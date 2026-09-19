@@ -4,7 +4,12 @@
 # against bad commits.
 
 name: build
-on: [pull_request, push]
+on:
+  pull_request:
+  push:
+    # 태그는 release 워크플로가 맡습니다 — 같은 빌드를 두 번 돌리지 않도록
+    branches:
+      - '**'
 
 jobs:
   build:
