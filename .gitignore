@@ -1,9 +1,11 @@
 # gradle
 
-.gradle/
+# 프로젝트 맨 위의 것만 무시합니다 — 아래 어디에나 있는 같은 이름 폴더까지 삼키지 않도록.
+# (src/main/java/kr/overbreak/classes 가 통째로 빠졌던 적이 있습니다)
+/.gradle/
 build/
-out/
-classes/
+/out/
+/classes/
 
 # eclipse
 
@@ -20,7 +22,7 @@ classes/
 
 .settings/
 .vscode/
-bin/
+/bin/
 .classpath
 .project
 
