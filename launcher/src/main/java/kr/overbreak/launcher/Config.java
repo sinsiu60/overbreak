@@ -22,7 +22,7 @@ import java.util.Properties;
  */
 public final class Config {
 	/** GitHub 저장소 (owner/repo) — 저장소를 만든 뒤 여기나 launcher.properties 에서 바꿉니다. */
-	public static final String DEFAULT_REPO = "siwoo/overbreak";
+	public static final String DEFAULT_REPO = "sinsiu60/overbreak";
 
 	public final String repo;
 	public final String manifestUrl;

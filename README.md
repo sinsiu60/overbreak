@@ -7,7 +7,8 @@
 
 ## 게임 하기
 
-[최신 릴리스](../../releases/latest)에서 `overbreak-launcher-<버전>.jar` 을 받아 두 번 누르면 됩니다.
+[최신 릴리스](../../releases/latest)에서 `OVERBREAK-Launcher-<버전>.exe` 를 받아 설치하고 켜면 됩니다.
+자바가 깔려 있지 않아도 됩니다 — 런처 안에 들어 있습니다. (맥 · 리눅스는 같은 릴리스의 `.jar` 을 자바 21 이상으로 실행하세요.)
 런처가 Fabric 모드로더 0.19.5 · Fabric API · OVERBREAK 를 깔고, 공식 마인크래프트 런처에 **OVERBREAK** 프로필을 만들어 둡니다.
 다음부터는 런처를 켜서 **업데이트 확인 · 설치** 만 누르면 최신으로 맞춰집니다 (옛 판은 자동으로 지워집니다).
 
@@ -19,11 +20,13 @@
 ```bash
 ./gradlew build                 # 모드 빌드 + 게임테스트
 ./gradlew :launcher:jar         # 런처 jar
+./gradlew :launcher:launcherZip # 런처 exe (자바 런타임 포함)
 ./gradlew runClient             # 클라이언트로 켜 보기
 ./gradlew runGameTest           # 서버 게임테스트만
 ```
 
-빌드 결과는 `build/libs/overbreak-<버전>.jar`, 런처는 `launcher/build/libs/overbreak-launcher-<버전>.jar` 에 나옵니다.
+빌드 결과는 `build/libs/overbreak-<버전>.jar`, 런처는 `launcher/build/libs/overbreak-launcher-<버전>.jar`
+(exe 는 `launcher/build/jpackage/OVERBREAK/OVERBREAK.exe`) 에 나옵니다.
 
 ## 내보내기
 

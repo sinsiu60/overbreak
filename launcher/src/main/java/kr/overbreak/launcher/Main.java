@@ -19,6 +19,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
@@ -152,7 +153,7 @@ public final class Main {
 		p.setBackground(BG);
 		p.setBorder(BorderFactory.createEmptyBorder(10, 20, 16, 20));
 		updateButton.addActionListener(e -> run(this::installAll));
-		playButton.addActionListener(e -> new Installer(this::log).openMinecraftLauncher());
+		playButton.addActionListener(e -> run(this::play));
 		folderButton.addActionListener(e -> {
 			if (minecraft != null) {
 				Installer.openFolder(Installer.modsDir(minecraft));
@@ -248,6 +249,44 @@ public final class Main {
 	private Map<String, Object> fetchManifest() throws Exception {
 		log("확인: " + config.manifestUrl);
 		return Json.object(Net.text(config.manifestUrl));
+	}
+
+	/** 게임 실행 — 공식 런처를 찾아 띄웁니다. 못 찾으면 어디 있는지 직접 물어봅니다. */
+	private void play() {
+		Installer installer = new Installer(this::log);
+		if (installer.openMinecraftLauncher()) {
+			return;
+		}
+		try {
+			SwingUtilities.invokeAndWait(() -> askLauncher(installer));
+		} catch (Exception e) {
+			log("실행 실패: " + e.getMessage());
+		}
+	}
+
+	/** 마인크래프트 런처 실행 파일을 직접 고르게 합니다 (한 번 고르면 기억합니다). */
+	private void askLauncher(Installer installer) {
+		String os = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT);
+		String hint = os.contains("win")
+				? "보통 C:\\Program Files (x86)\\Minecraft Launcher\\MinecraftLauncher.exe 에 있습니다."
+				: "마인크래프트 런처 실행 파일을 골라 주세요.";
+		int answer = JOptionPane.showConfirmDialog(frame,
+				"마인크래프트 런처를 찾지 못했습니다.\n" + hint + "\n\n직접 골라 볼까요?",
+				"마인크래프트 런처 찾기", JOptionPane.YES_NO_OPTION);
+		if (answer != JOptionPane.YES_OPTION) {
+			log("공식 마인크래프트 런처를 직접 켜고 「" + Installer.PROFILE_NAME + "」 프로필을 고르셔도 됩니다.");
+			return;
+		}
+		JFileChooser chooser = new JFileChooser();
+		chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		chooser.setDialogTitle("마인크래프트 런처 실행 파일 고르기");
+		String pf = System.getenv("ProgramFiles(x86)");
+		if (pf != null && Files.isDirectory(Path.of(pf))) {
+			chooser.setCurrentDirectory(Path.of(pf).toFile());
+		}
+		if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+			installer.useAndRemember(chooser.getSelectedFile().toPath());
+		}
 	}
 
 	private void askMinecraft() {

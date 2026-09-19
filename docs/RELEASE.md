@@ -46,12 +46,23 @@
 태그 이름(`v0.1.7`)과 `gradle.properties` 의 `version`(`0.1.7`)이 다르면 워크플로가 일부러 실패합니다.
 다르면 런처가 영영 "새 버전이 있습니다" 를 띄우게 되기 때문입니다.
 
-[.github/workflows/release.yml](../.github/workflows/release.yml) 이 하는 일:
+[.github/workflows/release.yml](../.github/workflows/release.yml) 이 하는 일 (윈도우 러너에서 돕니다 — exe 를 만들어야 하므로):
 
-- 모드와 런처를 빌드합니다 (서버 게임테스트도 돌립니다. 화면이 필요한 클라이언트 테스트는 건너뜁니다)
+- 모드를 빌드합니다 (서버 게임테스트도 돌립니다. 화면이 필요한 클라이언트 테스트는 건너뜁니다)
+- 런처를 exe 로 묶습니다 (자바 런타임 포함)
 - Fabric API jar 를 maven 에서 받아 sha256 을 잽니다
 - `update.json` 을 만듭니다 (`./gradlew updateManifest`)
-- 릴리스에 `overbreak-<버전>.jar` · `overbreak-launcher-<버전>.jar` · `update.json` 을 올립니다
+- 릴리스에 이것들을 올립니다:
+
+| 파일 | 누구를 위한 것 |
+| --- | --- |
+| `OVERBREAK-Launcher-<버전>.exe` | 윈도우 — 받아서 설치하면 끝 (자바 필요 없음) |
+| `overbreak-launcher-<버전>-windows.zip` | 윈도우 — 설치가 싫은 사람. 풀고 `OVERBREAK.exe` |
+| `overbreak-launcher-<버전>.jar` | 맥 · 리눅스 (자바 21 이상) |
+| `overbreak-<버전>.jar` | 손으로 `mods` 에 넣을 사람 |
+| `update.json` | 런처가 보는 파일 |
+
+설치용 exe 는 WiX 3 이 있어야 나옵니다. 러너에 없으면 그 단계만 조용히 건너뛰고 zip 으로 나갑니다.
 
 ## update.json
 
@@ -101,6 +112,18 @@ cat build/update.json
 | `Net.java` | 내려받기 · 진행률 · sha256 |
 | `Json.java` | 작은 JSON 읽기 · 쓰기 |
 | `Config.java` | 어느 저장소를 볼지 |
+| `Settings.java` | 사람이 직접 골라 준 마인크래프트 런처 경로를 기억 |
+
+exe 로 묶는 것은 [launcher/build.gradle](../launcher/build.gradle) 아래쪽에 있습니다:
+
+```bash
+./gradlew :launcher:jar               # jar 만 (맥 · 리눅스용)
+./gradlew :launcher:launcherZip       # OVERBREAK.exe + 자바 런타임 → zip
+./gradlew :launcher:launcherInstaller # 설치용 exe 한 개 (WiX 3 필요)
+```
+
+`jlink` 로 쓰는 모듈만 담은 작은 자바 런타임(약 45MB)을 만들고, `jpackage` 로 `OVERBREAK.exe` 를 붙입니다.
+그래서 받는 사람 컴퓨터에 자바가 없어도 그냥 켜집니다. 아이콘은 [launcher/packaging/overbreak.ico](../launcher/packaging/overbreak.ico).
 
 **업데이트 확인 · 설치** 를 누르면:
 
@@ -109,8 +132,15 @@ cat build/update.json
 3. `launcher_profiles.json` 에 **OVERBREAK** 프로필을 넣습니다 — 게임 폴더는 `.minecraft/overbreak`
 4. Fabric API 와 OVERBREAK 를 `overbreak/mods/` 에 맞춥니다. sha256 이 같으면 넘어가고, 같은 이름표의 옛 판은 지웁니다
 
-**게임 실행** 은 공식 마인크래프트 런처를 띄웁니다. 로그인은 공식 런처가 하던 대로 하고,
-프로필 목록에서 **OVERBREAK** 를 고르면 됩니다.
+**게임 실행** 은 공식 마인크래프트 런처를 띄웁니다. 이 차례로 찾습니다:
+
+1. 지난번에 사람이 직접 골라 준 경로 (`~/.overbreak-launcher.properties`)
+2. 흔한 설치 위치 — `Program Files (x86)\Minecraft Launcher\MinecraftLauncher.exe` 등
+3. `minecraft:` 주소를 맡은 프로그램 (레지스트리 `HKCU`/`HKCR`)
+4. 마이크로소프트 스토어판 — `explorer.exe shell:AppsFolder\Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft`
+
+그래도 못 찾으면 실행 파일을 직접 고르게 하고, 그 경로를 기억해 둡니다.
+로그인은 공식 런처가 하던 대로 하고, 프로필 목록에서 **OVERBREAK** 를 고르면 됩니다.
 
 전용 게임 폴더를 쓰기 때문에 원래 세계 · 다른 모드 · 설정은 그대로 남습니다.
 

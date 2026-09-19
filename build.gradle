@@ -113,7 +113,7 @@ tasks.register('updateManifest') {
 		if (!modFile.isFile()) {
 			throw new GradleException("모드 jar 를 찾지 못했습니다: ${modFile}")
 		}
-		def repo = project.findProperty('repo') ?: 'siwoo/overbreak'
+		def repo = project.findProperty('repo') ?: 'sinsiu60/overbreak'
 		def tag = project.findProperty('releaseTag') ?: "v${project.version}"
 		def apiFile = "fabric-api-${fabric_api_version}.jar"
 		def apiUrl = "https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/" +

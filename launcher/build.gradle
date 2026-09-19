@@ -33,7 +33,7 @@ jar {
 
 // 어느 저장소에서 받아올지를 jar 안에 굽습니다 — 릴리스 때 -Prepo=owner/name 으로 넘깁니다.
 // 받은 사람이 jar 옆에 launcher.properties 를 두면 그쪽이 이깁니다.
-def bakedRepo = project.findProperty('repo') ?: 'siwoo/overbreak'
+def bakedRepo = project.findProperty('repo') ?: 'sinsiu60/overbreak'
 def bakedConfig = tasks.register('bakedConfig', WriteProperties) {
 	destinationFile = layout.buildDirectory.file('generated/launcher/launcher.properties')
 	property('repo', bakedRepo.toString())
@@ -41,3 +41,115 @@ def bakedConfig = tasks.register('bakedConfig', WriteProperties) {
 }
 
 sourceSets.main.resources.srcDir(bakedConfig.map { it.destinationFile.get().asFile.parentFile })
+
+// ── exe 로 묶기 ──────────────────────────────────────────
+// 자바가 깔려 있지 않은 사람도 두 번 눌러 켤 수 있게, 자바 런타임까지 넣은 exe 를 만듭니다.
+//   ./gradlew :launcher:launcherZip        앱 폴더 + 압축 (어디서나 됨)
+//   ./gradlew :launcher:launcherInstaller  설치용 exe 한 개 (WiX 3 가 있어야 함)
+import javax.inject.Inject
+import org.gradle.process.ExecOperations
+
+abstract class RunTool extends DefaultTask {
+	@Inject
+	abstract ExecOperations getExecOps()
+
+	@Internal
+	abstract ListProperty<String> getArgv()
+
+	@TaskAction
+	void go() {
+		List<String> cmd = argv.get()
+		logger.lifecycle(cmd.join(' '))
+		execOps.exec { spec -> spec.commandLine(cmd) }
+	}
+}
+
+def jdkHome = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) }
+		.map { it.metadata.installationPath.asFile.absolutePath }
+def toolPath = { String name -> jdkHome.get() + File.separator + 'bin' + File.separator + name }
+
+def appName = 'OVERBREAK'
+def runtimeDir = layout.buildDirectory.dir('jre')
+def inputDir = layout.buildDirectory.dir('appinput')
+def imageDir = layout.buildDirectory.dir('jpackage')
+def installerDir = layout.buildDirectory.dir('installer')
+def iconFile = layout.projectDirectory.file('packaging/overbreak.ico')
+
+// 1. 런처가 쓰는 모듈만 담은 작은 자바 런타임
+def launcherRuntime = tasks.register('launcherRuntime', RunTool) {
+	description = '런처용 작은 자바 런타임을 만듭니다 (jlink)'
+	outputs.dir(runtimeDir)
+	doFirst {
+		delete runtimeDir
+	}
+	argv.set(provider {
+		[toolPath('jlink'),
+		 '--add-modules', 'java.base,java.desktop,java.net.http,java.logging,java.naming,jdk.crypto.ec,jdk.zipfs,jdk.localedata',
+		 '--strip-debug', '--no-header-files', '--no-man-pages', '--compress=zip-6',
+		 '--output', runtimeDir.get().asFile.absolutePath]
+	})
+}
+
+// 2. jpackage 에 넘길 입력 폴더 — 런처 jar 하나만 둡니다
+def launcherInput = tasks.register('launcherInput', Sync) {
+	from(tasks.named('jar'))
+	into(inputDir)
+}
+
+// 3. 앱 폴더 (OVERBREAK.exe + 런타임)
+def launcherAppImage = tasks.register('launcherAppImage', RunTool) {
+	description = 'OVERBREAK.exe 가 든 앱 폴더를 만듭니다 (jpackage)'
+	group = 'distribution'
+	dependsOn launcherRuntime, launcherInput
+	outputs.dir(imageDir)
+	doFirst {
+		delete imageDir
+	}
+	argv.set(provider {
+		[toolPath('jpackage'),
+		 '--type', 'app-image',
+		 '--name', appName,
+		 '--app-version', project.version.toString(),
+		 '--vendor', 'OVERBREAK',
+		 '--description', 'OVERBREAK 런처',
+		 '--input', inputDir.get().asFile.absolutePath,
+		 '--main-jar', tasks.jar.archiveFileName.get(),
+		 '--main-class', 'kr.overbreak.launcher.Main',
+		 '--runtime-image', runtimeDir.get().asFile.absolutePath,
+		 '--icon', iconFile.asFile.absolutePath,
+		 '--java-options', '-Dsun.java2d.uiScale.enabled=true',
+		 '--dest', imageDir.get().asFile.absolutePath]
+	})
+}
+
+// 4. 압축 한 개 — 풀고 OVERBREAK.exe 를 누르면 끝
+tasks.register('launcherZip', Zip) {
+	description = '앱 폴더를 zip 하나로 묶습니다'
+	group = 'distribution'
+	dependsOn launcherAppImage
+	from(imageDir)
+	archiveBaseName = 'overbreak-launcher'
+	archiveVersion = project.version.toString()
+	archiveClassifier = 'windows'
+}
+
+// 5. 설치용 exe 한 개 (WiX 3 필요 — 없으면 4번 zip 을 쓰면 됩니다)
+tasks.register('launcherInstaller', RunTool) {
+	description = '설치용 exe 를 만듭니다 (WiX 3 필요)'
+	group = 'distribution'
+	dependsOn launcherAppImage
+	outputs.dir(installerDir)
+	argv.set(provider {
+		[toolPath('jpackage'),
+		 '--type', 'exe',
+		 '--name', appName,
+		 '--app-version', project.version.toString(),
+		 '--vendor', 'OVERBREAK',
+		 '--description', 'OVERBREAK 런처',
+		 '--app-image', new File(imageDir.get().asFile, appName).absolutePath,
+		 '--icon', iconFile.asFile.absolutePath,
+		 '--win-shortcut', '--win-menu', '--win-menu-group', 'OVERBREAK',
+		 '--win-per-user-install', '--win-dir-chooser',
+		 '--dest', installerDir.get().asFile.absolutePath]
+	})
+}

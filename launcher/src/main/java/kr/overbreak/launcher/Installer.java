@@ -209,44 +209,149 @@ public final class Installer {
 
 	// ── 실행 ────────────────────────────────────────────────
 
+	/** 마인크래프트 런처를 찾은 결과 — 실행할 명령과 그것을 어디서 찾았는지. */
+	public record Launcher(List<String> command, String where) {}
+
 	/**
 	 * 공식 마인크래프트 런처를 띄웁니다 (로그인 · 게임 실행은 공식 런처가 합니다).
+	 *
+	 * 찾는 차례: 내가 기억해 둔 경로 → 흔한 설치 위치 → minecraft: 주소를 맡은 프로그램(레지스트리)
+	 * → 마이크로소프트 스토어판. 다 실패하면 false 를 돌려주고, 부르는 쪽에서 직접 고르게 합니다.
 	 *
 	 * @return 띄웠으면 true
 	 */
 	public boolean openMinecraftLauncher() {
-		String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-		List<String[]> tries = new ArrayList<>();
-		if (os.contains("win")) {
-			String pf86 = System.getenv("ProgramFiles(x86)");
-			String pf = System.getenv("ProgramFiles");
-			if (pf86 != null) {
-				tries.add(new String[] {pf86 + "\\Minecraft Launcher\\MinecraftLauncher.exe"});
-			}
-			if (pf != null) {
-				tries.add(new String[] {pf + "\\Minecraft Launcher\\MinecraftLauncher.exe"});
-			}
-			// 마이크로소프트 스토어판은 minecraft: 주소로 열립니다
-			tries.add(new String[] {"cmd", "/c", "start", "", "minecraft://"});
-		} else if (os.contains("mac")) {
-			tries.add(new String[] {"open", "-a", "Minecraft"});
-		} else {
-			tries.add(new String[] {"minecraft-launcher"});
+		Launcher found = findLauncher();
+		if (found == null) {
+			log.accept("마인크래프트 런처를 찾지 못했습니다.");
+			return false;
 		}
-		for (String[] cmd : tries) {
-			if (cmd.length == 1 && cmd[0].contains("\\") && !Files.isRegularFile(Path.of(cmd[0]))) {
+		try {
+			new ProcessBuilder(found.command()).start();
+			log.accept("마인크래프트 런처를 띄웠습니다 (" + found.where() + ").");
+			log.accept("프로필에서 「" + PROFILE_NAME + "」 을 고르고 플레이하세요.");
+			return true;
+		} catch (IOException e) {
+			log.accept("런처를 띄우지 못했습니다: " + e.getMessage());
+			return false;
+		}
+	}
+
+	/** 사람이 직접 골라 준 실행 파일을 기억하고 띄웁니다. */
+	public boolean useAndRemember(Path exe) {
+		if (exe == null || !Files.isRegularFile(exe)) {
+			return false;
+		}
+		try {
+			new ProcessBuilder(exe.toAbsolutePath().toString()).start();
+			Settings.put(Settings.MC_LAUNCHER, exe.toAbsolutePath().toString());
+			log.accept("이 경로를 기억해 둡니다: " + exe);
+			log.accept("프로필에서 「" + PROFILE_NAME + "」 을 고르고 플레이하세요.");
+			return true;
+		} catch (IOException e) {
+			log.accept("띄우지 못했습니다: " + e.getMessage());
+			return false;
+		}
+	}
+
+	/** 띄울 수 있는 마인크래프트 런처 하나. 없으면 null. */
+	public static Launcher findLauncher() {
+		String saved = Settings.get(Settings.MC_LAUNCHER);
+		if (saved != null && Files.isRegularFile(Path.of(saved))) {
+			return new Launcher(List.of(saved), "기억해 둔 경로");
+		}
+		String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+		if (os.contains("win")) {
+			return findOnWindows();
+		}
+		if (os.contains("mac")) {
+			for (String app : new String[] {"/Applications/Minecraft.app", "/Applications/Minecraft Launcher.app"}) {
+				if (Files.exists(Path.of(app))) {
+					return new Launcher(List.of("open", "-a", app), app);
+				}
+			}
+			return null;
+		}
+		for (String cmd : new String[] {"minecraft-launcher", "/usr/bin/minecraft-launcher", "/opt/minecraft-launcher/minecraft-launcher"}) {
+			if (!cmd.contains("/") || Files.isRegularFile(Path.of(cmd))) {
+				return new Launcher(List.of(cmd), cmd);
+			}
+		}
+		return null;
+	}
+
+	/** 마이크로소프트 스토어판 마인크래프트 런처의 앱 이름. */
+	private static final String STORE_APP = "Microsoft.4297127D64EC6_8wekyb3d8bbwe!Minecraft";
+
+	private static Launcher findOnWindows() {
+		for (String env : new String[] {"ProgramFiles(x86)", "ProgramFiles", "LOCALAPPDATA"}) {
+			String base = System.getenv(env);
+			if (base == null) {
 				continue;
 			}
-			try {
-				new ProcessBuilder(cmd).start();
-				log.accept("마인크래프트 런처를 띄웠습니다. 프로필에서 「" + PROFILE_NAME + "」 을 고르고 플레이하세요.");
-				return true;
-			} catch (IOException ignored) {
-				// 다음 후보
+			for (String rel : new String[] {
+					"Minecraft Launcher\\MinecraftLauncher.exe",
+					"Minecraft\\MinecraftLauncher.exe",
+					"Programs\\Minecraft Launcher\\MinecraftLauncher.exe"}) {
+				Path exe = Path.of(base, rel);
+				if (Files.isRegularFile(exe)) {
+					return new Launcher(List.of(exe.toString()), exe.toString());
+				}
 			}
 		}
-		log.accept("마인크래프트 런처를 찾지 못했습니다. 직접 실행한 뒤 「" + PROFILE_NAME + "」 프로필을 고르세요.");
-		return false;
+		// minecraft: 주소를 맡은 프로그램이 곧 런처입니다
+		String handler = registryHandler();
+		if (handler != null) {
+			// 스토어판은 WindowsApps 안에 있어 직접 실행할 수 없습니다 — 앱 목록으로 엽니다
+			if (!handler.replace('/', '\\').toLowerCase(Locale.ROOT).contains("\\windowsapps\\")
+					&& Files.isRegularFile(Path.of(handler))) {
+				return new Launcher(List.of(handler), "minecraft: 주소를 맡은 프로그램");
+			}
+			return storeLauncher();
+		}
+		return storeLauncher();
+	}
+
+	private static Launcher storeLauncher() {
+		// 스토어판이 깔려 있지 않으면 탐색기가 조용히 아무것도 하지 않습니다
+		Path apps = Path.of(System.getenv("LOCALAPPDATA") == null ? "" : System.getenv("LOCALAPPDATA"),
+				"Packages", "Microsoft.4297127D64EC6_8wekyb3d8bbwe");
+		if (!Files.isDirectory(apps)) {
+			return null;
+		}
+		return new Launcher(List.of("explorer.exe", "shell:AppsFolder\\" + STORE_APP), "마이크로소프트 스토어판");
+	}
+
+	/** HKCR\minecraft\shell\open\command 에 적힌 실행 파일. 없으면 null. */
+	private static String registryHandler() {
+		for (String key : new String[] {
+				"HKCU\\Software\\Classes\\minecraft\\shell\\open\\command",
+				"HKCR\\minecraft\\shell\\open\\command"}) {
+			String out = run("reg", "query", key, "/ve");
+			if (out == null) {
+				continue;
+			}
+			int q = out.indexOf('"');
+			if (q < 0) {
+				continue;
+			}
+			int end = out.indexOf('"', q + 1);
+			if (end > q) {
+				return out.substring(q + 1, end);
+			}
+		}
+		return null;
+	}
+
+	/** 짧은 명령 하나를 돌리고 나온 글을 돌려줍니다. 실패하면 null. */
+	private static String run(String... command) {
+		try {
+			Process proc = new ProcessBuilder(command).redirectErrorStream(true).start();
+			String out = new String(proc.getInputStream().readAllBytes());
+			return proc.waitFor() == 0 ? out : null;
+		} catch (IOException | InterruptedException e) {
+			return null;
+		}
 	}
 
 	public static void openFolder(Path dir) {

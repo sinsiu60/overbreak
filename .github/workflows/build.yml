@@ -22,7 +22,8 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build
-        run: ./gradlew build
+        # 클라이언트 게임테스트는 화면이 필요해 CI 에서는 건너뜁니다 (서버 게임테스트는 그대로 돕니다)
+        run: ./gradlew build -x runClientGameTest
       - name: capture build artifacts
         uses: actions/upload-artifact@v7
         with:

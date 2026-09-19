@@ -1,9 +1,11 @@
-# 릴리스 — v 로 시작하는 태그를 밀면 모드 · 런처 · update.json 을 만들어 릴리스에 올립니다.
+# 릴리스 — v 로 시작하는 태그를 밀면 모드 · 런처(exe) · update.json 을 만들어 릴리스에 올립니다.
 #
 #   git tag v0.1.6 && git push origin v0.1.6
 #
 # 런처는 늘 최신 릴리스의 update.json 을 봅니다:
 #   https://github.com/<owner>/<repo>/releases/latest/download/update.json
+#
+# exe 는 jpackage 로 만들고, 그건 윈도우에서만 돌아서 윈도우 러너를 씁니다.
 
 name: release
 on:
@@ -15,9 +17,13 @@ on:
 permissions:
   contents: write
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   release:
-    runs-on: ubuntu-24.04
+    runs-on: windows-2025
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
@@ -31,9 +37,6 @@ jobs:
           java-version: '25'
           distribution: 'microsoft'
 
-      - name: make gradle wrapper executable
-        run: chmod +x ./gradlew
-
       - name: read versions
         id: vars
         run: |
@@ -44,22 +47,40 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           case "$TAG" in
             v*) ;;
-            *) TAG="v${MOD}" ;;   # 손으로 돌렸을 때
+            *) TAG="v${MOD}" ;;
           esac
-          echo "mod=$MOD"       >> "$GITHUB_OUTPUT"
-          echo "api=$API"       >> "$GITHUB_OUTPUT"
-          echo "mc=$MC"         >> "$GITHUB_OUTPUT"
-          echo "loader=$LOADER" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG"       >> "$GITHUB_OUTPUT"
+          {
+            echo "mod=$MOD"
+            echo "api=$API"
+            echo "mc=$MC"
+            echo "loader=$LOADER"
+            echo "tag=$TAG"
+          } >> "$GITHUB_OUTPUT"
           # 태그와 gradle.properties 의 버전이 다르면 런처가 영영 "새 버전 있음" 으로 보입니다
           if [ "$TAG" != "v${MOD}" ]; then
             echo "::error::태그 $TAG 와 gradle.properties 의 version=$MOD 가 다릅니다"
             exit 1
           fi
 
-      - name: build mod and launcher
-        # 클라이언트 게임테스트는 화면이 필요해 CI 에서는 건너뜁니다 (서버 게임테스트는 그대로 돕니다)
-        run: ./gradlew build :launcher:jar -x runClientGameTest -Prepo=${{ github.repository }}
+      - name: build mod
+        # 화면이 필요한 클라이언트 게임테스트만 건너뜁니다 (서버 게임테스트는 그대로 돕니다)
+        run: ./gradlew build -x runClientGameTest -Prepo=${{ github.repository }}
+
+      - name: build launcher exe
+        run: ./gradlew :launcher:launcherZip -Prepo=${{ github.repository }}
+
+      - name: build launcher installer
+        # WiX 가 없으면 설치용 exe 만 빠지고 zip 으로 나갑니다
+        continue-on-error: true
+        run: |
+          for wix in "/c/Program Files (x86)/WiX Toolset v3.14/bin" "/c/Program Files (x86)/WiX Toolset v3.11/bin"; do
+            if [ -d "$wix" ]; then
+              echo "WiX: $wix"
+              export PATH="$wix:$PATH"
+              break
+            fi
+          done
+          ./gradlew :launcher:launcherInstaller -Prepo=${{ github.repository }}
 
       - name: fetch fabric api
         id: api
@@ -83,9 +104,17 @@ jobs:
 
       - name: collect assets
         run: |
+          V='${{ steps.vars.outputs.mod }}'
           cp build/update.json release/
-          cp build/libs/overbreak-${{ steps.vars.outputs.mod }}.jar release/
-          cp launcher/build/libs/overbreak-launcher-${{ steps.vars.outputs.mod }}.jar release/
+          cp "build/libs/overbreak-${V}.jar" release/
+          cp "launcher/build/libs/overbreak-launcher-${V}.jar" release/
+          cp "launcher/build/distributions/overbreak-launcher-${V}-windows.zip" release/
+          # 설치용 exe 는 WiX 가 있을 때만 나옵니다
+          if [ -f "launcher/build/installer/OVERBREAK-${V}.exe" ]; then
+            cp "launcher/build/installer/OVERBREAK-${V}.exe" "release/OVERBREAK-Launcher-${V}.exe"
+          else
+            echo "설치용 exe 없음 — zip 으로 나갑니다"
+          fi
           ls -l release
 
       - name: publish release
@@ -95,22 +124,31 @@ jobs:
           name: OVERBREAK ${{ steps.vars.outputs.mod }}
           draft: false
           prerelease: false
-          fail_on_unmatched_files: true
+          fail_on_unmatched_files: false
           files: |
-            release/overbreak-${{ steps.vars.outputs.mod }}.jar
+            release/OVERBREAK-Launcher-${{ steps.vars.outputs.mod }}.exe
+            release/overbreak-launcher-${{ steps.vars.outputs.mod }}-windows.zip
             release/overbreak-launcher-${{ steps.vars.outputs.mod }}.jar
+            release/overbreak-${{ steps.vars.outputs.mod }}.jar
             release/update.json
           body: |
             ## OVERBREAK ${{ steps.vars.outputs.mod }}
 
             마인크래프트 ${{ steps.vars.outputs.mc }} · Fabric ${{ steps.vars.outputs.loader }} · Fabric API ${{ steps.vars.outputs.api }}
 
-            ### 처음 하는 사람
-            `overbreak-launcher-${{ steps.vars.outputs.mod }}.jar` 을 받아 두 번 누르면 끝입니다.
+            ### 처음 하는 사람 (윈도우)
+            **`OVERBREAK-Launcher-${{ steps.vars.outputs.mod }}.exe`** 를 받아 설치하고 켜면 끝입니다.
+            자바가 없어도 됩니다 — 런처 안에 들어 있습니다.
             Fabric 모드로더 · Fabric API · OVERBREAK 를 알아서 깔고, 다음부터는 켤 때마다 최신으로 맞춰 줍니다.
+
+            설치가 싫다면 `overbreak-launcher-${{ steps.vars.outputs.mod }}-windows.zip` 을 풀고
+            안에 있는 `OVERBREAK.exe` 를 누르셔도 똑같습니다.
 
             ### 이미 런처가 있는 사람
             런처를 켜고 **업데이트 확인 · 설치** 만 누르면 됩니다. 런처를 다시 받을 필요는 없습니다.
+
+            ### 맥 · 리눅스
+            `overbreak-launcher-${{ steps.vars.outputs.mod }}.jar` 을 자바 21 이상으로 실행하세요.
 
             ### 손으로 넣고 싶다면
             `overbreak-${{ steps.vars.outputs.mod }}.jar` 을 `mods` 폴더에 넣고 옛 판은 지우세요.
