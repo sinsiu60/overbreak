@@ -1,0 +1,14 @@
+{
+  "model": {
+    "type": "minecraft:condition",
+    "property": "overbreak:charging",
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "overbreak:item/gauntlet"
+    },
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "overbreak:item/gauntlet_charged"
+    }
+  }
+}

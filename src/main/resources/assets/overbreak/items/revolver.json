@@ -1,0 +1,14 @@
+{
+  "model": {
+    "type": "minecraft:condition",
+    "property": "overbreak:cylinder_open",
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "overbreak:item/revolver"
+    },
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "overbreak:item/revolver_open"
+    }
+  }
+}

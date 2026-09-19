@@ -1,0 +1,33 @@
+{
+	"required": true,
+	"package": "kr.overbreak.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"AbstractClientPlayerFovMixin",
+		"AvatarRenderStateMixin",
+		"AvatarRendererMixin",
+		"CameraMixin",
+		"EntityRendererMixin",
+		"GameRendererBobMixin",
+		"HudMixin",
+		"InventorySelectMixin",
+		"ItemInHandLayerMixin",
+		"ItemInHandRendererMixin",
+		"LivingEntityRenderStateMixin",
+		"LivingEntityRendererMixin",
+		"LocalPlayerAimMixin",
+		"LocalPlayerSprintMixin",
+		"LocalPlayerSwingMixin",
+		"MinecraftAttackMixin",
+		"MinecraftGlowMixin",
+		"PlayerModelMixin",
+		"MinecraftTickRateMixin",
+		"ParticleEngineMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

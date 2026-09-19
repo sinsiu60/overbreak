@@ -1,0 +1,16 @@
+pluginManagement {
+	repositories {
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+		mavenCentral()
+		gradlePluginPortal()
+	}
+}
+
+// Should match your modid
+rootProject.name = 'overbreak'
+
+// 배포용 런처 (모드 자동 설치 · 업데이트) — ./gradlew :launcher:jar
+include 'launcher'

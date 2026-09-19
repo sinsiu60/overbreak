@@ -1,0 +1,43 @@
+// OVERBREAK 런처 — 모드 자동 설치 · 업데이트 + 마인크래프트 실행
+// 바깥 라이브러리를 쓰지 않습니다 (JDK 만으로). ./gradlew :launcher:jar 로 한 개의 실행 가능한 jar 가 나옵니다.
+plugins {
+	id 'java'
+}
+
+base {
+	archivesName = 'overbreak-launcher'
+}
+
+version = rootProject.version
+group = rootProject.group
+
+java {
+	// 마인크래프트 26.2 를 돌리는 사람은 최소 21 이상을 갖고 있습니다
+	toolchain.languageVersion = JavaLanguageVersion.of(25)
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.release = 21
+}
+
+jar {
+	manifest {
+		attributes(
+				'Main-Class': 'kr.overbreak.launcher.Main',
+				'Implementation-Title': 'OVERBREAK Launcher',
+				'Implementation-Version': project.version
+		)
+	}
+}
+
+// 어느 저장소에서 받아올지를 jar 안에 굽습니다 — 릴리스 때 -Prepo=owner/name 으로 넘깁니다.
+// 받은 사람이 jar 옆에 launcher.properties 를 두면 그쪽이 이깁니다.
+def bakedRepo = project.findProperty('repo') ?: 'siwoo/overbreak'
+def bakedConfig = tasks.register('bakedConfig', WriteProperties) {
+	destinationFile = layout.buildDirectory.file('generated/launcher/launcher.properties')
+	property('repo', bakedRepo.toString())
+	comment = 'OVERBREAK 런처 기본 설정 (빌드할 때 구워 넣음)'
+}
+
+sourceSets.main.resources.srcDir(bakedConfig.map { it.destinationFile.get().asFile.parentFile })

@@ -1,0 +1,14 @@
+{
+  "model": {
+    "type": "minecraft:condition",
+    "property": "overbreak:magazine_out",
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "overbreak:item/valkyrie_rifle"
+    },
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "overbreak:item/valkyrie_rifle_empty"
+    }
+  }
+}

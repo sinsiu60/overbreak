@@ -1,0 +1,144 @@
+plugins {
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'maven-publish'
+}
+
+repositories {
+	// Add repositories to retrieve artifacts from in here.
+	// You should only use this when depending on other mods because
+	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+	// See https://docs.gradle.org/current/userguide/declaring_repositories.html
+	// for more information about repositories.
+}
+
+
+loom {
+	splitEnvironmentSourceSets()
+
+	mods {
+		"overbreak" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+}
+
+fabricApi {
+	// 자동 테스트: 가짜 플레이어(FakePlayer)로 스킬 수치를 데이터팩 검증표와 맞춰 봅니다.
+	// eula = true 는 사용자 동의를 받아 테스트 환경에만 설정했습니다.
+	configureTests {
+		createSourceSet = true
+		modId = "overbreak-test"
+		enableGameTests = true
+		enableClientGameTests = true
+		eula = true
+	}
+}
+
+// 시험 실행에서는 접속 시 메인 화면을 끔 (직업 시험이 메뉴에 갇히지 않게) — 메인 화면 시험은 스스로 켬
+tasks.matching { it.name == "runGameTest" || it.name == "runClientGameTest" }.configureEach {
+	jvmArgs "-Doverbreak.lobby=false"
+}
+
+dependencies {
+	// To change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// Fabric API. This is technically optional, but you probably want it anyway.
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+}
+
+java {
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+jar {
+	def projectName = project.name
+	inputs.property "projectName", projectName
+
+	from("LICENSE") {
+		rename { "${it}_$projectName"}
+	}
+}
+
+// configure the maven publication
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			from components.java
+		}
+	}
+
+	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+	repositories {
+		// Add repositories to publish to here.
+		// Notice: This block does NOT have the same function as the block in the top level.
+		// The repositories here will be used for publishing your artifact, not for
+		// retrieving dependencies.
+	}
+}
+
+// ── 배포 ────────────────────────────────────────────────
+// 런처가 읽는 update.json 을 만듭니다. 릴리스에 이 파일과 모드 jar 를 함께 올리면 됩니다.
+//   ./gradlew updateManifest -PreleaseTag=v0.1.6 -Prepo=owner/name
+tasks.register('updateManifest') {
+	description = '런처가 읽을 update.json 을 build/ 에 만듭니다'
+	group = 'publishing'
+	dependsOn 'assemble'
+	def out = layout.buildDirectory.file('update.json')
+	def libs = layout.buildDirectory.dir('libs')
+	outputs.file(out)
+	doLast {
+		def modFile = new java.io.File(libs.get().asFile, "${base.archivesName.get()}-${project.version}.jar")
+		if (!modFile.isFile()) {
+			throw new GradleException("모드 jar 를 찾지 못했습니다: ${modFile}")
+		}
+		def repo = project.findProperty('repo') ?: 'siwoo/overbreak'
+		def tag = project.findProperty('releaseTag') ?: "v${project.version}"
+		def apiFile = "fabric-api-${fabric_api_version}.jar"
+		def apiUrl = "https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/" +
+				"${fabric_api_version.replace('+', '%2B')}/fabric-api-${fabric_api_version.replace('+', '%2B')}.jar"
+		def sha = { java.io.File f ->
+			java.security.MessageDigest.getInstance('SHA-256').digest(f.bytes).encodeHex().toString()
+		}
+		def apiSha = project.findProperty('fabricApiSha') ?: ''
+		def json = """{
+  "version": "${project.version}",
+  "minecraft": "${minecraft_version}",
+  "fabricLoader": "${loader_version}",
+  "mod": {
+    "file": "${modFile.name}",
+    "url": "https://github.com/${repo}/releases/download/${tag}/${modFile.name}",
+    "sha256": "${sha(modFile)}"
+  },
+  "fabricApi": {
+    "file": "${apiFile}",
+    "url": "${apiUrl}",
+    "sha256": "${apiSha}"
+  }
+}
+"""
+		out.get().asFile.text = json
+		logger.lifecycle("update.json → ${out.get().asFile}")
+	}
+}

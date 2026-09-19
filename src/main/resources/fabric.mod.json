@@ -1,0 +1,25 @@
+{
+	"schemaVersion": 1,
+	"id": "overbreak",
+	"version": "${version}",
+	"name": "OVERBREAK",
+	"description": "직업 기반 PVP 데스매치 (데이터팩 PVP 이전판)",
+	"authors": ["siwoo"],
+	"license": "All-Rights-Reserved",
+	"icon": "assets/overbreak/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["kr.overbreak.Overbreak"],
+		"client": ["kr.overbreak.client.OverbreakClient"]
+	},
+	"mixins": [
+		"overbreak.mixins.json",
+		{ "config": "overbreak.client.mixins.json", "environment": "client" }
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

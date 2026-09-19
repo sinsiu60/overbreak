@@ -1,0 +1,12 @@
+{
+	"schemaVersion": 1,
+	"id": "overbreak-test",
+	"version": "${version}",
+	"name": "OVERBREAK Tests",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-gametest": ["kr.overbreak.test.SmokeTest", "kr.overbreak.test.WarriorTest", "kr.overbreak.test.MeleeAimTest", "kr.overbreak.test.HammerKnightTest", "kr.overbreak.test.IronFistTest", "kr.overbreak.test.ValkyrieTest", "kr.overbreak.test.SheriffTest", "kr.overbreak.test.ShadeTest", "kr.overbreak.test.ThunderTest", "kr.overbreak.test.NetcodeTest", "kr.overbreak.test.EffectsTest", "kr.overbreak.test.DummyTest", "kr.overbreak.test.TeamMatchTest", "kr.overbreak.test.BruteTest"],
+		"fabric-client-gametest": ["kr.overbreak.test.client.HammerKnightClientTest", "kr.overbreak.test.client.SkillInfoClientTest", "kr.overbreak.test.client.AimMeleeClientTest", "kr.overbreak.test.client.WarriorAnimClientTest", "kr.overbreak.test.client.IronFistClientTest", "kr.overbreak.test.client.ValkyrieClientTest", "kr.overbreak.test.client.SheriffClientTest", "kr.overbreak.test.client.ShadeClientTest", "kr.overbreak.test.client.ThunderClientTest", "kr.overbreak.test.client.MapSurveyClientTest", "kr.overbreak.test.client.TickRateClientTest", "kr.overbreak.test.client.MsptClientTest", "kr.overbreak.test.client.LobbyClientTest", "kr.overbreak.test.client.TutorialClientTest", "kr.overbreak.test.client.TeamOutlineClientTest", "kr.overbreak.test.client.FeedbackClientTest", "kr.overbreak.test.client.BruteAnimClientTest"]
+	},
+	"depends": { "overbreak": "*" }
+}
