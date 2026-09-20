@@ -167,7 +167,7 @@ public final class FirstPersonAnim {
 			{3.0F, 0.62F, -0.62F, -0.55F, 26F, -6F, 0F, 1.0F},
 			{8.0F, 0.58F, -0.55F, -0.70F, 8F, -2F, 0F, 1.0F},
 			{12.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F}};
-	/** 공예 난사 — 두 총을 밖으로 벌리고 한 바퀴 (세로축 -360도). */
+	/** 곡예 난사 — 두 총을 밖으로 벌리고 한 바퀴 (세로축 -360도). */
 	private static final float[][] GS_ACRO = {
 			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
 			{2.0F, 0.40F, -0.46F, -0.80F, -10F, -40F, -14F, 1.05F},
@@ -204,7 +204,7 @@ public final class FirstPersonAnim {
 				: SkillAnims.latestOf(mc.player.getId(), SkillAnimPayload.HK_CHARGE, SkillAnimPayload.IF_SHOT, SkillAnimPayload.IF_CHARGE,
 						SkillAnimPayload.IF_PUNCH, SkillAnimPayload.IF_BLOCK, SkillAnimPayload.IF_SLAM_HIT,
 						SkillAnimPayload.BR_REGROUP,
-						// 건슬링어는 양손에 한 자루씩 — 왼손 총도 같은 키프레임을 매대로 따릅니다 (invert 가 좌우를 뒤집음)
+						// 건슬링어는 양손에 한 자루씩 — 왼손 총도 같은 키프레임을 그대로 따릅니다 (invert 가 좌우를 뒤집음)
 						SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_ACRO,
 						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_ULT, SkillAnimPayload.GS_GLIDE);
 	}

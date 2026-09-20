@@ -169,8 +169,8 @@ public abstract class ItemInHandRendererMixin {
 	}
 
 	/**
-	 * 건슬링어 쌀권총 — 양손에 한 자루씩이라 주 손 · 왼손 차례에 각각 그 손의 팔을 그리고,
-	 * 공중 재장전 동안에는 하늘로 털겨 올린 탄창 두 개도 따로 그립니다.
+	 * 건슬링어 쌍권총 — 양손에 한 자루씩이라 주 손 · 왼손 차례에 각각 그 손의 팔을 그리고,
+	 * 공중 재장전 동안에는 하늘로 튕겨 올린 탄창 두 개도 따로 그립니다.
 	 * 탄창은 손을 떠난 물건이라 총 자세가 아니라 카메라 공간 기준입니다 (pop → push 로 되돌림).
 	 */
 	@Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = RENDER_ITEM, shift = At.Shift.AFTER))

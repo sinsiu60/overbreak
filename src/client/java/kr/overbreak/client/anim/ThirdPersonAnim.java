@@ -220,7 +220,7 @@ public final class ThirdPersonAnim {
 			headSpin = turn;
 		}
 		if (play.anim == SkillAnimPayload.GS_ACRO) {
-			// 공예 난사: 0.8초(16) 동안 정확히 한 바퀴 — 난사 방향과 몸 방향이 같아야 합니다
+			// 곡예 난사: 0.8초(16) 동안 정확히 한 바퀴 — 난사 방향과 몸 방향이 같아야 합니다
 			float turn = -(360.0F / kr.overbreak.classes.gunslinger.AeroAcrobatics.DURATION) * Math.min(e, end);
 			if (e > end) {
 				float target = (float) Math.round(turn / 360.0F) * 360.0F;

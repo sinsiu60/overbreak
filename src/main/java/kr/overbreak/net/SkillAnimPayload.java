@@ -117,7 +117,7 @@ public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duratio
 	public static final int BR_ULT = 48;
 	/** 건슬링어 쌍권총 한 발 (번갈아 오른손 · 왼손 총구). */
 	public static final int GS_SHOT = 49;
-	/** 건슬링어 공중 재장전 (탄창 두 개를 위로 털겨 올리고 총을 돌리다가 다시 받아 끼움). */
+	/** 건슬링어 공중 재장전 (탄창 두 개를 위로 튕겨 올리고 총을 돌리다가 다시 받아 끼움). */
 	public static final int GS_RELOAD = 50;
 	/** 건슬링어 반동 도약 (두 총을 아래로 내리꽂음). */
 	public static final int GS_BOOST = 51;
