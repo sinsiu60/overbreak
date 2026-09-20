@@ -72,7 +72,7 @@ public final class IronFist implements PvpClass {
 									SkillInfo.stat("감소", "2초 뒤부터 초당 20"),
 									SkillInfo.stat("평타", "얻지 못함"),
 									SkillInfo.stat("궁극기 충전", "추가 체력 10당 1%")), false),
-					new SkillInfo("좌클릭", "철권포", null, "minecraft:iron_ingot",
+					new SkillInfo("LMB", "철권포", null, "minecraft:iron_ingot",
 							"왼손에서 산탄을 발사",
 							List.of(
 									SkillInfo.stat("분류", "히트스캔 · 산탄"),
@@ -108,7 +108,7 @@ public final class IronFist implements PvpClass {
 									SkillInfo.stat("강화 조건", "60 이상 막아 내기"),
 									SkillInfo.stat("군중 제어", "막지 못함"),
 									SkillInfo.stat("재사용 대기시간", "6초 (해제 후)")), false),
-					new SkillInfo("F", "지진 강타", Overbreak.id("hud/skill/ironfist_slam"), null,
+					new SkillInfo("E", "지진 강타", Overbreak.id("hud/skill/ironfist_slam"), null,
 							"도약했다가 땅을 내리쳐 앞으로 파동",
 							List.of(
 									SkillInfo.stat("분류", "이동기 · 광역 · 군중제어"),
@@ -183,7 +183,7 @@ public final class IronFist implements PvpClass {
 						.line(" 적을 밀쳐내고, 벽에 처박히면 40 추가 + 0.7초 기절.", ChatFormatting.GRAY).blank()
 						.bold("[웅크리기] 파워 블록", ChatFormatting.AQUA)
 						.line(" 최대 2초간 정면 피해를 전부 막습니다. 60 이상 막으면 강화 + 쿨 초기화.", ChatFormatting.GRAY).blank()
-						.bold("[F] 지진 강타", ChatFormatting.GOLD)
+						.bold("[E] 지진 강타", ChatFormatting.GOLD)
 						.line(" 도약했다가 착지하며 앞 90도 · 16칸에 파동.", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build()));
 		inv.setItem(Inventory.SLOT_OFFHAND, SkillItems.skill("overbreak:hand_cannon", SkillItems.name("철권포", ChatFormatting.GRAY), "if_gun",

@@ -42,7 +42,15 @@ final class PatchNotes {
 		return new Line(text, Tag.TWEAK);
 	}
 
-	static final List<Version> VERSIONS = List.of(new Version("0.1f", "", "규격 조정", List.of(
+	static final List<Version> VERSIONS = List.of(new Version("0.2", "", "조작 정리", List.of(
+			new Section("조작", 0xFF3FA2FF, List.of(
+					tweak("액티브3 이 F 에서 E 로 옮겨 왔습니다 — 모든 규격에 함께 적용됩니다"),
+					tweak("전장에서는 E 를 눌러도 인벤토리가 열리지 않습니다 (로비 · 관리자 자유 이동에서는 그대로 열립니다)"),
+					tweak("인벤토리 키를 다른 것으로 바꿔 두었다면 그 키가 그대로 액티브3 이 됩니다"))),
+			new Section("스킬 설명", 0xFF9AA0AC, List.of(
+					tweak("기본 공격 표기를 「좌클릭」 에서 「LMB」 로 바꿔 RMB 와 나란히 맞췄습니다"),
+					tweak("튜토리얼에 남아 있던 옛 수치를 지금 값으로 고쳤습니다 — 살육 80 · 사슬 15칸 · 포효 이동 30% / 공격력 15%"))))),
+			new Version("0.1f", "", "규격 조정", List.of(
 			new Section("워리어", 0xFFFF5A4A, List.of(
 					nerf("광란의 포효 이동속도 +50% → +30%"),
 					tweak("포효의 「공격력 +」 와 「스킬 피해 +」 를 공격력 증가 하나로 합쳤습니다 (평타 · 스킬 모두 적용)"),

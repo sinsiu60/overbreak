@@ -33,7 +33,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * [F] 그림자 표창 → 그림자 걸음.
+ * [E] 그림자 표창 → 그림자 걸음.
  *
  *   조준 방향으로 곧게 던짐 — 틱당 1.6칸 · 10틱 = 16칸. 벽에 닿으면 떨어짐
  *   처음 닿은 적(몸 1.3칸 — 0.1a 에서 30% 넓힘): 30 피해 (넉백 없음) · 30% 둔화 1.5초 · 그림자 낙인

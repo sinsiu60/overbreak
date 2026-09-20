@@ -152,6 +152,18 @@ public final class BruteTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
+	/** E(인벤토리 키)로 들어온 신호가 액티브3 으로 이어지는가 — 0.2 에서 F 에서 옮겨 왔습니다. */
+	@GameTest
+	public void tertiaryKeyRuns(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);
+		String regroup = Brute.skillKeys().get(2);
+		h.assertTrue(Attachments.profile(p).cooldown(regroup) == 0, "아직 쓰지 않음");
+		kr.overbreak.input.InputRouter.onTertiary(p);
+		h.assertTrue(Attachments.profile(p).cooldown(regroup) > 0, "E 한 번에 전열 재정비가 나가고 쿨이 돎");
+		Classes.clear(p);
+		h.succeed();
+	}
+
 	@GameTest(maxTicks = 440)
 	public void rampageBuffs(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);

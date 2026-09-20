@@ -57,7 +57,7 @@ public final class Valkyrie implements PvpClass {
 									SkillInfo.stat("대상", "연사 · 로켓 · 과열 분사 · 궁극기"),
 									SkillInfo.stat("미사일", "명중 5번마다 반경 1.5칸 7.5"),
 									SkillInfo.stat("미사일 초기화", "3초간 못 맞히면")), false),
-					new SkillInfo("좌클릭", "연사", null, "minecraft:crossbow",
+					new SkillInfo("LMB", "연사", null, "minecraft:crossbow",
 							"누르고 있으면 계속 사격",
 							List.of(
 									SkillInfo.stat("분류", "히트스캔 · 연사 · 탄창"),
@@ -86,7 +86,7 @@ public final class Valkyrie implements PvpClass {
 									SkillInfo.stat("느린 낙하", "최대 3초 (착지하면 끝)"),
 									SkillInfo.stat("공중 연사", "+25% (초당 10발)"),
 									SkillInfo.stat("재사용 대기시간", "12초")), false),
-					new SkillInfo("F", "과열 분사", Overbreak.id("hud/skill/valkyrie_overheat"), null,
+					new SkillInfo("E", "과열 분사", Overbreak.id("hud/skill/valkyrie_overheat"), null,
 							"앞 부채꼴에 1초간 난사",
 							List.of(
 									SkillInfo.stat("분류", "근접 · 광역 · 군중제어"),
@@ -158,7 +158,7 @@ public final class Valkyrie implements PvpClass {
 						.line(" 반경 3칸 35 + 0.8초 띄우기. 쿨타임 5초", ChatFormatting.GRAY).blank()
 						.bold("[웅크리기] 차원 도약", ChatFormatting.AQUA)
 						.line(" 뛰어올라 천천히 떨어지며 공격속도 +25%. 쿨타임 12초", ChatFormatting.GRAY).blank()
-						.bold("[F] 과열 분사", ChatFormatting.GOLD)
+						.bold("[E] 과열 분사", ChatFormatting.GOLD)
 						.line(" 앞 60도 · 5칸에 10발 (발당 8.5) + 둔화. 쿨타임 10초", ChatFormatting.GRAY).blank()
 						.line("이 직업의 모든 공격은 적을 밀어내지 않습니다.", ChatFormatting.RED).build()));
 		inv.setItem(9, SkillItems.statSheet(Hud.bold("발키리", ChatFormatting.YELLOW), SkillItems.lore()

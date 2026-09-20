@@ -110,7 +110,7 @@ public final class Thunder implements PvpClass {
 						.line(" 번개가 되어 8칸 돌진 · 무적 · 지나간 적 25. 쿨타임 9초", ChatFormatting.GRAY).blank()
 						.bold("[웅크리기] 뇌운", ChatFormatting.AQUA)
 						.line(" 조준한 곳에 4초 번개구름 · 둔화 · 0.5초마다 8. 쿨타임 13초", ChatFormatting.GRAY).blank()
-						.bold("[F] 낙뢰", ChatFormatting.AQUA)
+						.bold("[E] 낙뢰", ChatFormatting.AQUA)
 						.line(" 0.7초 뒤 조준한 곳에 벼락 45 · 띄우기. 쿨타임 11초", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build()));
 		inv.setItem(9, SkillItems.statSheet(Hud.bold("뇌신", ChatFormatting.AQUA), SkillItems.lore()
@@ -268,7 +268,7 @@ public final class Thunder implements PvpClass {
 									SkillInfo.stat("유지", "마지막으로 쌓인 뒤 4초"),
 									SkillInfo.stat("감전", "3스택에 25 피해 + 0.5초 기절"),
 									SkillInfo.stat("기절 제한", "같은 적 5초에 한 번")), false),
-					new SkillInfo("좌클릭", "뇌격", null, "minecraft:prismarine_crystals",
+					new SkillInfo("LMB", "뇌격", null, "minecraft:prismarine_crystals",
 							"번개를 쏘고, 곁의 적에게 한 번 더 튐",
 							List.of(
 									SkillInfo.stat("분류", "히트스캔 · 연쇄"),
@@ -296,7 +296,7 @@ public final class Thunder implements PvpClass {
 									SkillInfo.stat("피해", "0.5초마다 8 (최대 64)"),
 									SkillInfo.stat("정전기", "한 적에게 1초에 1스택"),
 									SkillInfo.stat("재사용 대기시간", "13초")), false),
-					new SkillInfo("F", "낙뢰", Overbreak.id("hud/skill/thunder_smite"), null,
+					new SkillInfo("E", "낙뢰", Overbreak.id("hud/skill/thunder_smite"), null,
 							"예고 후 조준한 곳에 벼락을 내리꽂음",
 							List.of(
 									SkillInfo.stat("분류", "설치 · 광역 · 군중제어"),

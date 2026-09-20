@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * 스킬 설명 한 칸 — F8 스킬 설명 화면 (클라이언트 SkillInfoScreen) 에 쓰입니다.
  *
- * @param key     조작 표시 (예: "패시브", "좌클릭", "RMB", "SHIFT", "F", "Q")
+ * @param key     조작 표시 (예: "패시브", "LMB", "RMB", "SHIFT", "E", "Q")
  * @param name    스킬 이름
  * @param icon    HUD 스프라이트 아이콘 (흰색 단색). 없으면 item 을 아이템 아이콘으로 그림
  * @param item    아이콘으로 쓸 아이템 id (예: "minecraft:iron_axe"). icon 이 있으면 무시

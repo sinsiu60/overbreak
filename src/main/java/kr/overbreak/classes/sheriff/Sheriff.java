@@ -57,7 +57,7 @@ public final class Sheriff implements PvpClass {
 					SkillInfo.stat("공격속도", "0.8초에 1발"),
 					SkillInfo.stat("이동속도", "기본")),
 			List.of(
-					new SkillInfo("좌클릭", "피스키퍼", null, "minecraft:crossbow",
+					new SkillInfo("LMB", "피스키퍼", null, "minecraft:crossbow",
 							"16칸까지 곧게 날아가는 정밀 사격",
 							List.of(
 									SkillInfo.stat("분류", "히트스캔 · 탄창"),
@@ -88,7 +88,7 @@ public final class Sheriff implements PvpClass {
 									SkillInfo.stat("구르는 동안", "받는 피해 50% 감소"),
 									SkillInfo.stat("리볼버 난사", "탄창 전부 회복"),
 									SkillInfo.stat("재사용 대기시간", "8초")), false),
-					new SkillInfo("F", "섬광 수류탄", Overbreak.id("hud/skill/sheriff_flash"), null,
+					new SkillInfo("E", "섬광 수류탄", Overbreak.id("hud/skill/sheriff_flash"), null,
 							"왼손으로 던져 터뜨려 적을 묶음",
 							List.of(
 									SkillInfo.stat("분류", "투사체 · 광역 · 군중제어 · 이동기 봉인"),
@@ -160,7 +160,7 @@ public final class Sheriff implements PvpClass {
 						.line(" 0.6초 동안 8칸에 남은 탄만큼 · 발당 30. 쿨타임 없음 (탄창을 씁니다)", ChatFormatting.GRAY).blank()
 						.bold("[웅크리기] 전술 구르기", ChatFormatting.GOLD)
 						.line(" 누른 방향으로 4칸 · 피해 50% 감소 · 탄창 전부 회복. 쿨타임 8초", ChatFormatting.GRAY).blank()
-						.bold("[F] 섬광 수류탄", ChatFormatting.GOLD)
+						.bold("[E] 섬광 수류탄", ChatFormatting.GOLD)
 						.line(" 6칸 투척 · 반경 3.5칸 25 · 둔화 80% · 이동기 봉인 · 시전 끊기. 쿨타임 10초", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build()));
 		inv.setItem(9, SkillItems.statSheet(Hud.bold("보안관", ChatFormatting.GOLD), SkillItems.lore()

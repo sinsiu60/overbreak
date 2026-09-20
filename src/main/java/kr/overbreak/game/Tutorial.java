@@ -170,18 +170,18 @@ public final class Tutorial {
 				.say("워리어는 맞은 만큼 죽는 규격이 아니다. 벤 만큼 사는 규격이다."));
 		script(18, new Script()
 				.sharp("우클릭 - 살육.")
-				.say("0.7초간 기를 모은 뒤 주위 3.5칸을 쓸어 벤다. 피해 50, 출혈 2스택.")
+				.say("0.7초간 기를 모은 뒤 주위 4.5칸을 쓸어 벤다. 피해 80, 출혈 2스택.")
 				.say("맞힌 적 한 명당 체력 35를 되찾는다. 그걸 보라고 다시 네 피를 덜었다.")
 				.say("표적에게 직접 써 봐라."));
 		script(19, new Script()
 				.sharp("웅크리기 - 광란의 포효.")
 				.say("이건 표적을 겨누는 규격이 아니다. 네 자신을 태우는 규격이다.")
-				.say("5초 동안 이동속도가 50%, 공격력이 30% 오른다. 스킬 피해까지 함께.")
+				.say("5초 동안 이동속도가 30%, 공격력이 15% 오른다. 평타와 스킬 모두.")
 				.say("덤으로 주위 3칸의 적은 2초간 발이 묶인다. 붙어서 켜라.")
 				.say("지금 한 번 켜 봐라."));
 		script(20, new Script()
-				.sharp("F - 피의 사슬.")
-				.say("전방 7칸으로 사슬을 던진다. 처음 걸린 자는 네 발밑까지 끌려온다.")
+				.sharp("E - 피의 사슬.")
+				.say("전방 15칸으로 사슬을 던진다. 처음 걸린 자는 네 발밑까지 끌려온다.")
 				.say("도망치는 자를 붙잡고, 뒤에 숨은 자를 앞으로 꺼내는 규격이다.")
 				.say("표적을 걸어서 끌어와라. 던지는 것만으로는 끝이 아니다."));
 		script(21, new Script()
@@ -556,7 +556,7 @@ public final class Tutorial {
 			case CHAIN -> {
 				unlocked(p);
 				prof.setCooldown("wr_chain", 0);
-				point(p, r, TutorialCuePayload.P_SKILL3, "F");
+				point(p, r, TutorialCuePayload.P_SKILL3, "E");
 				talk(r, 20, 0);
 			}
 			case ULT -> {
@@ -690,7 +690,7 @@ public final class Tutorial {
 			case BASIC -> progress("좌클릭으로 표적 타격", Math.min(5, Math.max(0, r.n)), 5);
 			case SLAY -> key("우클릭", "살육", ChatFormatting.RED);
 			case FURY -> key("웅크리기", "광란의 포효", ChatFormatting.RED);
-			case CHAIN -> Component.empty().append(Hud.text("F - ", ChatFormatting.GRAY)).append(Hud.bold("피의 사슬", ChatFormatting.RED))
+			case CHAIN -> Component.empty().append(Hud.text("E - ", ChatFormatting.GRAY)).append(Hud.bold("피의 사슬", ChatFormatting.RED))
 					.append(Hud.text("로 표적을 ", ChatFormatting.GRAY)).append(Hud.bold("끌어와라", ChatFormatting.WHITE));
 			case ULT -> key("Q", "광란의 처형장", ChatFormatting.GOLD);
 			case INFO -> Component.empty().append(Hud.bold("F8", ChatFormatting.AQUA)).append(Hud.text(" - 규격 정보 열기", ChatFormatting.GRAY));

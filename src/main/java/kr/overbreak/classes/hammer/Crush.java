@@ -24,7 +24,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * [F] 중력 파쇄 — 데이터팩 skill/crush/* 대응.
+ * [E] 중력 파쇄 — 데이터팩 skill/crush/* 대응.
  *
  *   선동작 0.5초(10틱): 망치를 들어 올렸다가 내려찍음. 정신집중이 아님 (이동 · 평타 자유, 기절당해도 그대로 발동)
  *     바닥 표시: 반경 4칸 금색 고정 테두리 + 4 → 0.4칸으로 조여드는 보라색 고리 (= 남은 시간)

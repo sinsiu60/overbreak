@@ -21,42 +21,42 @@ public final class HudLayouts {
 			"thunder", new Layout(List.of(
 					new SlotDef(icon("thunder_step"), "RMB"),
 					new SlotDef(icon("thunder_field"), "SHIFT"),
-					new SlotDef(icon("thunder_smite"), "F")),
+					new SlotDef(icon("thunder_smite"), "E")),
 					icon("thunder_ult"), 0xFF5AD8FF),
 			"shade", new Layout(List.of(
 					new SlotDef(icon("shade_rend"), "RMB"),
 					new SlotDef(icon("shade_evade"), "SHIFT"),
-					new SlotDef(icon("shade_kunai"), "F")),
+					new SlotDef(icon("shade_kunai"), "E")),
 					icon("shade_ult"), 0xFF9B6BFF),
 			"sheriff", new Layout(List.of(
 					new SlotDef(icon("sheriff_fan"), "RMB"),
 					new SlotDef(icon("sheriff_roll"), "SHIFT"),
-					new SlotDef(icon("sheriff_flash"), "F")),
+					new SlotDef(icon("sheriff_flash"), "E")),
 					icon("sheriff_ult"), 0xFFE8B04A),
 			"valkyrie", new Layout(List.of(
 					new SlotDef(icon("valkyrie_rocket"), "RMB"),
 					new SlotDef(icon("valkyrie_spring"), "SHIFT"),
-					new SlotDef(icon("valkyrie_overheat"), "F")),
+					new SlotDef(icon("valkyrie_overheat"), "E")),
 					icon("valkyrie_ult"), 0xFFFFD24A),
 			"ironfist", new Layout(List.of(
 					new SlotDef(icon("ironfist_punch"), "RMB"),
 					new SlotDef(icon("ironfist_block"), "SHIFT"),
-					new SlotDef(icon("ironfist_slam"), "F")),
+					new SlotDef(icon("ironfist_slam"), "E")),
 					icon("ironfist_ult"), 0xFF5AB4FF),
 			"hammer_knight", new Layout(List.of(
 					new SlotDef(icon("hammer_smash"), "RMB"),
 					new SlotDef(icon("hammer_charge"), "SHIFT"),
-					new SlotDef(icon("hammer_crush"), "F")),
+					new SlotDef(icon("hammer_crush"), "E")),
 					icon("hammer_ult"), 0xFFFFC23A),
 			"brute", new Layout(List.of(
 					new SlotDef(icon("brute_blow"), "RMB"),
 					new SlotDef(icon("brute_whirl"), "SHIFT"),
-					new SlotDef(icon("brute_regroup"), "F")),
+					new SlotDef(icon("brute_regroup"), "E")),
 					icon("brute_ult"), 0xFFFFA24A),
 			"warrior", new Layout(List.of(
 					new SlotDef(icon("warrior_slay"), "RMB"),
 					new SlotDef(icon("warrior_fury"), "SHIFT"),
-					new SlotDef(icon("warrior_chain"), "F")),
+					new SlotDef(icon("warrior_chain"), "E")),
 					icon("warrior_ult"), 0xFFFF5A4A));
 
 	private HudLayouts() {}

@@ -144,7 +144,7 @@ public final class Brute implements PvpClass {
 				.line(" 투기          (패시브)", ChatFormatting.GOLD)
 				.line(" 강타          (우클릭)", ChatFormatting.GOLD)
 				.line(" 돌개바람      (웅크리기)", ChatFormatting.GOLD)
-				.line(" 전열 재정비  (손 바꾸기 F)", ChatFormatting.GREEN)
+				.line(" 전열 재정비  (E)", ChatFormatting.GREEN)
 				.line(" 무쌍          (궁극기 · 버리기 Q)", ChatFormatting.GOLD).blank()
 				.bold("궁극기 게이지", ChatFormatting.WHITE)
 				.line(" 피해 10당 +2%", ChatFormatting.GRAY)
@@ -167,7 +167,7 @@ public final class Brute implements PvpClass {
 						.bold("[웅크리기] 돌개바람", ChatFormatting.GOLD)
 						.line(" 1초간 주위 3.5칸을 0.2초마다 15 (전부 75).", ChatFormatting.GRAY)
 						.line(" 도는 동안 이동속도 +30% · 받는 피해 -30% · 저지불가. 쿨 8초", ChatFormatting.GRAY).blank()
-						.bold("[F] 전열 재정비", ChatFormatting.GREEN)
+						.bold("[E] 전열 재정비", ChatFormatting.GREEN)
 						.line(" 1초 채널링으로 체력 60 회복 + 투기 5스택.", ChatFormatting.GRAY)
 						.line(" 그동안 받는 피해 -40%. 기절하면 끊깁니다. 쿨 12초", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build());
@@ -351,7 +351,7 @@ public final class Brute implements PvpClass {
 									SkillInfo.stat("스택당 받는 피해", "-2% (최대 -20%)"),
 									SkillInfo.stat("스택당 이동속도", "+1% (최대 +10%)"),
 									SkillInfo.stat("표시", "조준점 아래 칸")), false),
-					new SkillInfo("좌클릭", "대검 휩쓸기", null, "minecraft:netherite_sword",
+					new SkillInfo("LMB", "대검 휩쓸기", null, "minecraft:netherite_sword",
 							"앞의 넓은 범위를 베어 여러 적 공격",
 							List.of(
 									SkillInfo.stat("분류", "근접 · 광역"),
@@ -382,7 +382,7 @@ public final class Brute implements PvpClass {
 									SkillInfo.stat("이동속도", "+30% (휘돌며 파고듦)"),
 									SkillInfo.stat("적중 시", "벨 때마다 투기 1스택"),
 									SkillInfo.stat("재사용 대기시간", "8초")), false),
-					new SkillInfo("F", "전열 재정비", Overbreak.id("hud/skill/brute_regroup"), null,
+					new SkillInfo("E", "전열 재정비", Overbreak.id("hud/skill/brute_regroup"), null,
 							"숨을 골라 체력을 되돌림",
 							List.of(
 									SkillInfo.stat("분류", "회복 · 채널링"),

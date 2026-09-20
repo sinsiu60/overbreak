@@ -21,7 +21,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /**
- * [F] 전열 재정비 — 숨을 고르며 상처를 눌러 닫습니다.
+ * [E] 전열 재정비 — 숨을 고르며 상처를 눌러 닫습니다.
  *
  *   {@value #DURATION} (1/20초 단위 = 1초) 동안 채널링. 걸을 수는 있지만 이동속도 -30%, 평타 · 다른 스킬 불가
  *   숨을 고르는 동안 받는 피해 {@value #GUARD_PERCENT}% 감소 — 맞으면서도 버틸 수 있게 (0.1f)

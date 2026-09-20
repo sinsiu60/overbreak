@@ -42,7 +42,7 @@ public interface PvpClass {
 	/** 웅크리기(누르는 순간) = 액티브 2 */
 	default void secondary(ServerPlayer p) {}
 
-	/** 손 바꾸기 F = 액티브 3 */
+	/** 인벤토리 키 E = 액티브 3 (모드가 없는 클라이언트는 손 바꾸기 F) */
 	default void tertiary(ServerPlayer p) {}
 
 	/** 아이템 버리기 Q = 궁극기 (게이지 100% 일 때만 불립니다) */

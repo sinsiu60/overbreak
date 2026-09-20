@@ -30,7 +30,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * [F] 지진 강타 — 데이터팩 skill/slam/* 대응 (체력 10배 기준).
+ * [E] 지진 강타 — 데이터팩 skill/slam/* 대응 (체력 10배 기준).
  *
  *   도약: 조준 방향(피치 포함)으로 속도를 한 번만 주고 나머지는 중력 (포물선). 땅에서 쓰면 반드시 떠오름
  *     시간 제한 없이 착지까지. 그동안 평타 · 스킬 불가. 발사 직후 6틱은 착지로 보지 않음

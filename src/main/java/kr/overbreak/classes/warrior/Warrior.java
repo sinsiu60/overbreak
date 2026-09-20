@@ -122,7 +122,7 @@ public final class Warrior implements PvpClass {
 				.line(" 피의 갈망    (패시브)", ChatFormatting.DARK_RED)
 				.line(" 살육          (우클릭)", ChatFormatting.RED)
 				.line(" 광란의 포효  (웅크리기)", ChatFormatting.RED)
-				.line(" 피의 사슬    (손 바꾸기 F)", ChatFormatting.RED)
+				.line(" 피의 사슬    (E)", ChatFormatting.RED)
 				.line(" 광란의 처형장  (궁극기 · 버리기 Q)", ChatFormatting.GOLD).blank()
 				.bold("궁극기 게이지", ChatFormatting.WHITE)
 				.line(" 피해 7당 +2%, 맵 에너지 획득 시 +25%", ChatFormatting.GRAY)
@@ -254,7 +254,7 @@ public final class Warrior implements PvpClass {
 									SkillInfo.stat("폭발 피해", "50"),
 									SkillInfo.stat("폭발 시 회복", "체력 50"),
 									SkillInfo.stat("폭발 시 살육", "쿨타임 2초 감소")), false),
-					new SkillInfo("좌클릭", "도끼 베기", null, "minecraft:iron_axe",
+					new SkillInfo("LMB", "도끼 베기", null, "minecraft:iron_axe",
 							"앞의 넓은 범위를 베어 여러 적 공격",
 							List.of(
 									SkillInfo.stat("분류", "근접 · 광역"),
@@ -285,7 +285,7 @@ public final class Warrior implements PvpClass {
 									SkillInfo.stat("이동속도", "+30%"),
 									SkillInfo.stat("공격력", "+15% (평타 · 스킬 모두)"),
 									SkillInfo.stat("재사용 대기시간", "10초")), false),
-					new SkillInfo("F", "피의 사슬", Overbreak.id("hud/skill/warrior_chain"), null,
+					new SkillInfo("E", "피의 사슬", Overbreak.id("hud/skill/warrior_chain"), null,
 							"사슬을 돌리다 던져 적을 끌어옴",
 							List.of(
 									SkillInfo.stat("분류", "투사체 · 끌어오기 · 군중제어"),

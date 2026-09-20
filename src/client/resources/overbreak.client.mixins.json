@@ -19,6 +19,7 @@
 		"LocalPlayerSprintMixin",
 		"LocalPlayerSwingMixin",
 		"MinecraftAttackMixin",
+		"GuiInventoryMixin",
 		"MinecraftGlowMixin",
 		"PlayerModelMixin",
 		"MinecraftTickRateMixin",

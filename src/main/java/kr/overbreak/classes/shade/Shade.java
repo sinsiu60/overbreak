@@ -150,7 +150,7 @@ public final class Shade implements PvpClass {
 						.line(" 7.5칸 돌진하며 지나간 적에게 30 · 낙인. 처치하면 초기화. 쿨타임 8초", ChatFormatting.GRAY).blank()
 						.bold("[웅크리기] 잔영 회피", ChatFormatting.DARK_PURPLE)
 						.line(" 0.7초 피해 무효. 그동안 때린 적의 등 뒤로 이동 · 낙인 · 가르기 초기화. 쿨타임 10초", ChatFormatting.GRAY).blank()
-						.bold("[F] 그림자 표창", ChatFormatting.DARK_PURPLE)
+						.bold("[E] 그림자 표창", ChatFormatting.DARK_PURPLE)
 						.line(" 16칸 표창 30 (머리 60) · 둔화 · 낙인. 3초 안에 다시 F = 그 적 등 뒤로. 쿨타임 8초", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build());
 		s.set(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
@@ -383,7 +383,7 @@ public final class Shade implements PvpClass {
 									SkillInfo.stat("지속", "4초"),
 									SkillInfo.stat("터뜨리기", "낙인 찍힌 적을 평타로 벰"),
 									SkillInfo.stat("추가 피해", "30 (넉백 없음)")), false),
-					new SkillInfo("좌클릭", "그림자 베기", null, "minecraft:netherite_sword",
+					new SkillInfo("LMB", "그림자 베기", null, "minecraft:netherite_sword",
 							"앞의 좁은 부채꼴을 빠르게 벰",
 							List.of(
 									SkillInfo.stat("분류", "근접 · 광역"),
@@ -413,7 +413,7 @@ public final class Shade implements PvpClass {
 									SkillInfo.stat("반격 뒤", "0.3초 더 피해 무효"),
 									SkillInfo.stat("군중 제어", "막지 못함"),
 									SkillInfo.stat("재사용 대기시간", "10초")), false),
-					new SkillInfo("F", "그림자 표창", Overbreak.id("hud/skill/shade_kunai"), null,
+					new SkillInfo("E", "그림자 표창", Overbreak.id("hud/skill/shade_kunai"), null,
 							"표창을 꽂고, 다시 누르면 그 적의 등 뒤로",
 							List.of(
 									SkillInfo.stat("분류", "투사체 · 군중제어 · 이동기"),

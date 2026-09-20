@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * [F] 과열 분사 — 데이터팩 skill/overheat/* 대응 (체력 10배 기준).
+ * [E] 과열 분사 — 데이터팩 skill/overheat/* 대응 (체력 10배 기준).
  *
  *   1초 동안 2틱마다 한 발, 모두 10발. 매 발 그 순간의 조준 방향 60도 · 5칸 부채꼴 전원에게
  *   발당 8.5 (다 맞으면 85) + 1.5초 40% 둔화. 넉백 없음

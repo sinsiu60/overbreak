@@ -3,6 +3,7 @@ package kr.overbreak.client.input;
 import kr.overbreak.net.InputModePayload;
 import kr.overbreak.net.LeftClickPayload;
 import kr.overbreak.net.RightHoldPayload;
+import kr.overbreak.net.TertiaryPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 
@@ -56,6 +57,13 @@ public final class InputMode {
 
 	public static boolean active() {
 		return active;
+	}
+
+	/** 액티브3 (인벤토리 키 — 기본 E). 전장에서는 인벤토리가 열리지 않고 이 신호만 갑니다. */
+	public static void tertiary() {
+		if (ClientPlayNetworking.canSend(TertiaryPayload.TYPE)) {
+			ClientPlayNetworking.send(TertiaryPayload.INSTANCE);
+		}
 	}
 
 	/** 누른 순간. */

@@ -32,7 +32,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * [F] 피의 사슬 — 데이터팩 skill/chain/* 대응.
+ * [E] 피의 사슬 — 데이터팩 skill/chain/* 대응.
  *
  *   준비: 0.4초(8틱) 동안 왼손으로 사슬을 돌림 (정신집중 — 다른 스킬 · 평타 불가, 기절 · 에어본이면 끊김)
  *         갈고리가 왼손 옆 세로 원을 점점 빠르게 돔 ({@link ChainSpin})

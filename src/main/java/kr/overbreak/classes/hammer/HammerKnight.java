@@ -62,7 +62,7 @@ public final class HammerKnight implements PvpClass {
 									SkillInfo.stat("CC 연장", "0.5초"),
 									SkillInfo.stat("발동 횟수", "기절 한 번에 한 번"),
 									SkillInfo.stat("발동 경로", "평타 · 돌진 충격 · 대지 진동파")), false),
-					new SkillInfo("좌클릭", "철퇴 휘두르기", null, "minecraft:mace",
+					new SkillInfo("LMB", "철퇴 휘두르기", null, "minecraft:mace",
 							"앞의 넓은 범위를 내리쳐 여러 적 공격",
 							List.of(
 									SkillInfo.stat("분류", "근접 · 광역"),
@@ -90,7 +90,7 @@ public final class HammerKnight implements PvpClass {
 									SkillInfo.stat("피해", "20 (대상당 1회)"),
 									SkillInfo.stat("둔화", "50% · 1.5초"),
 									SkillInfo.stat("재사용 대기시간", "7초")), false),
-					new SkillInfo("F", "중력 파쇄", Overbreak.id("hud/skill/hammer_crush"), null,
+					new SkillInfo("E", "중력 파쇄", Overbreak.id("hud/skill/hammer_crush"), null,
 							"주위 적을 발밑으로 끌어오고 균열 생성",
 							List.of(
 									SkillInfo.stat("분류", "광역 · 군중제어 · 이동기 봉인"),

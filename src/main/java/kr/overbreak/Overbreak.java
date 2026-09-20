@@ -33,6 +33,7 @@ public final class Overbreak implements ModInitializer {
 		LeftClickPayload.init();
 		kr.overbreak.net.RightHoldPayload.init();
 		kr.overbreak.net.ReloadPayload.init();
+		kr.overbreak.net.TertiaryPayload.init();
 		kr.overbreak.net.SkillInputPayload.init();
 		kr.overbreak.net.DeadeyePayload.init();
 		kr.overbreak.net.TracerPayload.init();

@@ -33,7 +33,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * [F] 섬광 수류탄 — 데이터팩 skill/sheriff/flash/* 대응 (체력 10배 기준).
+ * [E] 섬광 수류탄 — 데이터팩 skill/sheriff/flash/* 대응 (체력 10배 기준).
  *
  *   왼손에서 조준 방향으로 곧게 던짐 (포물선 없음) — 틱당 0.75칸 · 8틱 = 6칸
  *   벽 · 적 몸(1.2칸)에 닿거나 6칸을 다 날면 터짐. 던진 본인은 안 맞음

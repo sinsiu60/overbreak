@@ -22,7 +22,8 @@ import net.minecraft.world.InteractionResult;
  * 튜토리얼 게이팅도 이 한 곳에 붙습니다.
  *
  * 데이터팩과 달라진 점:
- *   F — 비워 둔 왼손을 감시하지 않고 손 바꾸기 패킷을 가로채 취소합니다. 아이템이 움직이지 않습니다.
+ *   E — 모드 클라이언트는 인벤토리가 열리는 대신 {@link kr.overbreak.net.TertiaryPayload} 를 보냅니다.
+ *       모드가 없는 클라이언트를 위해 손 바꾸기(F) 패킷을 가로채는 길도 그대로 둡니다. 아이템은 움직이지 않습니다.
  *   Q — 떨어진 아이템을 지우고 복구하지 않고 버리기 패킷을 취소합니다. 아이템이 애초에 안 떨어집니다.
  */
 public final class InputRouter {
@@ -139,15 +140,29 @@ public final class InputRouter {
 		return false;
 	}
 
-	/** @return true 면 바닐라 손 바꾸기를 취소합니다 */
+	/** 액티브3 키 (모드 클라이언트의 {@link kr.overbreak.net.TertiaryPayload} — 기본 E). */
+	public static void onTertiary(ServerPlayer p) {
+		PlayerProfile prof = Attachments.profile(p);
+		if (prof.pvpClass == null) {
+			return;
+		}
+		p.resetLastActionTime();
+		if (!prof.pvpClass.intercept(p, Slot.TERTIARY) && pass(p, Slot.TERTIARY)) {
+			prof.pvpClass.tertiary(p);
+		}
+	}
+
+	/**
+	 * 손 바꾸기(F) — 모드가 없는 클라이언트를 위한 옛 길. 모드 클라이언트는 E 를 씁니다.
+	 *
+	 * @return true 면 바닐라 손 바꾸기를 취소합니다
+	 */
 	public static boolean onSwapHands(ServerPlayer p) {
 		PlayerProfile prof = Attachments.profile(p);
 		if (prof.pvpClass == null) {
 			return false;
 		}
-		if (!prof.pvpClass.intercept(p, Slot.TERTIARY) && pass(p, Slot.TERTIARY)) {
-			prof.pvpClass.tertiary(p);
-		}
+		onTertiary(p);
 		resync(p);
 		return true;
 	}
