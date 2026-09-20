@@ -136,7 +136,7 @@ public final class BulletTrails {
 					continue;
 				}
 				if (gunStyle(t.style)) {
-					if (t.style == TracerPayload.GUNSLINGER) {
+					if (t.style == TracerPayload.GUNSLINGER || t.style == TracerPayload.GUNSLINGER_L) {
 						// 굴적의 깃털은 하늘색 권총입니다
 						drawValkyrie(p, buffer, t.from, t.to, cam, age, 0x7FD4FF, 0x4FB8FF, 0xEAF9FF);
 					} else {
@@ -206,9 +206,12 @@ public final class BulletTrails {
 		if (style == TracerPayload.SHERIFF) {
 			return cam.add(forward.scale(0.9)).add(left.scale(-0.22)).add(up.scale(-0.17));
 		}
-		if (style == TracerPayload.GUNSLINGER) {
-			// 쌀권총은 좌우로 번갈아 나가지만, 화면 속 불꽃은 가운데 조금 아래에서 다 받습니다
-			return cam.add(forward.scale(0.9)).add(up.scale(-0.16));
+		if (style == TracerPayload.GUNSLINGER || style == TracerPayload.GUNSLINGER_L) {
+			// 쌀권총은 양손에 한 자루씩이라 총구도 화면 좌우로 나뉘어 있습니다.
+			// left 는 카메라 기준 왼쪽이므로, 오른손 총은 -, 왼손 총은 + 입니다.
+			// 쓰는 순간은 반동으로 총구가 올라가 있어, 그 자리에 맞춥니다
+			double side = style == TracerPayload.GUNSLINGER_L ? 0.50 : -0.50;
+			return cam.add(forward.scale(0.9)).add(left.scale(side)).add(up.scale(-0.14));
 		}
 		if (style == TracerPayload.LIGHTNING || style == TracerPayload.LIGHTNING_BIG) {
 			// 뇌신의 창 끝 (오른손, 위로 세운 창의 날)
@@ -445,7 +448,8 @@ public final class BulletTrails {
 
 	/** 탄두 궤적 · 총구 화염을 쓰는 총 (발키리 연사 포탑 · 보안관 리볼버). */
 	private static boolean gunStyle(int style) {
-		return style == TracerPayload.VALKYRIE || style == TracerPayload.SHERIFF || style == TracerPayload.GUNSLINGER;
+		return style == TracerPayload.VALKYRIE || style == TracerPayload.SHERIFF
+				|| style == TracerPayload.GUNSLINGER || style == TracerPayload.GUNSLINGER_L;
 	}
 
 	private static Vector3f toF(Vec3 v) {

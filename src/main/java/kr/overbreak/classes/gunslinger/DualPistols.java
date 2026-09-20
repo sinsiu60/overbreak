@@ -75,7 +75,7 @@ public final class DualPistols {
 		double side = left ? 0.30 : -0.30;
 		st.leftMuzzle = !st.leftMuzzle;
 		Vec3 muzzle = Local.offset(eye, yp[0], yp[1], side, -0.20, 0.42);
-		Tracer.spawn(level, p, muzzle, hit.end(), Tracer.GUNSLINGER);
+		Tracer.spawn(level, p, muzzle, hit.end(), left ? Tracer.GUNSLINGER_L : Tracer.GUNSLINGER);
 		// 쓴 쪽 손만 반동이 나가도록 번호를 나눕니다 (1인칭 · 3인칭 공통)
 		SkillAnimPayload.broadcast(p, left ? SkillAnimPayload.GS_SHOT_L : SkillAnimPayload.GS_SHOT, -1);
 		Fx.sound(p, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.34F, 2.0F);
