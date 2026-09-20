@@ -30,7 +30,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -87,7 +86,6 @@ public final class Gunslinger implements PvpClass {
 									SkillInfo.stat("사거리", "16칸 · 거리 감소 없음"),
 									SkillInfo.stat("사격 속도", "0.2초에 1발"),
 									SkillInfo.stat("탄창", "18발 · R 또는 다 쓰면 1.25초 재장전"),
-									SkillInfo.stat("공중 반동", "조준 반대 방향으로 약하게 밀려남"),
 									SkillInfo.stat("넉백", "없음")), false),
 					new SkillInfo("RMB", "반동 도약", Overbreak.id("hud/skill/gunslinger_boost"), null,
 							"조준한 곳에 충격탄을 쏘고 그 반동으로 정반대로 날아감",
@@ -177,7 +175,7 @@ public final class Gunslinger implements PvpClass {
 						.line("직업 · 궤적의 깃털", ChatFormatting.DARK_GRAY).blank()
 						.bold("[LMB] 쌍권총 연사", ChatFormatting.AQUA)
 						.line(" 16칸 히트스캔 · 발당 20 · 0.2초에 1발. 탄창 18발 (R 재장전 1.25초)", ChatFormatting.GRAY)
-						.line(" 공중에서 맞히면 치명타 150% (30) · 공중에서 쏘면 반대로 밀려납니다.", ChatFormatting.GRAY).blank()
+						.line(" 공중에서 맞히면 치명타 150% (30).", ChatFormatting.GRAY).blank()
 						.bold("[RMB] 반동 도약", ChatFormatting.AQUA)
 						.line(" 조준한 곳에 반경 3칸 25 + 넉백, 그 반동으로 정반대로 약 7칸. 쿨타임 6초", ChatFormatting.GRAY).blank()
 						.bold("[웅크리기] 곡예 난사", ChatFormatting.AQUA)
@@ -326,21 +324,6 @@ public final class Gunslinger implements PvpClass {
 			return false;
 		}
 		return source.is(DamageTypeTags.IS_FALL) || st.iframes();
-	}
-
-	/**
-	 * 지금 속도에 한 번 더 얹는 힘 (바닐라 addVelocity 와 같은 뜻).
-	 * {@link kr.overbreak.combat.Motion#launch} 는 속도를 통째로 갈아 끼우므로, 쏘면서 밀리는 약한 반동은 이쪽을 씁니다.
-	 *
-	 * @param power 시간 단위당 칸
-	 */
-	public static void impulse(ServerPlayer p, Vec3 dir, double power) {
-		if (power <= 0 || dir.lengthSqr() < 1.0E-8) {
-			return;
-		}
-		Vec3 add = dir.normalize().scale(power * Ticks.step());
-		p.setDeltaMovement(p.getDeltaMovement().add(add));
-		p.hurtMarked = true;
 	}
 
 	public static GunslingerState state(ServerPlayer p) {

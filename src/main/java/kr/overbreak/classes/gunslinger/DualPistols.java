@@ -23,7 +23,6 @@ import net.minecraft.world.phys.Vec3;
  *
  *   16칸 히트스캔 · 발당 20 · 0.2초에 한 발. 오른손 총구 → 왼손 총구를 번갈아 씁니다
  *   공중에서 맞히면 무조건 치명타 150% (30) — 그리고 반동 도약 · 사선 앵커 쿨타임이 0.5초씩 깎입니다
- *   공중에서 쏘면 조준 반대 방향으로 약한 반동 벡터가 실립니다 (쏘면서 밀려나는 3차원 기동)
  *   탄창 18발 · R 또는 다 쓰면 1.25초 재장전 (재장전 중에는 다른 행동이 잠깁니다)
  */
 public final class DualPistols {
@@ -35,8 +34,6 @@ public final class DualPistols {
 	public static final int MAG = 18;
 	/** 재장전 (시간 단위 · 1.25초 = 25틱 @20). */
 	public static final int RELOAD = 25;
-	/** 공중 사격 반동 (시간 단위당 칸). 약하게 — 쏘는 것만으로 날아다니지는 못합니다. */
-	static final double SHOT_KICK = 0.11;
 
 	private DualPistols() {}
 
@@ -52,7 +49,7 @@ public final class DualPistols {
 			startReload(p, st);
 			return;
 		}
-		shoot(p, st, Aim.direction(p), DAMAGE_100, true);
+		shoot(p, st, Aim.direction(p), DAMAGE_100);
 		st.shotCd = Ticks.of(GAP);
 		st.ammo--;
 		if (st.ammo <= 0) {
@@ -61,12 +58,14 @@ public final class DualPistols {
 	}
 
 	/**
-	 * 한 발. 곡예 난사도 이 길로 쏩니다 (총구 · 예광탄 · 공중 치명타가 모두 같아야 하므로).
+	 * 한 발 (총구 · 예광탄 · 공중 치명타).
 	 *
-	 * @param kick 공중이면 반동 벡터를 실을 것인가 (곡예 난사는 자기 회전이 있어 싣지 않습니다)
+	 * 쏜 반동으로 밀려나지는 않습니다 — 조준선이 흔들려 평타가 제자리에 꽂히지 않았습니다 (0.2d).
+	 * 뒤로 날아가는 것은 반동 도약(RMB)이 맡습니다.
+	 *
 	 * @return 맞은 대상 (없으면 null)
 	 */
-	static LivingEntity shoot(ServerPlayer p, GunslingerState st, Vec3 dir, int damage100, boolean kick) {
+	static LivingEntity shoot(ServerPlayer p, GunslingerState st, Vec3 dir, int damage100) {
 		ServerLevel level = p.level();
 		Vec3 eye = p.getEyePosition();
 		Hitscan.Hit hit = Hitscan.cast(p, eye, dir, RANGE);
@@ -84,10 +83,6 @@ public final class DualPistols {
 		Fx.particleExcept(level, p, ParticleTypes.SMOKE, muzzle.x, muzzle.y, muzzle.z, 3, 0.04, 0.04, 0.04, 0.01);
 
 		boolean air = AeroDrift.airborne(p);
-		if (air && kick) {
-			// 3차원 반동: 조준한 방향의 정반대로 밀려납니다
-			Gunslinger.impulse(p, dir.scale(-1.0), SHOT_KICK);
-		}
 		LivingEntity victim = hit.target();
 		if (victim != null) {
 			int damage = air ? damage100 * AeroDrift.CRIT_PERCENT / 100 : damage100;

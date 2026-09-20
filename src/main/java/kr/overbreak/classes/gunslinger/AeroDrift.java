@@ -78,10 +78,17 @@ public final class AeroDrift {
 			return;
 		}
 		st.glideT--;
-		if (!st.gliding) {
-			st.gliding = true;
+		st.gliding = true;
+		// 재장전 동안에는 활공 동작을 띄우지 않습니다 — 공중 재장전(1.25초)을 통째로 덧어써 끊어먹었습니다.
+		// 느린 낙하는 그대로 먹히고, 재장전이 끝나면 그때 동작이 들어옵니다.
+		boolean showAnim = st.reloadT <= 0;
+		if (showAnim && !st.glideAnim) {
+			st.glideAnim = true;
 			SkillAnimPayload.broadcast(p, SkillAnimPayload.GS_GLIDE, -1);
 			Fx.sound(p, SoundEvents.BREEZE_IDLE_AIR, SoundSource.PLAYERS, 0.7F, 1.5F);
+		} else if (!showAnim && st.glideAnim) {
+			st.glideAnim = false;
+			SkillAnimPayload.stop(p, SkillAnimPayload.GS_GLIDE);
 		}
 		// 느린 낙하는 1초마다 다시 걸어 두면 충분합니다 (끊기면 바로 다시 떨어짐)
 		p.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, Ticks.of(6), 0, false, false));
@@ -99,6 +106,9 @@ public final class AeroDrift {
 		}
 		st.gliding = false;
 		p.removeEffect(MobEffects.SLOW_FALLING);
-		SkillAnimPayload.stop(p, SkillAnimPayload.GS_GLIDE);
+		if (st.glideAnim) {
+			st.glideAnim = false;
+			SkillAnimPayload.stop(p, SkillAnimPayload.GS_GLIDE);
+		}
 	}
 }

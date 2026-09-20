@@ -15,8 +15,10 @@ public final class GunslingerState {
 
 	/** 활공 남은 틱 (체공 훈풍). 땅에 닿으면 다시 가득 찹니다. */
 	public int glideT = AeroDrift.GLIDE_TICKS_INIT;
-	/** 지금 활공 중인가 (웅크리기 + 공중). */
+	/** 지금 활공 중인가 (공중 + 점프 키). */
 	public boolean gliding;
+	/** 활공 동작을 보여 주고 있는가 — 재장전 중에는 띄워도 동작을 꺼 둡니다. */
+	public boolean glideAnim;
 	/** 발이 땅에 닿아 있었는가 (직전 틱) — 착지 순간을 잡습니다. */
 	public boolean wasGround = true;
 

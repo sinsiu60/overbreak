@@ -327,6 +327,27 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
+	/** 재장전 중에는 활공 동작을 띄우지 않습니다 — 공중 재장전 동작을 덮어써 끊어먹었습니다 (0.2d). */
+	@GameTest(maxTicks = 200)
+	public void glideAnimWaitsForReload(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 3, 1.5), 0.0F);
+		GunslingerState st = Gunslinger.state(p);
+		p.setOnGround(false);
+		Attachments.profile(p).jumpDown = true;
+		st.ammo = 3;
+		gs().reload(p);
+		classTicks(p, 4);
+		h.assertTrue(st.gliding, "재장전 중에도 활공(느린 낙하)은 먹힘");
+		h.assertTrue(!st.glideAnim, "재장전 중에는 활공 동작을 띄우지 않음");
+		// 재장전이 끝나면 그때 동작이 들어옵니다
+		classTicks(p, 25);
+		h.assertTrue(st.reloadT == 0, "재장전 끝");
+		h.assertTrue(st.glideAnim, "재장전이 끝나면 활공 동작이 들어옴");
+		Attachments.profile(p).jumpDown = false;
+		Classes.clear(p);
+		h.succeed();
+	}
+
 	@Override
 	public void invokeTestMethod(GameTestHelper h, Method method) throws ReflectiveOperationException {
 		method.invoke(this, h);
