@@ -125,6 +125,8 @@ public final class FirstPersonAnim {
 	/**
 	 * 투귀 강화 포션 (왼손) — 병을 입으로 올려 들이켰다가 발밑으로 내던집니다 (0.2a).
 	 * {시각, x, y, z, 가로축 회전, 세로축 회전, 화면축 회전, 크기}
+	 *
+	 * 팔은 그리지 않습니다 (0.2b) — 바닐라 왼팔 자리가 병에 통째로 가려 손만 어색하게 비어져 나왔습니다.
 	 */
 	private static final float[][] BR_POTION_OFF = {
 			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
@@ -159,14 +161,6 @@ public final class FirstPersonAnim {
 	 *   오른손: 바닐라 빈손 자리보다 조금 뒤 · 아래 — 뒤쪽 손잡이를 쥠
 	 *   왼손  : 화면 가운데 아래로 옮겨 앞쪽 총열 아래를 받침 (팔이 오른쪽 위로 뻗어 총열에 닿음)
 	 */
-	/**
-	 * 포션을 그린 자리에서 그 병을 쥔 팔을 그릴 자리로 (0.2a).
-	 * 병 모델 기준점은 바닥 가운데라, 팔은 그보다 조금 아래 · 바깥에서 올라옵니다.
-	 */
-	public static void potionGrip(PoseStack pose, int invert) {
-		pose.translate(invert * 0.04F, -0.68F, -0.04F);
-	}
-
 	public static void gunGrip(PoseStack pose, int invert, boolean support) {
 		pose.translate(-invert * 0.56F, 0.52F, 0.72F);
 		if (!support) {
@@ -237,12 +231,6 @@ public final class FirstPersonAnim {
 					.translate(-invert * MAG_HOLD.x, -MAG_HOLD.y, -MAG_HOLD.z);
 		}
 		return new GunHands(arm, magazine);
-	}
-
-	/** 지금 왼손이 강화 포션을 들이켜는 중인가 (팔까지 함께 그립니다). */
-	public static boolean potionActive() {
-		SkillAnims.Play play = offhandPlay();
-		return play != null && play.anim == SkillAnimPayload.BR_REGROUP;
 	}
 
 	/** 왼손 아이템(방패 · 철권포 · 강화 포션) 애니메이션 중인가. */

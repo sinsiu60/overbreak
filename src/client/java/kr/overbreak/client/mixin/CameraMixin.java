@@ -38,9 +38,7 @@ public abstract class CameraMixin {
 		if (!TpsCamera.active(Minecraft.getInstance().options.getCameraType()) || this.level == null || this.entity == null) {
 			return original.call(self, cameraDist);
 		}
-		// 파멸의 일격은 1인칭에서 3인칭으로 벌어졌다가 다시 붙습니다 (0.2a)
-		float zoom = kr.overbreak.client.camera.DoomCamera.zoom();
-		float side = TpsCamera.SIDE * cameraDist / 4.0F * zoom;
+		float side = TpsCamera.SIDE * cameraDist / 4.0F;
 		Vec3 right = new Vec3(-this.left.x(), -this.left.y(), -this.left.z());
 		Vec3 from = this.position;
 		Vec3 to = from.add(right.scale(side + TpsCamera.WALL_MARGIN));
@@ -50,6 +48,6 @@ public abstract class CameraMixin {
 			allowed = Math.min(side, Math.max(0.0F, (float) hit.getLocation().distanceTo(from) - TpsCamera.WALL_MARGIN));
 		}
 		this.move(0.0F, 0.0F, allowed);
-		return original.call(self, cameraDist * TpsCamera.DISTANCE_RATIO * zoom);
+		return original.call(self, cameraDist * TpsCamera.DISTANCE_RATIO);
 	}
 }

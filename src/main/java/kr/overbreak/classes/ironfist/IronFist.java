@@ -124,7 +124,6 @@ public final class IronFist implements PvpClass {
 									SkillInfo.stat("분류", "이동기 · 광역"),
 									SkillInfo.stat("솟구침 · 조준", "1초 · 최대 3초 (무적)"),
 									SkillInfo.stat("조준", "이동 키로 착탄 원을 끌고 다님 (최대 20칸)"),
-									SkillInfo.stat("시점", "조준 동안 3인칭 · 시야가 착탄 원을 따라감"),
 									SkillInfo.stat("확정", "우클릭 — 벼르고 1초 뒤 낙하"),
 									SkillInfo.stat("범위", "반경 6칸"),
 									SkillInfo.stat("피해", "중심 150 → 가장자리 15"),

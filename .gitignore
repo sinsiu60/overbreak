@@ -40,3 +40,6 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+# eclipse/vscode 가 만드는 하위 프로젝트 출력
+/launcher/bin/

@@ -10,9 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * 화면이 움직이지 않아야 할 때 마우스 회전을 막습니다 (0.2a).
- *
- *   기절 중 · 파멸의 일격으로 조준하는 중 (그때는 시야가 착탄점을 따라갑니다).
+ * 기절하면 화면이 움직이지 않습니다 (0.2a).
  *
  * 기절은 "아무것도 못 하는" 제어기인데 시야만은 자유로우면 맞은 느낌이 흐려집니다.
  * 기절 동안 마우스로 도는 것을 막아, 맞은 자리에 그대로 굳어 있게 합니다.
@@ -25,7 +23,7 @@ public abstract class StunLookMixin {
 		if ((Object) this != Minecraft.getInstance().player) {
 			return;
 		}
-		if (InputMode.active() && (HudState.stunned() || kr.overbreak.client.camera.DoomCamera.holding())) {
+		if (InputMode.active() && HudState.stunned()) {
 			ci.cancel();
 		}
 	}

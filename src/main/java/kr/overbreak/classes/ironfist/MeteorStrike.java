@@ -5,7 +5,6 @@ import kr.overbreak.Overbreak;
 import kr.overbreak.cc.CrowdControl;
 import kr.overbreak.combat.SkillDamage;
 import kr.overbreak.core.Attachments;
-import kr.overbreak.net.DoomAimPayload;
 import kr.overbreak.net.InputModePayload;
 import kr.overbreak.net.SkillAnimPayload;
 import kr.overbreak.skill.Effects;
@@ -46,8 +45,8 @@ import org.jspecify.annotations.Nullable;
  *   2.5단계 벼르기 1초: 확정한 뒤 잠깐 숨을 고르고 (모습이 드러나고, 아래에서 올려다볼 틈이 생깁니다 — 0.2a)
  *   3단계 낙하 4틱: 착탄점으로 내리꽂힘
  *
- * 0.2a: 조준하는 동안 시전자 화면은 강제로 3인칭이 되고 시야가 착탄 원을 따라갑니다 ({@link kr.overbreak.net.DoomAimPayload}).
- * 이동 키가 원을 끄는 방향은 조준을 시작한 순간의 각도로 고정해, 시야가 돌아도 조작이 함께 돌지 않게 했습니다.
+ * 0.2b: 조준 중 시점을 건드리던 것은 되돌렸습니다 — 시야도 이동 키 기준도 0.1a 그대로입니다.
+ * 확정 뒤 1초 벼르는 것만 남습니다.
  *   착탄: 반경 6칸 · 중심 150 에서 가장자리 15 까지 줄어드는 피해 (기절 없음 — 원본과 같음)
  *         흡수 체력 가득(120) · 다음 로켓 펀치 강화
  */
@@ -76,8 +75,6 @@ final class MeteorStrike implements Effects.Active {
 	private Vec3 anchor;
 	private double aimX;
 	private double aimZ;
-	/** 이동 키가 원을 끄는 기준 각도 — 조준을 시작한 순간으로 고정합니다 (시야가 돌아도 조작은 그대로). */
-	private float steerYaw;
 	private Vec3 target;
 	private @Nullable GroundShape disc;
 	private @Nullable GroundShape inner;
@@ -144,7 +141,6 @@ final class MeteorStrike implements Effects.Active {
 							.append(Hud.bold("파멸의 일격  ", ChatFormatting.RED))
 							.append(Hud.text("이동 키로 조준 · 우클릭으로 내리꽂기", ChatFormatting.GRAY)));
 				}
-				DoomAimPayload.send(caster, target);
 				if (--t <= 0) {
 					drop();
 				}
@@ -187,7 +183,6 @@ final class MeteorStrike implements Effects.Active {
 		anchor = caster.position();
 		aimX = anchor.x;
 		aimZ = anchor.z;
-		steerYaw = caster.getYRot();
 		caster.setDeltaMovement(Vec3.ZERO);
 		caster.hurtMarked = true;
 		caster.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, Ticks.of(AIM + 20), 0, false, false));
@@ -208,7 +203,7 @@ final class MeteorStrike implements Effects.Active {
 		if (f == 0.0 && s == 0.0) {
 			return;
 		}
-		double yaw = Math.toRadians(steerYaw);
+		double yaw = Math.toRadians(caster.getYRot());
 		double sin = Math.sin(yaw);
 		double cos = Math.cos(yaw);
 		// 바라보는 방향 = (-sin, cos), 왼쪽 = (cos, sin)
@@ -246,8 +241,6 @@ final class MeteorStrike implements Effects.Active {
 		}
 		stage = 3;
 		t = Ticks.of(BRACE);
-		// 조준이 끝났으니 화면을 돌려줍니다 (떨어지는 것은 직접 보게)
-		DoomAimPayload.stop(caster);
 		caster.removeEffect(MobEffects.INVISIBILITY);
 		Fx.sound(caster, SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2F, 0.6F);
 		Fx.sound(caster, SoundEvents.TRIDENT_RIPTIDE_1, SoundSource.PLAYERS, 0.8F, 0.5F);
@@ -317,7 +310,6 @@ final class MeteorStrike implements Effects.Active {
 
 	private void cleanup() {
 		unhold();
-		DoomAimPayload.stop(caster);
 		Attachments.combatant(caster).casting = false;
 		caster.setNoGravity(false);
 		caster.resetFallDistance();

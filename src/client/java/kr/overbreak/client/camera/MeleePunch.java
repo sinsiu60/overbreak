@@ -10,6 +10,7 @@ import net.minecraft.util.Mth;
  * 근접 타격 화면 반동 (0.2a) — 오버워치처럼, 휘두를 때 화면이 그 방향으로 살짝 기울었다가 돌아옵니다.
  *
  *   베는 방향을 따라 시계 · 반시계로 기울고(Z), 힘을 싣는 느낌으로 아주 조금 숙였다가(X) 풉니다.
+ *   기를 모으는 스킬(살육 · 분쇄 · 강타)은 누른 순간이 아니라 실제로 후려치는 순간에 흔들립니다.
  *   들어갈 때는 두 틱 만에 홱, 풀릴 때는 여섯 틱에 걸쳐 천천히 — 때린 손맛은 남기고 조준은 방해하지 않습니다.
  *
  * 실제 시야각(xRot · yRot)은 건드리지 않고 화면 행렬만 돌리므로 조준점이 가리키는 곳은 그대로입니다.
@@ -17,11 +18,11 @@ import net.minecraft.util.Mth;
  */
 public final class MeleePunch {
 	/** 기울기 (도). */
-	private static final float ROLL = 3.4F;
+	private static final float ROLL = 1.9F;
 	/** 숙임 (도). */
-	private static final float PITCH = 1.5F;
+	private static final float PITCH = 0.85F;
 	/** 세게 치는 스킬은 더 크게. */
-	private static final float HEAVY = 1.9F;
+	private static final float HEAVY = 1.5F;
 	private static final float RISE = 2.0F;
 	private static final float FALL = 6.0F;
 
@@ -46,14 +47,33 @@ public final class MeleePunch {
 		}
 		side = dir;
 		scale = heavy(msg.anim()) ? HEAVY : 1.0F;
-		startedAt = kr.overbreak.client.ClientClock.now();
+		// 기 모으는 스킬은 누른 순간이 아니라 실제로 후려치는 순간에 흔들립니다 (0.2b)
+		startedAt = kr.overbreak.client.ClientClock.now() + windup(msg.anim());
 		power = 1.0F;
+	}
+
+	/**
+	 * 후려치기까지의 선딜레이 (1/20초 단위) — 서버 쪽 기 모으는 시간과 같은 값입니다.
+	 * 살육 {@code Slay.CHARGE} · 분쇄 {@code Smash.CHANNEL} · 강타 {@code HeavyBlow.WINDUP}.
+	 */
+	private static float windup(int anim) {
+		return switch (anim) {
+			case SkillAnimPayload.SLAY -> 14.0F;
+			case SkillAnimPayload.HK_SMASH -> 10.0F;
+			case SkillAnimPayload.BR_BLOW -> 6.0F;
+			default -> 0.0F;
+		};
 	}
 
 	public static void tick() {
 		if (power > 0.0F && kr.overbreak.client.ClientClock.now() - startedAt > RISE + FALL) {
 			power = 0.0F;
 		}
+	}
+
+	/** 기 모으는 동안에는 아직 아무 일도 일어나지 않습니다. */
+	private static boolean waiting(float e) {
+		return e < 0.0F;
 	}
 
 	public static void clear() {
@@ -67,6 +87,9 @@ public final class MeleePunch {
 			return;
 		}
 		float e = (float) (kr.overbreak.client.ClientClock.at(partialTick) - startedAt);
+		if (waiting(e)) {
+			return;
+		}
 		float k = e < RISE ? e / RISE : 1.0F - (e - RISE) / FALL;
 		if (k <= 0.0F) {
 			return;

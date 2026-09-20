@@ -21,8 +21,8 @@ public final class HealScreen {
 	private static final int EDGE = 0x4FD07A;
 	private static final float IN = 3.0F;
 	private static final float OUT = 7.0F;
-	private static final float BASE_ALPHA = 135.0F;
-	private static final float BURST_ALPHA = 115.0F;
+	private static final float BASE_ALPHA = 78.0F;
+	private static final float BURST_ALPHA = 62.0F;
 	/** 들어온 직후 번쩍이는 길이 (틱). */
 	private static final float BURST = 6.0F;
 

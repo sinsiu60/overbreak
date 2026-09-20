@@ -60,9 +60,6 @@ public final class OverbreakClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(HitPayload.TYPE, (payload, context) -> HitMarker.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.HealPayload.TYPE,
 				(payload, context) -> kr.overbreak.client.hud.HealScreen.receive(payload));
-		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.DoomAimPayload.TYPE,
-				(payload, context) -> kr.overbreak.client.camera.DoomCamera.receive(payload));
-		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.camera.DoomCamera::tick);
 		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.HurtPayload.TYPE,
 				(payload, context) -> kr.overbreak.client.hud.DamageFeedback.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.ScorePayload.TYPE,
