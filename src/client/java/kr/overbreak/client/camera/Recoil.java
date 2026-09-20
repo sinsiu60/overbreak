@@ -49,7 +49,7 @@ public final class Recoil {
 			kick(ROCKET);
 		} else if (msg.anim() == SkillAnimPayload.SH_SHOT) {
 			kick(PEACEKEEPER);
-		} else if (msg.anim() == SkillAnimPayload.GS_SHOT) {
+		} else if (msg.anim() == SkillAnimPayload.GS_SHOT || msg.anim() == SkillAnimPayload.GS_SHOT_L) {
 			kick(PISTOL);
 		} else if (msg.anim() == SkillAnimPayload.SH_FAN) {
 			// 리볼버 난사: 한 발마다 3도 위로, 좌우는 번갈아 1도 (익히면 손으로 되잡을 수 있는 정해진 모양)

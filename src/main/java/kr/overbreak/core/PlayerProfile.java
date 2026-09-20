@@ -48,6 +48,8 @@ public final class PlayerProfile {
 	/** 모드 클라이언트가 알려 준 우클릭 상태 (net/RightHoldPayload). rightKnown 이 false 면 사용 패킷 창으로 판단합니다. */
 	public boolean rightDown;
 	public boolean rightKnown;
+	/** 모드 클라이언트가 알려 준 점프 키 상태 (net/JumpHoldPayload). */
+	public boolean jumpDown;
 	public long lastSwingTick = -1000;
 	public long lastBlockHitTick = -1000;
 	/** Q 를 누르면 클라이언트가 팔도 휘두릅니다. 그 스윙을 평타로 치지 않으려고 기록합니다. */

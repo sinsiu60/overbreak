@@ -28,6 +28,8 @@ import net.minecraft.client.renderer.item.properties.conditional.ConditionalItem
 public final class OverbreakClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		// 전장에서는 웅크리기 키가 자세를 낮추지 않습니다 (웅크리기 = 액티븃2 스킬 키)
+		kr.overbreak.core.Crouch.clientCheck = p -> p == net.minecraft.client.Minecraft.getInstance().player && InputMode.active();
 		// 연출 시계 (1/20초 단위) — 다른 모든 클라이언트 틱 처리보다 먼저
 		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.ClientClock::tick);
 		ClientPlayNetworking.registerGlobalReceiver(SkillAnimPayload.TYPE, (payload, context) -> {
@@ -55,6 +57,8 @@ public final class OverbreakClient implements ClientModInitializer {
 		PlayerAnimations.reload(false);
 		ClientTickEvents.END_CLIENT_TICK.register(PlayerAnimations::tick);
 		ClientPlayNetworking.registerGlobalReceiver(InputModePayload.TYPE, (payload, context) -> InputMode.receive(payload));
+		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.ViewPayload.TYPE,
+				(payload, context) -> kr.overbreak.client.camera.ViewLock.receive(payload));
 		ClientTickEvents.END_CLIENT_TICK.register(InputMode::tick);
 		ClientPlayNetworking.registerGlobalReceiver(HudPayload.TYPE, (payload, context) -> HudState.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(HitPayload.TYPE, (payload, context) -> HitMarker.receive(payload));
@@ -82,6 +86,8 @@ public final class OverbreakClient implements ClientModInitializer {
 		// 입력 처리보다 먼저 조준점을 보내서, 같은 틱의 스킬 · 평타가 새 조준을 쓰게 합니다
 		ClientTickEvents.START_CLIENT_TICK.register(AimTracker::tick);
 		ClientTickEvents.START_CLIENT_TICK.register(InputMode::tickRightHold);
+		ClientTickEvents.START_CLIENT_TICK.register(InputMode::tickJumpHold);
+		ClientTickEvents.START_CLIENT_TICK.register(kr.overbreak.client.camera.ViewLock::tick);
 		// 아이템 모델 조건: 로켓 펀치 충전 중이면 건틀릿이 파랗게 빛나는 모델로 (assets/overbreak/items/gauntlet.json)
 		ConditionalItemModelProperties.ID_MAPPER.put(Overbreak.id("charging"), ChargingProperty.MAP_CODEC);
 		// 재장전 중 탄창이 빠진 구간이면 연사 포탑이 탄창 없는 모델로 (assets/overbreak/items/valkyrie_rifle.json)

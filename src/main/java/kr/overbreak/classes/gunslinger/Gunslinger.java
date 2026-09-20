@@ -43,7 +43,7 @@ import org.jspecify.annotations.Nullable;
  * 조작 (모드 공통 배치에 맞춤)
  *   LMB         쌍권총 연사
  *   RMB         반동 도약
- *   SHIFT + RMB 곡예 난사 (웅크리기만 누르면 체공 훈풍 활공이라 우클릭을 같이 눌러야 합니다)
+ *   SHIFT       곡예 난사 (활공은 점프 키로 옮겨 웅크리기가 비었습니다)
  *   E           사선 앵커
  *   Q           차원 회전 포격
  *   R           재장전
@@ -72,9 +72,9 @@ public final class Gunslinger implements PvpClass {
 					SkillInfo.stat("낙하 피해", "받지 않음")),
 			List.of(
 					new SkillInfo("패시브", "체공 훈풍", null, "minecraft:feather",
-							"공중에서 웅크리면 활공하고, 공중에서 맞힌 총알은 무조건 치명타",
+							"공중에서 점프 키를 누르면 활공하고, 공중에서 맞힌 총알은 무조건 치명타",
 							List.of(
-									SkillInfo.stat("활공", "공중에서 웅크리기 — 낙하 속도 -80%"),
+									SkillInfo.stat("활공", "공중에서 점프 키를 누르고 있기 — 낙하 속도 -80%"),
 									SkillInfo.stat("활공 시간", "최대 2초 · 착지하면 다시 참"),
 									SkillInfo.stat("공중 치명타", "150% (평타 30 · 곡예 난사 22.5)"),
 									SkillInfo.stat("쿨타임 환급", "공중 명중마다 반동 도약 · 사선 앵커 -0.5초"),
@@ -98,13 +98,14 @@ public final class Gunslinger implements PvpClass {
 									SkillInfo.stat("도약", "조준 반대 방향 — 바닥을 보면 약 7칸"),
 									SkillInfo.stat("균열 지대", "봉인됨"),
 									SkillInfo.stat("재사용 대기시간", "6초 (차원 회전 포격 중에는 없음)")), false),
-					new SkillInfo("SHIFT+RMB", "곡예 난사", Overbreak.id("hud/skill/gunslinger_acro"), null,
-							"한 바퀴 돌며 사방으로 여덟 발, 도는 동안 무적",
+					new SkillInfo("SHIFT", "곡예 난사", Overbreak.id("hud/skill/gunslinger_acro"), null,
+							"한 바퀴 돌며 반경 8칸을 통째로 훑는 난사, 도는 동안 무적",
 							List.of(
-									SkillInfo.stat("분류", "히트스캔 · 광역 · 무적"),
-									SkillInfo.stat("발수", "8발 (45도씩 · 0.1초마다)"),
-									SkillInfo.stat("피해", "발당 15 (전탄 120 · 공중 180)"),
-									SkillInfo.stat("사거리", "8칸"),
+									SkillInfo.stat("분류", "광역 · 무적 · 조준 없음"),
+									SkillInfo.stat("난사", "8번 (0.1초마다 · 사방으로)"),
+									SkillInfo.stat("피해", "한 번당 15 (전부 120 · 공중 180)"),
+									SkillInfo.stat("범위", "반경 8칸 안 모든 적 (벽 뒤도)"),
+									SkillInfo.stat("시점", "도는 동안 3인칭 · 끝나면 원래대로"),
 									SkillInfo.stat("무적", "도는 0.8초 동안"),
 									SkillInfo.stat("탄창", "쓰지 않음"),
 									SkillInfo.stat("재사용 대기시간", "9초")), false),
@@ -179,12 +180,12 @@ public final class Gunslinger implements PvpClass {
 						.line(" 공중에서 맞히면 치명타 150% (30) · 공중에서 쏘면 반대로 밀려납니다.", ChatFormatting.GRAY).blank()
 						.bold("[RMB] 반동 도약", ChatFormatting.AQUA)
 						.line(" 조준한 곳에 반경 3칸 25 + 넉백, 그 반동으로 정반대로 약 7칸. 쿨타임 6초", ChatFormatting.GRAY).blank()
-						.bold("[웅크리기 + RMB] 곡예 난사", ChatFormatting.AQUA)
-						.line(" 한 바퀴 돌며 8칸 사방으로 8발 · 발당 15. 도는 0.8초 무적. 쿨타임 9초", ChatFormatting.GRAY).blank()
+						.bold("[웅크리기] 곡예 난사", ChatFormatting.AQUA)
+						.line(" 한 바퀴 돌며 반경 8칸 안 모든 적에게 8번 · 한 번당 15. 도는 0.8초 무적. 쿨타임 9초", ChatFormatting.GRAY).blank()
 						.bold("[E] 사선 앵커", ChatFormatting.AQUA)
 						.line(" 12칸 와이어 · 적중 20 + 0.5초 기절 + 머리 위로 · 벽이면 그 자리로. 쿨타임 7초", ChatFormatting.GRAY).blank()
 						.bold("[패시브] 체공 훈풍", ChatFormatting.AQUA)
-						.line(" 공중에서 웅크리면 2초 활공 · 공중 명중마다 이동기 쿨타임 -0.5초 · 낙하 피해 없음", ChatFormatting.GRAY).blank()
+						.line(" 공중에서 점프 키를 누르고 있으면 2초 활공 · 공중 명중마다 이동기 쿨타임 -0.5초 · 낙하 피해 없음", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build()));
 		// 쌍권총 — 양손에 한 자루씩. 왼손 총은 모습만 있는 소품이라 버리기 · 칸 고정에 걸리지 않습니다
 		inv.setItem(Inventory.SLOT_OFFHAND, SkillItems.prop("overbreak:gunslinger_pistols",
@@ -219,14 +220,10 @@ public final class Gunslinger implements PvpClass {
 		DualPistols.fire(p, state(p));
 	}
 
-	/** 우클릭 — 웅크린 채 누르면 곡예 난사, 그냥 누르면 반동 도약. */
+	/** 우클릭 — 반동 도약. */
 	@Override
 	public void primary(ServerPlayer p) {
 		GunslingerState st = state(p);
-		if (p.isShiftKeyDown()) {
-			AeroAcrobatics.cast(p, st);
-			return;
-		}
 		boolean ult = st.inUlt();
 		RecoilBoost.cast(p, st);
 		if (ult && st.bombardment != null) {
@@ -234,9 +231,10 @@ public final class Gunslinger implements PvpClass {
 		}
 	}
 
-	/** 웅크리기 단독은 체공 훈풍(활공) — 매 틱 {@link AeroDrift} 가 보고 있으므로 여기서는 아무것도 하지 않습니다. */
+	/** 웅크리기 — 곡예 난사. 활공은 공중에서 점프 키를 누르고 있을 때라 서로 겹치지 않습니다. */
 	@Override
 	public void secondary(ServerPlayer p) {
+		AeroAcrobatics.cast(p, state(p));
 	}
 
 	@Override

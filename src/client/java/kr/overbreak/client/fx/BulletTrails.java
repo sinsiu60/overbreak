@@ -136,7 +136,12 @@ public final class BulletTrails {
 					continue;
 				}
 				if (gunStyle(t.style)) {
-					drawValkyrie(p, buffer, t.from, t.to, cam, age);
+					if (t.style == TracerPayload.GUNSLINGER) {
+						// 굴적의 깃털은 하늘색 권총입니다
+						drawValkyrie(p, buffer, t.from, t.to, cam, age, 0x7FD4FF, 0x4FB8FF, 0xEAF9FF);
+					} else {
+						drawValkyrie(p, buffer, t.from, t.to, cam, age);
+					}
 				} else {
 					drawPellet(p, buffer, t.from, t.to, cam, age);
 				}
@@ -200,6 +205,10 @@ public final class BulletTrails {
 		}
 		if (style == TracerPayload.SHERIFF) {
 			return cam.add(forward.scale(0.9)).add(left.scale(-0.22)).add(up.scale(-0.17));
+		}
+		if (style == TracerPayload.GUNSLINGER) {
+			// 쌀권총은 좌우로 번갈아 나가지만, 화면 속 불꽃은 가운데 조금 아래에서 다 받습니다
+			return cam.add(forward.scale(0.9)).add(up.scale(-0.16));
 		}
 		if (style == TracerPayload.LIGHTNING || style == TracerPayload.LIGHTNING_BIG) {
 			// 뇌신의 창 끝 (오른손, 위로 세운 창의 날)
@@ -274,6 +283,12 @@ public final class BulletTrails {
 
 	/** 발키리: 궤적 줄(총구 → 탄두, 옅은 노랑) + 탄두(굵고 밝은 짧은 빛). 탄두가 끝에 닿으면 궤적만 서서히 사라짐. */
 	private static void drawValkyrie(PoseStack.Pose pose, VertexConsumer buffer, Vec3 from, Vec3 to, Vec3 cam, float age) {
+		drawValkyrie(pose, buffer, from, to, cam, age, 0xFFC23A, 0xFFB020, 0xFFF8E0);
+	}
+
+	/** 꼬리 · 탄두 겉불 · 탄두 속불 색을 직접 정해 그립니다 (직업마다 다릅니다). */
+	private static void drawValkyrie(PoseStack.Pose pose, VertexConsumer buffer, Vec3 from, Vec3 to, Vec3 cam, float age,
+			int trailRgb, int glowRgb, int coreRgb) {
 		double dist = from.distanceTo(to);
 		if (dist < 1.0E-3) {
 			return;
@@ -285,7 +300,7 @@ public final class BulletTrails {
 		float linger = (float) Math.max(0.0, age + 1.0 - travel);
 		float trailAlpha = 0.8F * (1.0F - Mth.clamp(linger / VK_LINGER, 0.0F, 1.0F));
 		if (trailAlpha > 0.0F) {
-			quad(pose, buffer, from, from.lerp(to, f), cam, 0.03F, 0.006F, ARGB.color(Math.round(trailAlpha * 255.0F), 0xFFC23A), 0.3F);
+			quad(pose, buffer, from, from.lerp(to, f), cam, 0.03F, 0.006F, ARGB.color(Math.round(trailAlpha * 255.0F), trailRgb), 0.3F);
 		}
 		// 탄두: 끝에 닿은 뒤 1틱 동안 꺼짐
 		float bulletAlpha = 1.0F - Mth.clamp(linger, 0.0F, 1.0F);
@@ -294,8 +309,8 @@ public final class BulletTrails {
 			Vec3 a = from.lerp(to, tail);
 			Vec3 b = from.lerp(to, f);
 			int alpha = Math.round(bulletAlpha * 255.0F);
-			quad(pose, buffer, a, b, cam, 0.09F, 0.01F, ARGB.color(Math.round(alpha * 0.8F), 0xFFB020), 0.0F);
-			quad(pose, buffer, a, b, cam, 0.038F, 0.0045F, ARGB.color(alpha, 0xFFF8E0), 0.0F);
+			quad(pose, buffer, a, b, cam, 0.09F, 0.01F, ARGB.color(Math.round(alpha * 0.8F), glowRgb), 0.0F);
+			quad(pose, buffer, a, b, cam, 0.038F, 0.0045F, ARGB.color(alpha, coreRgb), 0.0F);
 		}
 	}
 
@@ -430,7 +445,7 @@ public final class BulletTrails {
 
 	/** 탄두 궤적 · 총구 화염을 쓰는 총 (발키리 연사 포탑 · 보안관 리볼버). */
 	private static boolean gunStyle(int style) {
-		return style == TracerPayload.VALKYRIE || style == TracerPayload.SHERIFF;
+		return style == TracerPayload.VALKYRIE || style == TracerPayload.SHERIFF || style == TracerPayload.GUNSLINGER;
 	}
 
 	private static Vector3f toF(Vec3 v) {

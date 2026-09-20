@@ -101,7 +101,7 @@ public final class SkillAnims {
 			case SkillAnimPayload.BR_WHIRL -> 20.0F;
 			case SkillAnimPayload.BR_REGROUP -> 20.0F;
 			case SkillAnimPayload.BR_ULT -> 22.0F;
-			case SkillAnimPayload.GS_SHOT -> 6.0F;
+			case SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_SHOT_L -> 6.0F;
 			case SkillAnimPayload.GS_RELOAD -> 25.0F;
 			case SkillAnimPayload.GS_BOOST -> 12.0F;
 			case SkillAnimPayload.GS_ACRO -> 16.0F;

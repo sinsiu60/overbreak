@@ -16,7 +16,7 @@ import net.minecraft.world.effect.MobEffects;
 /**
  * [패시브] 체공 훈풍 — 건슬링어를 공중에 붙잡아 두는 두 가지 이득.
  *
- *   활공   : 공중에서 웅크리기를 누르고 있으면 떨어지는 속도가 확 줄어듭니다 (최대 2초).
+ *   활공   : 공중에서 점프 키를 누르고 있으면 떨어지는 속도가 확 줄어듭니다 (최대 2초).
  *            땅에 닿으면 다시 가득 찹니다. 느린 낙하로 걸어 클라이언트가 그대로 예측합니다 (끊김 없음).
  *   공중 명중: 공중에서 맞힌 총알은 무조건 치명타 150%, 그리고 맞힐 때마다
  *            반동 도약 · 사선 앵커의 남은 쿨타임이 0.5초씩 깎입니다.
@@ -71,7 +71,8 @@ public final class AeroDrift {
 			return;
 		}
 		// 궁극기로 공중에 붙잡혀 있는 동안에는 활공이 끼어들지 않습니다
-		boolean want = p.isShiftKeyDown() && st.glideT > 0 && !st.inUlt();
+		// 웅크리기는 곡예 난사라, 활공은 공중에서 점프 키를 누르고 있을 때입니다
+		boolean want = Attachments.profile(p).jumpDown && st.glideT > 0 && !st.inUlt();
 		if (!want) {
 			stop(p, st);
 			return;

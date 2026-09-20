@@ -129,6 +129,8 @@ public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duratio
 	public static final int GS_ULT = 54;
 	/** 건슬링어 체공 훈풍 활공 (두 팔을 벌리고 미끄러짐). 서버가 멈춥니다. */
 	public static final int GS_GLIDE = 55;
+	/** 건슬링어 쌀권총 — 왼손 차례. 오른손({@link #GS_SHOT}) 과 번갈아 나갑니다. */
+	public static final int GS_SHOT_L = 56;
 
 	public static final Type<SkillAnimPayload> TYPE = new Type<>(Overbreak.id("skill_anim"));
 	public static final StreamCodec<ByteBuf, SkillAnimPayload> CODEC = StreamCodec.composite(

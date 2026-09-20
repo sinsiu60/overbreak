@@ -72,11 +72,13 @@ public final class DualPistols {
 		Hitscan.Hit hit = Hitscan.cast(p, eye, dir, RANGE);
 		float[] yp = Local.yawPitch(dir);
 		// 총구는 번갈아 — 오른쪽 총, 왼쪽 총
-		double side = st.leftMuzzle ? 0.30 : -0.30;
+		boolean left = st.leftMuzzle;
+		double side = left ? 0.30 : -0.30;
 		st.leftMuzzle = !st.leftMuzzle;
 		Vec3 muzzle = Local.offset(eye, yp[0], yp[1], side, -0.20, 0.42);
-		Tracer.spawn(level, p, muzzle, hit.end(), Tracer.SHERIFF);
-		SkillAnimPayload.broadcast(p, SkillAnimPayload.GS_SHOT, -1);
+		Tracer.spawn(level, p, muzzle, hit.end(), Tracer.GUNSLINGER);
+		// 쓴 쪽 손만 반동이 나가도록 번호를 나눕니다 (1인칭 · 3인칭 공통)
+		SkillAnimPayload.broadcast(p, left ? SkillAnimPayload.GS_SHOT_L : SkillAnimPayload.GS_SHOT, -1);
 		Fx.sound(p, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.34F, 2.0F);
 		Fx.sound(p, SoundEvents.PISTON_EXTEND, SoundSource.PLAYERS, 0.45F, 1.4F);
 		Fx.particleExcept(level, p, ParticleTypes.SMOKE, muzzle.x, muzzle.y, muzzle.z, 3, 0.04, 0.04, 0.04, 0.01);

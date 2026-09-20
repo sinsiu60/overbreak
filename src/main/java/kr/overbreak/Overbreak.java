@@ -37,6 +37,8 @@ public final class Overbreak implements ModInitializer {
 		kr.overbreak.net.SkillInputPayload.init();
 		kr.overbreak.net.DeadeyePayload.init();
 		kr.overbreak.net.TracerPayload.init();
+		kr.overbreak.net.JumpHoldPayload.init();
+		kr.overbreak.net.ViewPayload.init();
 		HudPayload.init();
 		kr.overbreak.net.ScorePayload.init();
 		kr.overbreak.net.TeamPayload.init();

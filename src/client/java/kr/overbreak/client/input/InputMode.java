@@ -1,6 +1,7 @@
 package kr.overbreak.client.input;
 
 import kr.overbreak.net.InputModePayload;
+import kr.overbreak.net.JumpHoldPayload;
 import kr.overbreak.net.LeftClickPayload;
 import kr.overbreak.net.RightHoldPayload;
 import kr.overbreak.net.TertiaryPayload;
@@ -19,6 +20,8 @@ public final class InputMode {
 	private static long ticks;
 	private static long lastSentTick = -1;
 	private static boolean rightSent;
+	private static boolean jumpSent;
+	private static boolean jumpKnown;
 	private static boolean wasActive;
 
 	private InputMode() {}
@@ -52,6 +55,25 @@ public final class InputMode {
 			ClientPlayNetworking.send(new RightHoldPayload(down));
 			rightSent = down;
 			wasActive = true;
+		}
+	}
+
+	/**
+	 * 점프 키를 누르고 있는지 바뀜 틱에만 서버로.
+	 * 서버는 점프 키 자체를 볼 수 없어서, 굴적의 깃털의 체공 훈풍처럼 "공중에서 점프 키를 누르고 있는 동안" 이
+	 * 조건인 스킬이 이 신호를 씁니다.
+	 */
+	public static void tickJumpHold(Minecraft mc) {
+		if (mc.player == null || !active) {
+			jumpKnown = false;
+			jumpSent = false;
+			return;
+		}
+		boolean down = mc.gui.screen() == null && mc.options.keyJump.isDown();
+		if ((down != jumpSent || !jumpKnown) && ClientPlayNetworking.canSend(JumpHoldPayload.TYPE)) {
+			ClientPlayNetworking.send(new JumpHoldPayload(down));
+			jumpSent = down;
+			jumpKnown = true;
 		}
 	}
 

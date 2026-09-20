@@ -189,24 +189,40 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
-	/** 곡예 난사 — 여덟 발 · 도는 동안 무적 · 웅크린 채 우클릭으로만 나감. */
+	/** 곡예 난사 — 웅크리기 단독 · 반경 8칸 안 모든 적에게 8번 · 도는 동안 무적 (0.2d). */
 	@GameTest(maxTicks = 200)
-	public void acrobaticsEightShots(GameTestHelper h) {
+	public void acrobaticsHitsEveryoneInRadius(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(3.5, 0, 3.5), 0.0F);
 		p.setOnGround(true);
-		Villager v = dummy(h, new Vec3(3.5, 0, 5.5));
-		p.setShiftKeyDown(true);
-		gs().primary(p);
+		// 뒤쪽 · 옆쪽 적도 맞아야 합니다 (조준을 보지 않습니다)
+		Villager front = dummy(h, new Vec3(3.5, 0, 5.5));
+		Villager back = dummy(h, new Vec3(3.5, 0, 1.5));
+		gs().secondary(p);
 		GunslingerState st = Gunslinger.state(p);
-		h.assertTrue(st.acrobatics != null, "웅크린 채 우클릭 = 곡예 난사");
+		h.assertTrue(st.acrobatics != null, "웅크리기 = 곡예 난사");
 		h.assertTrue(Gunslinger.absorb(p, h.getLevel().damageSources().generic()), "도는 동안 무적");
 		h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.ACRO) == T.of(AeroAcrobatics.COOLDOWN), "쿨타임 9초");
 		h.runAfterDelay(T.of(AeroAcrobatics.DURATION + 6), () -> {
 			h.assertTrue(st.acrobatics == null, "0.8초 뒤 끝남");
 			h.assertTrue(!Gunslinger.absorb(p, h.getLevel().damageSources().generic()), "끝나면 무적 풀림");
-			// 2칸 앞 표적은 여덟 발 가운데 정면 한 발만 확실히 맞습니다 (나머지는 사방으로)
-			h.assertTrue(dealtBy(v, p) >= 15, "적어도 한 발 15 (실측 " + dealtBy(v, p) + ")");
-			p.setShiftKeyDown(false);
+			float total = AeroAcrobatics.SHOTS * 15.0F;
+			near(h, dealtBy(front, p), total, 0.01, "앞쪽 적 8번 전부");
+			near(h, dealtBy(back, p), total, 0.01, "등 뒤 적도 8번 전부");
+			Classes.clear(p);
+			h.succeed();
+		});
+	}
+
+	/** 반경 밖(8칸 초과)은 맞지 않습니다. */
+	@GameTest(maxTicks = 200)
+	public void acrobaticsSpareOutOfRange(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(0.5, 0, 0.5), 0.0F);
+		p.setOnGround(true);
+		// 구역 대각선 끝 — 약 9.9칸로 8칸을 넘습니다
+		Villager far = dummy(h, new Vec3(7.5, 0, 7.5));
+		gs().secondary(p);
+		h.runAfterDelay(T.of(AeroAcrobatics.DURATION + 6), () -> {
+			near(h, dealtBy(far, p), 0, 0.01, "8칸 밖은 안 맞음");
 			Classes.clear(p);
 			h.succeed();
 		});
@@ -296,14 +312,14 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		FakePlayer p = caster(h, new Vec3(1.5, 3, 1.5), 0.0F);
 		GunslingerState st = Gunslinger.state(p);
 		p.setOnGround(false);
-		p.setShiftKeyDown(true);
+		Attachments.profile(p).jumpDown = true;
 		classTicks(p, 4);
-		h.assertTrue(st.gliding, "공중 + 웅크리기 = 활공");
+		h.assertTrue(st.gliding, "공중 + 점프 키 = 활공");
 		h.assertTrue(st.glideT < T.of(AeroDrift.GLIDE), "활공 시간이 줄어듦 (" + st.glideT + ")");
 		h.assertTrue(p.hasEffect(net.minecraft.world.effect.MobEffects.SLOW_FALLING), "느린 낙하");
-		p.setShiftKeyDown(false);
+		Attachments.profile(p).jumpDown = false;
 		classTicks(p, 1);
-		h.assertTrue(!st.gliding, "웅크리기를 떼면 멈춤");
+		h.assertTrue(!st.gliding, "점프 키를 떼면 멈춤");
 		p.setOnGround(true);
 		classTicks(p, 1);
 		h.assertTrue(st.glideT == T.of(AeroDrift.GLIDE), "착지하면 다시 가득 참");

@@ -101,6 +101,11 @@ public final class HudState {
 		flags = msg.flags();
 	}
 
+	/** 지금 직업 id (서버가 HUD 로 알려 준 것). 직업이 없으면 빈 문자열. */
+	public static String classId() {
+		return classId;
+	}
+
 	public static void tick(Minecraft mc) {
 		if (mc.level == null) {
 			classId = "";

@@ -193,6 +193,57 @@ public final class FirstPersonAnim {
 			{4.0F, 0.66F, -0.60F, -0.66F, -6F, 16F, 12F, 1.0F},
 			{200.0F, 0.66F, -0.60F, -0.66F, -6F, 16F, 12F, 1.0F}};
 
+	/**
+	 * 직업별 1인칭 평타 — {시각, x, y, z, 가로축 회전, 세로축 회전, 화면축 회전, 크기}.
+	 * 공용 {@link #BASIC} 은 손만 좌우로 흔들어 무기 무게가 전혀 느껴지지 않았습니다 (0.2c).
+	 * 본편 6틱 + 되돌아오는 4틱 — 무기가 무거울수록 늦게 떨어지고 더 깊이 내려갑니다.
+	 *
+	 * 워리어 철도끼: 오른쪽 위로 치켜들었다가 왼쪽 아래로 내려베기.
+	 */
+	private static final float[][] WR_BASIC = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F},
+			{1.2F, 0.78F, -0.30F, -0.62F, -40F, 36F, -52F, 1.02F},
+			{3.0F, 0.26F, -0.68F, -0.86F, 46F, -48F, 70F, 1.10F},
+			{4.2F, 0.38F, -0.62F, -0.80F, 28F, -28F, 46F, 1.05F},
+			{6.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F}};
+	/** 워리어 역방향: 왼쪽 위에서 오른쪽 아래로. */
+	private static final float[][] WR_BASIC_BACK = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F},
+			{1.2F, 0.41F, -0.30F, -0.62F, -40F, -36F, 52F, 1.02F},
+			{3.0F, 0.77F, -0.68F, -0.86F, 46F, 48F, -70F, 1.10F},
+			{4.2F, 0.69F, -0.62F, -0.80F, 28F, 28F, -46F, 1.05F},
+			{6.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F}};
+
+	/** 햄머나이트 철퇴: 머리 위로 들었다가 곧장 내리찍고 반동으로 한 번 튐 (가장 무거움). */
+	private static final float[][] HK_BASIC = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F},
+			{1.5F, 0.60F, -0.26F, -0.56F, -52F, 10F, -14F, 1.06F},
+			{3.2F, 0.44F, -0.60F, -0.88F, 44F, -8F, 14F, 1.18F},
+			{4.4F, 0.48F, -0.58F, -0.82F, 32F, -6F, 10F, 1.08F},
+			{6.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F}};
+	/** 햄머나이트 역방향: 왼쪽 위에서 비스듬히 내리찍음. */
+	private static final float[][] HK_BASIC_BACK = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F},
+			{1.5F, 0.53F, -0.26F, -0.56F, -52F, -10F, 14F, 1.06F},
+			{3.2F, 0.64F, -0.60F, -0.88F, 44F, 8F, -14F, 1.18F},
+			{4.4F, 0.62F, -0.58F, -0.82F, 32F, 6F, -10F, 1.08F},
+			{6.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F}};
+
+	/** 셰이드 그림자 검: 짧게 뒤로 뺐다가 화면을 가로로 훑는 빠른 베기 (가장 가벼움). */
+	private static final float[][] SD_BASIC = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F},
+			{0.8F, 0.76F, -0.46F, -0.64F, -16F, 48F, -30F, 1.00F},
+			{2.2F, 0.18F, -0.56F, -0.86F, 14F, -62F, 52F, 1.08F},
+			{3.4F, 0.30F, -0.54F, -0.80F, 8F, -38F, 34F, 1.03F},
+			{6.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F}};
+	/** 셰이드 역방향: 왼쪽에서 오른쪽으로 되돌려 베기. */
+	private static final float[][] SD_BASIC_BACK = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F},
+			{0.8F, 0.42F, -0.46F, -0.64F, -16F, -48F, 30F, 1.00F},
+			{2.2F, 0.83F, -0.56F, -0.86F, 14F, 62F, -52F, 1.08F},
+			{3.4F, 0.74F, -0.54F, -0.80F, 8F, 38F, -34F, 1.03F},
+			{6.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.00F}};
+
 	/** 바닐라 기본 손 자세 — 키프레임이 끝나면 여기로 돌아옵니다. */
 	private static final float[] BASE = {0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F};
 
@@ -205,7 +256,7 @@ public final class FirstPersonAnim {
 						SkillAnimPayload.IF_PUNCH, SkillAnimPayload.IF_BLOCK, SkillAnimPayload.IF_SLAM_HIT,
 						SkillAnimPayload.BR_REGROUP,
 						// 건슬링어는 양손에 한 자루씩 — 왼손 총도 같은 키프레임을 그대로 따릅니다 (invert 가 좌우를 뒤집음)
-						SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_ACRO,
+						SkillAnimPayload.GS_SHOT_L, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_ACRO,
 						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_ULT, SkillAnimPayload.GS_GLIDE);
 	}
 
@@ -305,7 +356,7 @@ public final class FirstPersonAnim {
 			return false;
 		}
 		float[][] keys = switch (play.anim) {
-			case SkillAnimPayload.GS_SHOT -> GS_SHOT;
+			case SkillAnimPayload.GS_SHOT_L -> GS_SHOT;
 			case SkillAnimPayload.GS_RELOAD -> GS_RELOAD;
 			case SkillAnimPayload.GS_BOOST -> GS_BOOST;
 			case SkillAnimPayload.GS_ACRO -> GS_ACRO;
@@ -441,7 +492,13 @@ public final class FirstPersonAnim {
 			return true;
 		}
 		if (play.anim == SkillAnimPayload.BASIC || play.anim == SkillAnimPayload.BASIC_BACK) {
-			basic(pose, invert, play.anim == SkillAnimPayload.BASIC ? BASIC : BASIC_BACK, e);
+			boolean back = play.anim == SkillAnimPayload.BASIC_BACK;
+			float[][] cls = classBasic(back);
+			if (cls != null) {
+				keyed(pose, invert, cls, e, end, SkillAnims.fade(play.anim));
+				return true;
+			}
+			basic(pose, invert, back ? BASIC_BACK : BASIC, e);
 			return true;
 		}
 		if (play.anim != SkillAnimPayload.SLAY) {
@@ -458,6 +515,19 @@ public final class FirstPersonAnim {
 		}
 		slay(pose, invert, e);
 		return true;
+	}
+
+	/**
+	 * 지금 직업의 평타 표 — 없으면 null (공용 {@link #BASIC} 으로 갑니다).
+	 * 투귀는 자기 애니메이션 번호(BR_BASIC)를 따로 쓰므로 여기에 없습니다.
+	 */
+	private static float[] @Nullable [] classBasic(boolean back) {
+		return switch (kr.overbreak.client.hud.HudState.classId()) {
+			case "warrior" -> back ? WR_BASIC_BACK : WR_BASIC;
+			case "hammer_knight" -> back ? HK_BASIC_BACK : HK_BASIC;
+			case "shade" -> back ? SD_BASIC_BACK : SD_BASIC;
+			default -> null;
+		};
 	}
 
 	/** 기본 공격 — 카메라를 축으로 가로 베기 후 기본 손 자세로 부드럽게 복귀. */

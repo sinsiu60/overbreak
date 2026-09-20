@@ -11,6 +11,7 @@
 		"LivingEntityKnockbackMixin",
 		"LivingEntityLevitationMixin",
 		"LivingEntityMinVelocityMixin",
+		"PlayerCrouchMixin",
 		"MannequinAccess"
 	],
 	"injectors": {

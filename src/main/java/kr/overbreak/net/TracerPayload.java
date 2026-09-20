@@ -19,7 +19,7 @@ import org.jspecify.annotations.Nullable;
  *
  * ownerId 쏜 엔티티 (-1 = 없음) — 본인 1인칭이면 화면 속 총구에서 시작하도록 클라이언트가 맞춥니다
  * from/to 시작점 · 끝점 (몸 · 벽 · 사거리 끝)
- * style   0 = 발키리 (노랑), 1 = 파쇄권 산탄 (흰빛), 2 = 보안관 리볼버 (금색), 3 = 번개 (하늘색 지그재그), 4 = 굵은 벼락
+ * style   0 = 발키리 (노랑), 1 = 파쇄권 산탄 (흰빛), 2 = 보안관 리볼버 (금색), 3 = 번개 (하늘색 지그재그), 4 = 굵은 벼락, 5 = 건슬링어 쌀권총 (하늘색)
  */
 public record TracerPayload(int ownerId, double fx, double fy, double fz, double tx, double ty, double tz, int style)
 		implements CustomPacketPayload {
@@ -28,6 +28,8 @@ public record TracerPayload(int ownerId, double fx, double fy, double fz, double
 	public static final int SHERIFF = 2;
 	public static final int LIGHTNING = 3;
 	public static final int LIGHTNING_BIG = 4;
+	/** 건슬링어 쌀권총 (하늘색). */
+	public static final int GUNSLINGER = 5;
 	private static final double RANGE = 96.0;
 
 	public static final Type<TracerPayload> TYPE = new Type<>(Overbreak.id("tracer"));

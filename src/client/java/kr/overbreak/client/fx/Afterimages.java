@@ -53,7 +53,9 @@ public final class Afterimages {
 		}
 		ticks = (float) kr.overbreak.client.ClientClock.now();
 		for (AbstractClientPlayer p : mc.level.players()) {
-			if (!(SkillAnims.playing(p.getId(), SkillAnimPayload.SD_REND) || SkillAnims.playing(p.getId(), SkillAnimPayload.SD_STEP)) || p.isInvisible()) {
+			// 그림자 가르기 · 그림자 걸음 · 곡예 난사 (도는 동안 산데비스탄처럼 잔상이 남음)
+			if (!(SkillAnims.playing(p.getId(), SkillAnimPayload.SD_REND) || SkillAnims.playing(p.getId(), SkillAnimPayload.SD_STEP)
+					|| SkillAnims.playing(p.getId(), SkillAnimPayload.GS_ACRO)) || p.isInvisible()) {
 				continue;
 			}
 			EntityRenderer<? super AbstractClientPlayer, ?> r = mc.getEntityRenderDispatcher().getRenderer(p);

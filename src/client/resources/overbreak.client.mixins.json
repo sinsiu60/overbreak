@@ -24,7 +24,8 @@
 		"PlayerModelMixin",
 		"StunLookMixin",
 		"MinecraftTickRateMixin",
-		"ParticleEngineMixin"
+		"ParticleEngineMixin",
+		"OptionsCameraMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
