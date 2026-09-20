@@ -180,6 +180,7 @@ final class Slay implements Effects.Active {
 		}
 		if (healN > 0) {
 			caster.heal(healN);
+			kr.overbreak.net.HealPayload.send(caster, kr.overbreak.net.HealPayload.PULSE);
 			PlayerProfile prof = Attachments.profile(caster);
 			prof.msgT = 40;
 			Hud.actionbar(caster, Component.empty()

@@ -90,6 +90,9 @@ public final class SkillHud {
 		// 공격속도 증가 — 화면 가장자리 금색
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("haste_screen"), HasteScreen::render);
 		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(HasteScreen::tick);
+		// 회복 — 화면 가장자리 초록 (흡혈 · 채널링 회복)
+		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("heal_screen"), HealScreen::render);
+		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(HealScreen::tick);
 		// 경기 점수판 (화면 위쪽 가운데) — 채팅 위에
 		HudElementRegistry.attachElementAfter(VanillaHudElements.CHAT, Overbreak.id("score_hud"), ScoreHud::render);
 		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(ScoreHud::tick);

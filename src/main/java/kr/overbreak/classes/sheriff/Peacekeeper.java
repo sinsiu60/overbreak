@@ -37,7 +37,6 @@ final class Peacekeeper {
 	static final int GAP = 16;
 	static final int MAG = 6;
 	static final int RELOAD = 40;
-	static final double KNOCK = 0.35;
 	/** 헤드샷 계수 (%). */
 	static final int HEADSHOT_PERCENT = 175;
 
@@ -79,7 +78,6 @@ final class Peacekeeper {
 			} finally {
 				HitPayload.critNext = false;
 			}
-			knockAway(p, victim, KNOCK);
 			Fx.particle(level, ParticleTypes.CRIT, victim.getX(), victim.getY() + 1, victim.getZ(), 12, 0.25, 0.35, 0.25, 0.25);
 			Fx.sound(victim, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 1.0F, hit.head() ? 1.5F : 1.2F);
 			if (far) {

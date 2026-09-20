@@ -56,6 +56,8 @@ final class BloodChain implements Effects.Active {
 	static final double ARRIVE_SLOW = 0.5;
 	static final int PIN_WAIT = 8;
 	static final int PULL_TICKS = 40;
+	/** 걸린 쪽이 시전자를 돌아보는 속도 — 한 틱에 남은 각도의 이만큼을 좁힙니다 (0.2a). */
+	private static final float FACE_RATE = 0.2F;
 	static final double PULL_SPEED = 1.17;
 	/** 시전자 앞 이 거리에서 멈춥니다. */
 	static final double STOP_DIST = 1.3;
@@ -250,6 +252,7 @@ final class BloodChain implements Effects.Active {
 			return false;
 		}
 		t++;
+		facePuller();
 		drawLinks(target.position().add(0, 1, 0));
 		if (Ticks.ambient()) {
 			Fx.particle(level, Fx.dust(RED, 1.0F), target.getX(), target.getY() + 1, target.getZ(), 6, 0.3, 0.4, 0.3, 0);
@@ -275,6 +278,7 @@ final class BloodChain implements Effects.Active {
 		}
 		// 끌려오는 동안 기절을 이어 갑니다 (소리 · 입자는 처음 걸 때만)
 		CrowdControl.stun(target, 4, false);
+		facePuller();
 		// 멈출 곳: 시전자에서 대상 쪽으로 STOP_DIST 떨어진 지점 (수평 기준)
 		Vec3 toTarget = target.position().subtract(caster.position());
 		Vec3 flat = new Vec3(toTarget.x, 0.0, toTarget.z);
@@ -306,6 +310,17 @@ final class BloodChain implements Effects.Active {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * 걸린 쪽이 자기를 끌어당기는 워리어를 돌아보게 합니다 (0.2a).
+	 *
+	 * 끌려가는 동안 등을 보이고 있으면 무슨 일이 벌어지는지 알 수 없어, 사슬이 끝날 때까지 시전자를 봅니다.
+	 */
+	private void facePuller() {
+		if (target instanceof net.minecraft.server.level.ServerPlayer victim) {
+			kr.overbreak.util.Look.toward(victim, caster.getEyePosition(), FACE_RATE);
+		}
 	}
 
 	private void breakChain(ServerLevel level) {

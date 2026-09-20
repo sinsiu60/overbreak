@@ -34,7 +34,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * 직업 14 · 보안관 (원거리 정밀 사격형) — 데이터팩 class/sheriff + skill/sheriff/* + ult/deadeye (데이터팩 이름 "명사수").
  *
- *   체력 170 (-30) · 0.8초에 한 발 · 이동속도 기본 · 근접 불가 · 게이지 피해 10당 2.5%
+ *   체력 170 (-30) · 0.8초에 한 발 · 이동속도 -8% · 근접 불가 · 게이지 피해 10당 2.5%
  *   오른손 리볼버 (피스키퍼 · 리볼버 난사 · 황야의 무법자) · 왼손으로 섬광 수류탄 투척 · 스피드로더 재장전
  */
 public final class Sheriff implements PvpClass {
@@ -55,7 +55,7 @@ public final class Sheriff implements PvpClass {
 					SkillInfo.stat("체력", "170"),
 					SkillInfo.stat("공격력", "발당 70 (10~20칸 감소)"),
 					SkillInfo.stat("공격속도", "0.8초에 1발"),
-					SkillInfo.stat("이동속도", "기본")),
+					SkillInfo.stat("이동속도", "-8%")),
 			List.of(
 					new SkillInfo("LMB", "피스키퍼", null, "minecraft:crossbow",
 							"16칸까지 곧게 날아가는 정밀 사격",
@@ -124,7 +124,7 @@ public final class Sheriff implements PvpClass {
 	public void give(ServerPlayer p) {
 		PlayerProfile prof = Attachments.profile(p);
 		prof.classState = new SheriffState();
-		Classes.baseStats(p, -30, 0.0, 125);
+		Classes.baseStats(p, -30, -0.08, 125);
 		for (String k : TOTALS.keySet()) {
 			prof.setCooldown(k, 0);
 		}
@@ -168,7 +168,7 @@ public final class Sheriff implements PvpClass {
 				.line("체력      170  (기본 200)", ChatFormatting.GRAY)
 				.line("공격력    발당 70  (10~20칸 -70%)", ChatFormatting.GRAY)
 				.line("공격속도  0.8초에 1발", ChatFormatting.GRAY)
-				.line("이동속도  기본", ChatFormatting.GRAY)
+				.line("이동속도  -8%  (기본 대비)", ChatFormatting.GRAY)
 				.line("탄창      6발", ChatFormatting.GRAY).blank()
 				.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build()));
 		Attachments.profile(p).barShown.clear();

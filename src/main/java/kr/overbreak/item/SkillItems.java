@@ -48,6 +48,20 @@ public final class SkillItems {
 		return model.indexOf(':') >= 0 ? Identifier.parse(model) : Identifier.withDefaultNamespace(model);
 	}
 
+	/**
+	 * 손에 잠깐 쥐는 소품 (투귀 강화 포션 등) — 설명도 쿨타임 막대도 없이 모습만 있는 아이템입니다.
+	 * 스킬 아이템이 아니므로 버리기(궁극기)나 칸 고정에 걸리지 않습니다.
+	 */
+	public static ItemStack prop(String model, Component name) {
+		ItemStack s = new ItemStack(Items.CARROT_ON_A_STICK);
+		s.set(DataComponents.ITEM_MODEL, modelId(model));
+		s.set(DataComponents.ITEM_NAME, name);
+		s.set(DataComponents.MAX_STACK_SIZE, 1);
+		s.set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true));
+		s.set(DataComponents.CUSTOM_DATA, tag("none", false));
+		return s;
+	}
+
 	/** 궁극기 아이템 — 막대가 필요 없으므로 내구도 없이 만듭니다. */
 	public static ItemStack ult(String model, Component name, List<Component> lore) {
 		ItemStack s = new ItemStack(Items.CARROT_ON_A_STICK);

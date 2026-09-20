@@ -43,6 +43,8 @@ public final class Overbreak implements ModInitializer {
 		kr.overbreak.net.TeamDraftPayload.init();
 		HitPayload.init();
 		kr.overbreak.net.HurtPayload.init();
+		kr.overbreak.net.HealPayload.init();
+		kr.overbreak.net.DoomAimPayload.init();
 		Classes.init();
 		InputRouter.init();
 		AttackSpeed.init();

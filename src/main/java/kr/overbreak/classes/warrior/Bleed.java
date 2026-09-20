@@ -123,6 +123,7 @@ public final class Bleed implements Effects.Active {
 	/** 폭발 보상: 체력 50 · 살육 쿨타임 2초 감소. */
 	private static void reward(ServerPlayer p) {
 		p.heal(50.0F);
+		kr.overbreak.net.HealPayload.send(p, kr.overbreak.net.HealPayload.PULSE);
 		PlayerProfile prof = Attachments.profile(p);
 		prof.setCooldownTicks(Warrior.SLAY, prof.cooldown(Warrior.SLAY) - kr.overbreak.core.tick.Ticks.of(40));
 		Fx.sound(p, SoundEvents.GENERIC_DRINK, SoundSource.PLAYERS, 0.7F, 1.5F);

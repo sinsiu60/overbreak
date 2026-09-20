@@ -317,7 +317,7 @@ public final class IronFistTest implements CustomTestMethodInvoker {
 		});
 	}
 
-	@GameTest(maxTicks = 420)
+	@GameTest(maxTicks = 500)
 	public void meteorStrikeBlast(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(3.5, 0, 2.5), 90.0F); // 발밑을 보고 씀
 		Villager inner = dummy(h, new Vec3(3.5, 0, 4.5));
@@ -326,7 +326,8 @@ public final class IronFistTest implements CustomTestMethodInvoker {
 		fist().ult(p);
 		h.assertTrue(IronFist.state(p).empowerT > 0, "궁극기를 쓰면 로켓 펀치 강화");
 		h.onEachTick(() -> fist().tick(p));
-		h.runAfterDelay(T.of(95), () -> {
+		// 솟구침 20 + 조준 60 + 벼르기 20 (0.2a) + 낙하 4
+		h.runAfterDelay(T.of(115), () -> {
 			// 중심에서 멀어질수록 줄어드는 피해 — 2칸 105, 4칸 60 (0.1a)
 			near(h, inner.getHealth(), 895, 0.05, "2칸 105");
 			near(h, outer.getHealth(), 940, 0.05, "4칸 60");

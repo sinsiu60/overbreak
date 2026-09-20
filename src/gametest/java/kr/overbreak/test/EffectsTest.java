@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import kr.overbreak.skill.Effects;
 import net.fabricmc.fabric.api.gametest.v1.CustomTestMethodInvoker;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.minecraft.gametest.framework.GameTestHelper;
 
 /**
@@ -68,6 +69,27 @@ public final class EffectsTest implements CustomTestMethodInvoker {
 			Effects.cancelOwnedBy(a);
 			h.succeed();
 		});
+	}
+
+	/** 기절하면 HUD 깃발이 서서 클라이언트가 시야를 굳힙니다 (0.2a). */
+	@GameTest
+	public void stunRaisesHudFlag(GameTestHelper h) {
+		FakePlayer p = net.fabricmc.fabric.api.entity.FakePlayer.get(h.getLevel(),
+				new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "ob_stunflag"));
+		kr.overbreak.classes.Classes.give(p, kr.overbreak.classes.Classes.byId(kr.overbreak.classes.warrior.Warrior.ID));
+		h.assertTrue((flags(p) & kr.overbreak.skill.HudExtra.FLAG_STUN) == 0, "멀쩡할 때는 깃발 없음");
+		kr.overbreak.cc.CrowdControl.stun(p, 20);
+		h.assertTrue((flags(p) & kr.overbreak.skill.HudExtra.FLAG_STUN) != 0, "기절하면 깃발이 섬");
+		kr.overbreak.cc.CrowdControl.clearStun(p);
+		h.assertTrue((flags(p) & kr.overbreak.skill.HudExtra.FLAG_STUN) == 0, "풀리면 깃발도 내려감");
+		kr.overbreak.classes.Classes.clear(p);
+		h.succeed();
+	}
+
+	/** HudSync 가 지금 만들어 내는 깃발. */
+	private static int flags(net.minecraft.server.level.ServerPlayer p) {
+		int f = kr.overbreak.core.Attachments.profile(p).pvpClass.hudExtra(p).flags();
+		return kr.overbreak.core.Attachments.combatant(p).stunT > 0 ? f | kr.overbreak.skill.HudExtra.FLAG_STUN : f;
 	}
 
 	@Override

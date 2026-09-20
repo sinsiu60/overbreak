@@ -16,6 +16,8 @@ public record HudExtra(int ammo, int ammoMax, int meter, int meterKind, int stac
 	public static final int METER_RELOAD = 4;
 	/** 공격속도가 올라간 상태 — 화면 가장자리가 노랗게 빛납니다. */
 	public static final int FLAG_HASTE = 1;
+	/** 기절 중 — 화면이 돌아가지 않습니다 (직업이 아니라 {@link kr.overbreak.skill.HudSync} 가 붙입니다). */
+	public static final int FLAG_STUN = 2;
 
 	public HudExtra(int ammo, int ammoMax, int meter, int meterKind) {
 		this(ammo, ammoMax, meter, meterKind, 0, 0, 0);

@@ -45,7 +45,7 @@ import org.jspecify.annotations.Nullable;
  *   체력 240 (+40) · 공격력 45 (대검 +44) · 공격속도 1.2 · 이동속도 +3% · 평타 넉백 없음
  *
  * 워리어가 한 번에 몰아치고 빠진다면, 투귀는 맞으면서 스택을 쌓아 버티는 쪽입니다.
- * 붙어 있는 시간이 길수록 단단해지고(투기), 스스로 체력을 되돌리며(전열 재정비) 자리를 지킵니다.
+ * 붙어 있는 시간이 길수록 단단해지고(투기), 강화 포션으로 체력을 되돌리며(전열 재정비) 자리를 지킵니다.
  */
 public final class Brute implements PvpClass {
 	public static final String ID = "brute";
@@ -168,7 +168,7 @@ public final class Brute implements PvpClass {
 						.line(" 1초간 주위 3.5칸을 0.2초마다 15 (전부 75).", ChatFormatting.GRAY)
 						.line(" 도는 동안 이동속도 +30% · 받는 피해 -30% · 저지불가. 쿨 8초", ChatFormatting.GRAY).blank()
 						.bold("[E] 전열 재정비", ChatFormatting.GREEN)
-						.line(" 1초 채널링으로 체력 60 회복 + 투기 5스택.", ChatFormatting.GRAY)
+						.line(" 왼손의 강화 포션을 1초간 들이켜 체력 60 회복 + 투기 5스택.", ChatFormatting.GRAY)
 						.line(" 그동안 받는 피해 -40%. 기절하면 끊깁니다. 쿨 12초", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build());
 		// 대검을 들고 있을 때만 공격력 +44 (기본 1 + 44 = 45)
@@ -244,6 +244,7 @@ public final class Brute implements PvpClass {
 		Fervor.gain(p, st, 1);
 		if (st.rampageT > 0) {
 			p.heal(RAMPAGE_LIFESTEAL);
+			kr.overbreak.net.HealPayload.send(p, kr.overbreak.net.HealPayload.PULSE);
 		}
 	}
 
@@ -383,10 +384,10 @@ public final class Brute implements PvpClass {
 									SkillInfo.stat("적중 시", "벨 때마다 투기 1스택"),
 									SkillInfo.stat("재사용 대기시간", "8초")), false),
 					new SkillInfo("E", "전열 재정비", Overbreak.id("hud/skill/brute_regroup"), null,
-							"숨을 골라 체력을 되돌림",
+							"강화 포션을 들이켜 체력을 되돌림",
 							List.of(
 									SkillInfo.stat("분류", "회복 · 채널링"),
-									SkillInfo.stat("채널링", "1초 (걸을 수 있음)"),
+									SkillInfo.stat("채널링", "1초 (걸을 수 있음 · 다 마시면 병을 깨뜨림)"),
 									SkillInfo.stat("회복", "체력 60"),
 									SkillInfo.stat("투기", "5스택"),
 									SkillInfo.stat("받는 피해", "-40% (채널링 동안)"),

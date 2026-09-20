@@ -164,6 +164,22 @@ public final class BruteTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
+	/** 전열 재정비는 왼손에 강화 포션을 쥐고 시작해, 끝나면 병을 내려놓습니다 (0.2a). */
+	@GameTest(maxTicks = 200)
+	public void regroupHoldsPotion(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);
+		h.assertTrue(p.getOffhandItem().isEmpty(), "쓰기 전에는 왼손이 비어 있음");
+		brute().tertiary(p);
+		h.assertTrue(!p.getOffhandItem().isEmpty(), "쓰는 동안 왼손에 강화 포션");
+		h.onEachTick(() -> brute().tick(p));
+		// 1초 채널링이 끝나면 병을 던져 깨뜨립니다
+		h.runAfterDelay(T.of(30), () -> {
+			h.assertTrue(p.getOffhandItem().isEmpty(), "다 마시면 병이 손에서 사라짐");
+			Classes.clear(p);
+			h.succeed();
+		});
+	}
+
 	@GameTest(maxTicks = 440)
 	public void rampageBuffs(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);

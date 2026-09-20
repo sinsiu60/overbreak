@@ -41,7 +41,12 @@ public final class HudSync {
 		}
 		int ultState = !prof.ultOn ? 0 : prof.ultCharge >= 100 ? 2 : 1;
 		HudExtra x = c.hudExtra(p);
+		// 기절은 직업과 무관하므로 여기서 한 번에 붙입니다 (클라이언트가 시야를 굳힙니다)
+		int flags = x.flags();
+		if (kr.overbreak.core.Attachments.combatant(p).stunT > 0) {
+			flags |= HudExtra.FLAG_STUN;
+		}
 		return new HudPayload(c.id(), remaining, total, active, prof.ultCharge, ultState, x.ammo(), x.ammoMax(), x.meter(), x.meterKind(),
-				x.stacks(), x.stacksMax(), x.flags());
+				x.stacks(), x.stacksMax(), flags);
 	}
 }

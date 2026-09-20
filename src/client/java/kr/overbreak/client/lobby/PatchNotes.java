@@ -42,7 +42,30 @@ final class PatchNotes {
 		return new Line(text, Tag.TWEAK);
 	}
 
-	static final List<Version> VERSIONS = List.of(new Version("0.2", "", "조작 정리", List.of(
+	static final List<Version> VERSIONS = List.of(new Version("0.2a", "", "손맛과 시야", List.of(
+			new Section("근접 공통", 0xFFFF7A4A, List.of(
+					tweak("휘두를 때 화면이 베는 쪽으로 살짝 기울었다가 돌아옵니다 — 힘을 싣는 느낌"),
+					tweak("큰 스킬(살육 · 분쇄 · 강타 · 로켓 펀치)은 더 크게 기웁니다"),
+					tweak("조준점이 가리키는 곳은 그대로입니다 — 맞는 자리에는 영향이 없습니다"))),
+			new Section("기절", 0xFFE8555B, List.of(
+					nerf("기절당하면 그동안 화면을 돌릴 수 없습니다 — 굳어 있는 느낌이 제대로 납니다"))),
+			new Section("워리어", 0xFFFF5A4A, List.of(
+					buff("피의 사슬에 걸린 적은 사슬이 끝날 때까지 끌어당기는 워리어를 바라봅니다 (로드호그처럼)"),
+					tweak("스킬로 흡혈할 때 화면 가장자리가 초록으로 번집니다 — 이제야 들어왔습니다"))),
+			new Section("파쇄권", 0xFFFFC24A, List.of(
+					tweak("파멸의 일격으로 조준하는 동안 강제로 3인칭이 되고 시야가 착탄 원을 따라갑니다"),
+					tweak("1인칭이었다면 끝나고 카메라가 부드럽게 다시 붙습니다"),
+					nerf("확정한 뒤 곧바로 떨어지지 않고 1초를 법니다 — 아래에서 피할 틈"))),
+			new Section("투귀", 0xFFFFA24A, List.of(
+					tweak("1인칭 평타가 손을 흔드는 모양에서 크게 베는 궤적으로 바뀌었습니다"),
+					tweak("돌개바람 1인칭에서 칼이 마지막에 덜컹이던 것 수정 — 끝까지 같은 속도로 돕니다"),
+					tweak("돌개바람 3인칭에서 몸통만 돌고 머리 · 다리가 남던 것 수정 — 몸 전체가 돕니다"),
+					tweak("전열 재정비가 「숨 고르기」 에서 「강화 포션 들이켜기」 로 — 왼손의 병을 마시고 발밑에 내던져 깨뜨립니다"),
+					tweak("마시는 1초 동안 화면 가장자리에 초록 회복 표시"))),
+			new Section("보안관", 0xFFE8B04A, List.of(
+					nerf("피스키퍼 넉백 제거"),
+					nerf("이동속도 기본 → -8%"))))),
+			new Version("0.2", "", "조작 정리", List.of(
 			new Section("조작", 0xFF3FA2FF, List.of(
 					tweak("액티브3 이 F 에서 E 로 옮겨 왔습니다 — 모든 규격에 함께 적용됩니다"),
 					tweak("전장에서는 E 를 눌러도 인벤토리가 열리지 않습니다 (로비 · 관리자 자유 이동에서는 그대로 열립니다)"),

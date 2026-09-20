@@ -31,6 +31,9 @@ public final class ThirdPersonAnim {
 	private static final float K = Float.NaN; // 머리: 바닐라(시선) 유지
 
 	/** 걷기 동작 세기가 이 값 이상이면 다리는 걷기 동작만 씁니다. */
+	/** 돌개바람 회전 속도 (1/20초 단위당 도) — 1초에 세 바퀴. */
+	private static final float WHIRL_SPIN = 54.0F;
+
 	private static final float WALK_FULL = 0.25F;
 
 	private static final int RAX = 0, RAY = 1, RAZ = 2, LAX = 3, LAY = 4, LAZ = 5, BX = 6, BY = 7, HX = 8,
@@ -183,6 +186,7 @@ public final class ThirdPersonAnim {
 
 		float itemScale = 1.0F;
 		float spin = 0.0F;
+		float headSpin = 0.0F;
 		if (play.anim == SkillAnimPayload.HK_ULT) {
 			// 망치: 힘을 모으며 1.0 → 1.35배, 내려치는 순간 1.6배 → 1.3배
 			float s = e < 16.0F ? 1.0F + 0.2F * Mth.clamp((e - 4.0F) / 12.0F, 0.0F, 1.0F)
@@ -203,9 +207,23 @@ public final class ThirdPersonAnim {
 			float s = e < 13.0F ? 1.0F + 0.5F * (e / 13.0F) : 2.0F + 0.5F * Math.max(0.0F, 1.0F - (e - 13.0F) / 2.0F);
 			itemScale = 1.0F + (s - 1.0F) * w;
 		}
+		if (play.anim == SkillAnimPayload.BR_WHIRL) {
+			// 돌개바람: 1초에 세 바퀴. 몸통만 돌면 머리 · 다리가 제자리에 남아 기괴하므로 몸 전체가 돕니다 (0.2a)
+			float turn = -WHIRL_SPIN * Math.min(e, end);
+			if (e > end) {
+				// 끝나면 가장 가까운 한 바퀴 지점까지 감속하며 마저 돌아 원래 방향으로
+				float target = (float) Math.round(turn / 360.0F) * 360.0F;
+				float q = Mth.clamp((e - end) / fade, 0.0F, 1.0F);
+				turn = Mth.lerp(1.0F - (1.0F - q) * (1.0F - q), turn, target);
+			}
+			spin = turn;
+			headSpin = turn;
+		}
 		a.overbreak$setItemScale(itemScale);
-		// 살육은 몸 전체(다리 포함)가 돕니다. 상체만 도는 동작이 필요하면 overbreak$setSpin 을 씁니다.
+		// 살육 · 돌개바람은 몸 전체(다리 포함)가 돕니다. 상체만 도는 동작이 필요하면 overbreak$setSpin 을 씁니다.
 		state.bodyRot += spin;
+		// 머리 각도는 몸통 기준으로 계산되므로, 같이 돌려 줘야 머리도 함께 돕니다
+		state.yRot += headSpin;
 		a.overbreak$setSpin(0.0F);
 	}
 

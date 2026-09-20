@@ -49,6 +49,11 @@ public final class HudState {
 		return (flags & kr.overbreak.skill.HudExtra.FLAG_HASTE) != 0;
 	}
 
+	/** 기절 중인가 — 그동안은 마우스로 화면을 돌릴 수 없습니다 ({@link kr.overbreak.client.mixin.StunLookMixin}). */
+	public static boolean stunned() {
+		return (flags & kr.overbreak.skill.HudExtra.FLAG_STUN) != 0;
+	}
+
 	public static void receive(HudPayload msg) {
 		int n = msg.remaining().size();
 		if (!msg.classId().equals(classId) || n != remaining.length) {

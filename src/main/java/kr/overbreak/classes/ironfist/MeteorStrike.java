@@ -5,6 +5,7 @@ import kr.overbreak.Overbreak;
 import kr.overbreak.cc.CrowdControl;
 import kr.overbreak.combat.SkillDamage;
 import kr.overbreak.core.Attachments;
+import kr.overbreak.net.DoomAimPayload;
 import kr.overbreak.net.InputModePayload;
 import kr.overbreak.net.SkillAnimPayload;
 import kr.overbreak.skill.Effects;
@@ -42,13 +43,19 @@ import org.jspecify.annotations.Nullable;
  *   2단계 조준 최대 3초(60틱): 그 높이에 붙들림 · 모습이 사라짐 (무적)
  *     <b>이동 키(WASD)로</b> 지상의 붉은 착탄 원을 끌고 다닙니다 — 시작한 자리에서 최대 20칸, 상대에게도 보입니다
  *     시야는 자유 (원을 내려다보면 됩니다). 우클릭으로 확정, 3초가 지나면 그 자리로
- *   3단계 낙하 4틱: 투명이 풀리고 착탄점으로 내리꽂힘
+ *   2.5단계 벼르기 1초: 확정한 뒤 잠깐 숨을 고르고 (모습이 드러나고, 아래에서 올려다볼 틈이 생깁니다 — 0.2a)
+ *   3단계 낙하 4틱: 착탄점으로 내리꽂힘
+ *
+ * 0.2a: 조준하는 동안 시전자 화면은 강제로 3인칭이 되고 시야가 착탄 원을 따라갑니다 ({@link kr.overbreak.net.DoomAimPayload}).
+ * 이동 키가 원을 끄는 방향은 조준을 시작한 순간의 각도로 고정해, 시야가 돌아도 조작이 함께 돌지 않게 했습니다.
  *   착탄: 반경 6칸 · 중심 150 에서 가장자리 15 까지 줄어드는 피해 (기절 없음 — 원본과 같음)
  *         흡수 체력 가득(120) · 다음 로켓 펀치 강화
  */
 final class MeteorStrike implements Effects.Active {
 	static final int RISE = 20;
 	static final int AIM = 60;
+	/** 확정한 뒤 떨어지기까지 벼르는 시간 (1/20초 단위 = 1초, 0.2a). */
+	static final int BRACE = 20;
 	static final int DROP = 4;
 	static final double RISE_SPEED = 0.6;
 	/** 착탄 원을 끌고 다닐 수 있는 최대 거리 (솟구친 자리 기준). */
@@ -69,6 +76,8 @@ final class MeteorStrike implements Effects.Active {
 	private Vec3 anchor;
 	private double aimX;
 	private double aimZ;
+	/** 이동 키가 원을 끄는 기준 각도 — 조준을 시작한 순간으로 고정합니다 (시야가 돌아도 조작은 그대로). */
+	private float steerYaw;
 	private Vec3 target;
 	private @Nullable GroundShape disc;
 	private @Nullable GroundShape inner;
@@ -135,8 +144,24 @@ final class MeteorStrike implements Effects.Active {
 							.append(Hud.bold("파멸의 일격  ", ChatFormatting.RED))
 							.append(Hud.text("이동 키로 조준 · 우클릭으로 내리꽂기", ChatFormatting.GRAY)));
 				}
+				DoomAimPayload.send(caster, target);
 				if (--t <= 0) {
 					drop();
+				}
+			}
+			case 3 -> {
+				// 벼르는 동안은 그 자리에 그대로 — 아래에서 보면 떨어질 자리가 환히 보입니다
+				hold();
+				if (disc != null && inner != null) {
+					disc.moveTo(target);
+					inner.moveTo(target);
+				}
+				if (Ticks.ambient()) {
+					Fx.particle(level, ParticleTypes.SMALL_FLAME, caster.getX(), caster.getY() + 1.0, caster.getZ(),
+							6, 0.3, 0.5, 0.3, 0.01);
+				}
+				if (--t <= 0) {
+					fall();
 				}
 			}
 			default -> {
@@ -162,6 +187,7 @@ final class MeteorStrike implements Effects.Active {
 		anchor = caster.position();
 		aimX = anchor.x;
 		aimZ = anchor.z;
+		steerYaw = caster.getYRot();
 		caster.setDeltaMovement(Vec3.ZERO);
 		caster.hurtMarked = true;
 		caster.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, Ticks.of(AIM + 20), 0, false, false));
@@ -182,7 +208,7 @@ final class MeteorStrike implements Effects.Active {
 		if (f == 0.0 && s == 0.0) {
 			return;
 		}
-		double yaw = Math.toRadians(caster.getYRot());
+		double yaw = Math.toRadians(steerYaw);
 		double sin = Math.sin(yaw);
 		double cos = Math.cos(yaw);
 		// 바라보는 방향 = (-sin, cos), 왼쪽 = (cos, sin)
@@ -213,16 +239,26 @@ final class MeteorStrike implements Effects.Active {
 		caster.resetFallDistance();
 	}
 
-	/** 2단계에서 우클릭 · 시간 초과. */
+	/** 2단계에서 우클릭 · 시간 초과 — 곧바로 떨어지지 않고 1초 벼릅니다 (0.2a). */
 	void drop() {
 		if (stage != 2) {
 			return;
 		}
 		stage = 3;
+		t = Ticks.of(BRACE);
+		// 조준이 끝났으니 화면을 돌려줍니다 (떨어지는 것은 직접 보게)
+		DoomAimPayload.stop(caster);
+		caster.removeEffect(MobEffects.INVISIBILITY);
+		Fx.sound(caster, SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2F, 0.6F);
+		Fx.sound(caster, SoundEvents.TRIDENT_RIPTIDE_1, SoundSource.PLAYERS, 0.8F, 0.5F);
+	}
+
+	/** 벼르기가 끝나고 실제로 내리꽂습니다. */
+	private void fall() {
+		stage = 4;
 		t = Ticks.of(DROP);
 		unhold();
 		caster.removeEffect(MobEffects.RESISTANCE);
-		caster.removeEffect(MobEffects.INVISIBILITY);
 		SkillAnimPayload.broadcast(caster, SkillAnimPayload.IF_ULT_DROP, -1);
 		Fx.sound(caster, SoundEvents.TRIDENT_RIPTIDE_2, SoundSource.PLAYERS, 1.4F, 0.6F);
 	}
@@ -281,10 +317,11 @@ final class MeteorStrike implements Effects.Active {
 
 	private void cleanup() {
 		unhold();
+		DoomAimPayload.stop(caster);
 		Attachments.combatant(caster).casting = false;
 		caster.setNoGravity(false);
 		caster.resetFallDistance();
-		if (stage < 3) {
+		if (stage < 4) {
 			caster.removeEffect(MobEffects.RESISTANCE);
 			caster.removeEffect(MobEffects.INVISIBILITY);
 			SkillAnimPayload.stop(caster, SkillAnimPayload.IF_ULT_RISE);

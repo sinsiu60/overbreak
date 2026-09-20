@@ -57,6 +57,24 @@ public abstract class ItemInHandRendererMixin {
 									PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords);
 
 	/**
+	 * 강화 포션을 쥔 팔 (투귀 전열 재정비, 0.2a) — 바닐라는 왼손에 든 것만 그리고 팔은 그리지 않습니다.
+	 * 병을 그린 바로 뒤에, 그 병을 쥔 손을 함께 그립니다.
+	 */
+	@Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = RENDER_ITEM, shift = At.Shift.AFTER))
+	private void overbreak$potionHand(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack,
+									  ItemStack itemStack, float inverseArmHeight, PoseStack poseStack,
+									  SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+		if (hand != InteractionHand.OFF_HAND || player.isInvisible() || !FirstPersonAnim.potionActive()) {
+			return;
+		}
+		HumanoidArm off = player.getMainArm().getOpposite();
+		poseStack.pushPose();
+		FirstPersonAnim.potionGrip(poseStack, off == HumanoidArm.RIGHT ? 1 : -1);
+		this.renderPlayerArm(poseStack, submitNodeCollector, lightCoords, 0.0F, 0.0F, off);
+		poseStack.popPose();
+	}
+
+	/**
 	 * 두 손 무기 (발키리 연사 포탑): 총을 그린 바로 뒤에 팔을 그립니다.
 	 *   주 손: 총 자세 기준으로 손잡이를 쥠
 	 *   받치는 손: 화면 왼쪽 아래에서 뻗어 총 몸통 밑을 받침. 재장전 중에는 탄창을 빼고 끼우고 장전 손잡이를 당김

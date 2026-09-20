@@ -37,13 +37,16 @@ public abstract class GameRendererBobMixin {
 		}
 	}
 
-	/** 전술 구르기 1인칭 화면 기울기 — 월드 화면 행렬에만 (손 · 총은 화면에 붙어 있음). */
+	/** 전술 구르기 · 근접 타격 화면 기울기 — 월드 화면 행렬에만 (손 · 총은 화면에 붙어 있음). */
 	@Inject(method = "renderLevel", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/client/renderer/GameRenderer;bobHurt(Lnet/minecraft/client/renderer/state/level/CameraRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;)V",
 			shift = At.Shift.AFTER))
 	private void overbreak$rollCamera(net.minecraft.client.DeltaTracker deltaTracker, CallbackInfo ci, @Local PoseStack bobStack) {
 		if (InputMode.active()) {
-			kr.overbreak.client.camera.RollCamera.apply(bobStack, deltaTracker.getGameTimeDeltaPartialTick(false));
+			float partial = deltaTracker.getGameTimeDeltaPartialTick(false);
+			kr.overbreak.client.camera.RollCamera.apply(bobStack, partial);
+			// 근접 타격 반동 — 휘두른 쪽으로 화면이 살짝 기울었다가 돌아옵니다
+			kr.overbreak.client.camera.MeleePunch.apply(bobStack, partial);
 		}
 	}
 

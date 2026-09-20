@@ -33,8 +33,10 @@ public final class OverbreakClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(SkillAnimPayload.TYPE, (payload, context) -> {
 			SkillAnims.receive(payload);
 			Recoil.onAnim(payload);
+			kr.overbreak.client.camera.MeleePunch.onAnim(payload);
 		});
 		ClientTickEvents.END_CLIENT_TICK.register(Recoil::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(mc -> kr.overbreak.client.camera.MeleePunch.tick());
 		// 총알 궤적: 서버가 알려 준 줄을 화면을 향한 2D 빛줄기로 짧게 그림
 		ClientPlayNetworking.registerGlobalReceiver(TracerPayload.TYPE, (payload, context) -> BulletTrails.receive(payload));
 		ClientTickEvents.END_CLIENT_TICK.register(BulletTrails::tick);
@@ -56,6 +58,11 @@ public final class OverbreakClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(InputMode::tick);
 		ClientPlayNetworking.registerGlobalReceiver(HudPayload.TYPE, (payload, context) -> HudState.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(HitPayload.TYPE, (payload, context) -> HitMarker.receive(payload));
+		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.HealPayload.TYPE,
+				(payload, context) -> kr.overbreak.client.hud.HealScreen.receive(payload));
+		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.DoomAimPayload.TYPE,
+				(payload, context) -> kr.overbreak.client.camera.DoomCamera.receive(payload));
+		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.camera.DoomCamera::tick);
 		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.HurtPayload.TYPE,
 				(payload, context) -> kr.overbreak.client.hud.DamageFeedback.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.ScorePayload.TYPE,

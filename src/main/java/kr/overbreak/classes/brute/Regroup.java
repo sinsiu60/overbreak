@@ -21,10 +21,11 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 /**
- * [E] 전열 재정비 — 숨을 고르며 상처를 눌러 닫습니다.
+ * [E] 전열 재정비 — 왼손에 쥔 강화 포션을 단숨에 들이켭니다 (0.2a).
  *
  *   {@value #DURATION} (1/20초 단위 = 1초) 동안 채널링. 걸을 수는 있지만 이동속도 -30%, 평타 · 다른 스킬 불가
- *   숨을 고르는 동안 받는 피해 {@value #GUARD_PERCENT}% 감소 — 맞으면서도 버틸 수 있게 (0.1f)
+ *   마시는 동안 받는 피해 {@value #GUARD_PERCENT}% 감소 — 맞으면서도 버틸 수 있게 (0.1f)
+ *   다 마시면 빈 병을 발밑에 내던져 깨뜨립니다 (끊겨도 병은 깨집니다 — 마시다 만 것도 버립니다)
  *   끝까지 버티면 체력 {@value #HEAL} 회복 + 투기 {@value #FERVOR} 스택
  *   중간에 기절 · 넘어지면 끊기고, 그때까지 찬 만큼만 회복합니다 (쿨타임은 그대로)
  *   쿨타임 12초 (누른 순간부터)
@@ -41,6 +42,8 @@ final class Regroup implements Effects.Active {
 
 	private static final Identifier SLOW_ID = Overbreak.id("brute_regroup_slow");
 	private static final int GREEN = Fx.rgb(0.45, 0.95, 0.45);
+	/** 왼손에 쥐는 강화 포션 (3D 모델 overbreak:brute_potion). */
+	private static final String POTION_MODEL = "overbreak:brute_potion";
 
 	private final ServerPlayer caster;
 	private final BruteState state;
@@ -63,12 +66,15 @@ final class Regroup implements Effects.Active {
 		st.regroup = r;
 		Attachments.combatant(p).casting = true;
 		CrowdControl.mod(p, Attributes.MOVEMENT_SPEED, SLOW_ID, -SLOW, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+		holdPotion(p);
 		SkillAnimPayload.broadcast(p, SkillAnimPayload.BR_REGROUP, -1);
+		Fx.sound(p, SoundEvents.BOTTLE_EMPTY, SoundSource.PLAYERS, 0.8F, 1.3F);
 		Fx.sound(p, SoundEvents.GENERIC_DRINK, SoundSource.PLAYERS, 0.9F, 0.7F);
-		Fx.sound(p, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.5F, 1.2F);
+		// 화면 가장자리 초록 — 마시는 동안 내내
+		kr.overbreak.net.HealPayload.send(p, DURATION);
 		Attachments.profile(p).msgT = 25;
 		Hud.actionbar(p, Component.empty().append(Hud.bold("전열 재정비", ChatFormatting.GREEN))
-				.append(Hud.text("  숨을 고르는 중...  받는 피해 -40%", ChatFormatting.GRAY)));
+				.append(Hud.text("  강화 포션을 들이키는 중...  받는 피해 -40%", ChatFormatting.GRAY)));
 		Effects.add(r);
 	}
 
@@ -106,7 +112,35 @@ final class Regroup implements Effects.Active {
 		return true;
 	}
 
+	/** 왼손에 포션을 쥐여 줍니다 (원래 들고 있던 것은 없습니다 — 투귀는 왼손을 비워 둡니다). */
+	private static void holdPotion(ServerPlayer p) {
+		p.getInventory().setItem(net.minecraft.world.entity.player.Inventory.SLOT_OFFHAND,
+				kr.overbreak.item.SkillItems.prop(POTION_MODEL,
+						kr.overbreak.item.SkillItems.name("강화 포션", ChatFormatting.GREEN)));
+		p.containerMenu.sendAllDataToRemote();
+	}
+
+	/** 다 마셨든 끊겼든 빈 병은 발밑에 내던져 깨집니다. */
+	private void dropBottle() {
+		caster.getInventory().setItem(net.minecraft.world.entity.player.Inventory.SLOT_OFFHAND,
+				net.minecraft.world.item.ItemStack.EMPTY);
+		caster.containerMenu.sendAllDataToRemote();
+		if (!(caster.level() instanceof ServerLevel level)) {
+			return;
+		}
+		double x = caster.getX();
+		double y = caster.getY() + 0.1;
+		double z = caster.getZ();
+		Fx.sound(caster, SoundEvents.SPLASH_POTION_BREAK, SoundSource.PLAYERS, 0.9F, 1.2F);
+		Fx.sound(caster, SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 0.8F, 1.1F);
+		Fx.particle(level, new net.minecraft.core.particles.ItemParticleOption(ParticleTypes.ITEM,
+				net.minecraft.world.item.Items.GLASS_BOTTLE), x, y, z, 12, 0.2, 0.05, 0.2, 0.15);
+		Fx.particle(level, Fx.dust(GREEN, 1.1F), x, y, z, 18, 0.35, 0.05, 0.35, 0.02);
+		Fx.particle(level, ParticleTypes.SPLASH, x, y, z, 10, 0.3, 0.05, 0.3, 0.1);
+	}
+
 	private void finish() {
+		dropBottle();
 		Fervor.gain(caster, state, FERVOR);
 		Fx.sound(caster, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7F, 1.4F);
 		Attachments.profile(caster).msgT = 35;
@@ -117,6 +151,7 @@ final class Regroup implements Effects.Active {
 	}
 
 	private void interrupt() {
+		dropBottle();
 		SkillAnimPayload.stop(caster, SkillAnimPayload.BR_REGROUP);
 		Fx.sound(caster, SoundEvents.NOTE_BLOCK_BASS, SoundSource.PLAYERS, 0.8F, 0.5F);
 		Attachments.profile(caster).msgT = 30;
@@ -136,6 +171,11 @@ final class Regroup implements Effects.Active {
 	}
 
 	private void cleanup() {
+		// 죽거나 나가서 끝났을 때도 손에 병이 남지 않게
+		if (!caster.getOffhandItem().isEmpty()) {
+			caster.getInventory().setItem(net.minecraft.world.entity.player.Inventory.SLOT_OFFHAND,
+					net.minecraft.world.item.ItemStack.EMPTY);
+		}
 		CrowdControl.unmod(caster, Attributes.MOVEMENT_SPEED, SLOW_ID);
 		Attachments.combatant(caster).casting = false;
 		if (state.regroup == this) {

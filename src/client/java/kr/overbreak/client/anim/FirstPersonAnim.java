@@ -122,6 +122,18 @@ public final class FirstPersonAnim {
 			{3.0F, 0.62F, -0.86F, -0.60F, 0F, 0F, 0F, 1.0F},
 			{40.0F, 0.62F, -0.86F, -0.60F, 0F, 0F, 0F, 1.0F}};
 
+	/**
+	 * 투귀 강화 포션 (왼손) — 병을 입으로 올려 들이켰다가 발밑으로 내던집니다 (0.2a).
+	 * {시각, x, y, z, 가로축 회전, 세로축 회전, 화면축 회전, 크기}
+	 */
+	private static final float[][] BR_POTION_OFF = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
+			{4.0F, 0.44F, -0.28F, -0.66F, 38F, -12F, -10F, 1.0F},
+			{8.0F, 0.38F, -0.18F, -0.60F, 74F, -14F, -12F, 1.0F},
+			{15.0F, 0.37F, -0.15F, -0.58F, 92F, -14F, -12F, 1.0F},
+			{18.0F, 0.48F, -0.38F, -0.66F, 24F, -10F, -6F, 1.0F},
+			{20.0F, 0.58F, -1.00F, -0.56F, -62F, 0F, 34F, 1.0F}};
+
 	/** 바닐라 기본 손 자세 — 키프레임이 끝나면 여기로 돌아옵니다. */
 	private static final float[] BASE = {0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F};
 
@@ -131,7 +143,8 @@ public final class FirstPersonAnim {
 		Minecraft mc = Minecraft.getInstance();
 		return mc.player == null ? null
 				: SkillAnims.latestOf(mc.player.getId(), SkillAnimPayload.HK_CHARGE, SkillAnimPayload.IF_SHOT, SkillAnimPayload.IF_CHARGE,
-						SkillAnimPayload.IF_PUNCH, SkillAnimPayload.IF_BLOCK, SkillAnimPayload.IF_SLAM_HIT);
+						SkillAnimPayload.IF_PUNCH, SkillAnimPayload.IF_BLOCK, SkillAnimPayload.IF_SLAM_HIT,
+						SkillAnimPayload.BR_REGROUP);
 	}
 
 	private static final net.minecraft.resources.Identifier VALKYRIE_RIFLE = kr.overbreak.Overbreak.id("valkyrie_rifle");
@@ -146,6 +159,14 @@ public final class FirstPersonAnim {
 	 *   오른손: 바닐라 빈손 자리보다 조금 뒤 · 아래 — 뒤쪽 손잡이를 쥠
 	 *   왼손  : 화면 가운데 아래로 옮겨 앞쪽 총열 아래를 받침 (팔이 오른쪽 위로 뻗어 총열에 닿음)
 	 */
+	/**
+	 * 포션을 그린 자리에서 그 병을 쥔 팔을 그릴 자리로 (0.2a).
+	 * 병 모델 기준점은 바닥 가운데라, 팔은 그보다 조금 아래 · 바깥에서 올라옵니다.
+	 */
+	public static void potionGrip(PoseStack pose, int invert) {
+		pose.translate(invert * 0.04F, -0.68F, -0.04F);
+	}
+
 	public static void gunGrip(PoseStack pose, int invert, boolean support) {
 		pose.translate(-invert * 0.56F, 0.52F, 0.72F);
 		if (!support) {
@@ -218,18 +239,25 @@ public final class FirstPersonAnim {
 		return new GunHands(arm, magazine);
 	}
 
-	/** 왼손 아이템(방패 · 철권포) 애니메이션 중인가. */
+	/** 지금 왼손이 강화 포션을 들이켜는 중인가 (팔까지 함께 그립니다). */
+	public static boolean potionActive() {
+		SkillAnims.Play play = offhandPlay();
+		return play != null && play.anim == SkillAnimPayload.BR_REGROUP;
+	}
+
+	/** 왼손 아이템(방패 · 철권포 · 강화 포션) 애니메이션 중인가. */
 	public static boolean offhandItemActive() {
 		return offhandPlay() != null;
 	}
 
-	/** 왼손 아이템 자세를 통째로 정합니다 (돌진 충격 방패 · 철권포 장갑). */
+	/** 왼손 아이템 자세를 통째로 정합니다 (돌진 충격 방패 · 철권포 장갑 · 강화 포션). */
 	public static boolean applyOffhandItem(PoseStack pose, HumanoidArm arm, float partial) {
 		SkillAnims.Play play = offhandPlay();
 		if (play == null) {
 			return false;
 		}
 		float[][] keys = switch (play.anim) {
+			case SkillAnimPayload.BR_REGROUP -> BR_POTION_OFF;
 			case SkillAnimPayload.HK_CHARGE -> HK_SHIELD;
 			case SkillAnimPayload.IF_SHOT -> IF_SHOT_OFF;
 			case SkillAnimPayload.IF_CHARGE -> IF_AIM_OFF;
