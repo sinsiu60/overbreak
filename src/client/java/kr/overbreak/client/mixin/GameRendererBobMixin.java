@@ -47,6 +47,8 @@ public abstract class GameRendererBobMixin {
 			kr.overbreak.client.camera.RollCamera.apply(bobStack, partial);
 			// 근접 타격 반동 — 휘두른 쪽으로 화면이 살짝 기울었다가 돌아옵니다
 			kr.overbreak.client.camera.MeleePunch.apply(bobStack, partial);
+			// 공중 재장전이 맞물리는 순간의 펀치
+			kr.overbreak.client.camera.ReloadKick.apply(bobStack, partial);
 		}
 	}
 

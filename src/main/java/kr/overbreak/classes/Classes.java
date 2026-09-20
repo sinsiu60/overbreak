@@ -46,6 +46,7 @@ public final class Classes {
 		register(new kr.overbreak.classes.shade.Shade());
 		register(new kr.overbreak.classes.thunder.Thunder());
 		register(new kr.overbreak.classes.brute.Brute());
+		register(new kr.overbreak.classes.gunslinger.Gunslinger());
 	}
 
 	public static void register(PvpClass c) {

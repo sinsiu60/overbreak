@@ -23,7 +23,8 @@ public abstract class AbstractClientPlayerFovMixin {
 		}
 		float partial = net.minecraft.client.Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
 		float scale = kr.overbreak.client.hud.ShadeScreen.fovScale(partial) * kr.overbreak.client.hud.ThunderScreen.fovScale(partial)
-				* kr.overbreak.client.tutorial.BootSequence.fovScale();
+				* kr.overbreak.client.tutorial.BootSequence.fovScale()
+				* kr.overbreak.client.camera.ReloadKick.fovScale(partial);
 		if (kr.overbreak.client.hud.DeadeyeHud.active()) {
 			scale *= 0.9F;
 		}

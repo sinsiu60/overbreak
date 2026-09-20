@@ -219,6 +219,17 @@ public final class ThirdPersonAnim {
 			spin = turn;
 			headSpin = turn;
 		}
+		if (play.anim == SkillAnimPayload.GS_ACRO) {
+			// 공예 난사: 0.8초(16) 동안 정확히 한 바퀴 — 난사 방향과 몸 방향이 같아야 합니다
+			float turn = -(360.0F / kr.overbreak.classes.gunslinger.AeroAcrobatics.DURATION) * Math.min(e, end);
+			if (e > end) {
+				float target = (float) Math.round(turn / 360.0F) * 360.0F;
+				float q = Mth.clamp((e - end) / fade, 0.0F, 1.0F);
+				turn = Mth.lerp(1.0F - (1.0F - q) * (1.0F - q), turn, target);
+			}
+			spin = turn;
+			headSpin = turn;
+		}
 		a.overbreak$setItemScale(itemScale);
 		// 살육 · 돌개바람은 몸 전체(다리 포함)가 돕니다. 상체만 도는 동작이 필요하면 overbreak$setSpin 을 씁니다.
 		state.bodyRot += spin;

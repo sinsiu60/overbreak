@@ -115,6 +115,20 @@ public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duratio
 	public static final int BR_REGROUP = 47;
 	/** 투귀 무쌍 (포효). */
 	public static final int BR_ULT = 48;
+	/** 건슬링어 쌍권총 한 발 (번갈아 오른손 · 왼손 총구). */
+	public static final int GS_SHOT = 49;
+	/** 건슬링어 공중 재장전 (탄창 두 개를 위로 털겨 올리고 총을 돌리다가 다시 받아 끼움). */
+	public static final int GS_RELOAD = 50;
+	/** 건슬링어 반동 도약 (두 총을 아래로 내리꽂음). */
+	public static final int GS_BOOST = 51;
+	/** 건슬링어 곡예 난사 (몸을 한 바퀴 돌리며 사방으로 난사). */
+	public static final int GS_ACRO = 52;
+	/** 건슬링어 사선 앵커 (왼손을 앞으로 내뻗어 와이어 발사). */
+	public static final int GS_ANCHOR = 53;
+	/** 건슬링어 차원 회전 포격 (떠서 아래를 겨눈 채 연속 사격). duration 을 씁니다. */
+	public static final int GS_ULT = 54;
+	/** 건슬링어 체공 훈풍 활공 (두 팔을 벌리고 미끄러짐). 서버가 멈춥니다. */
+	public static final int GS_GLIDE = 55;
 
 	public static final Type<SkillAnimPayload> TYPE = new Type<>(Overbreak.id("skill_anim"));
 	public static final StreamCodec<ByteBuf, SkillAnimPayload> CODEC = StreamCodec.composite(

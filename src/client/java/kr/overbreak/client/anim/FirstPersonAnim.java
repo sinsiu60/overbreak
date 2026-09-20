@@ -136,6 +136,63 @@ public final class FirstPersonAnim {
 			{18.0F, 0.48F, -0.38F, -0.66F, 24F, -10F, -6F, 1.0F},
 			{20.0F, 0.58F, -1.00F, -0.56F, -62F, 0F, 34F, 1.0F}};
 
+	/**
+	 * 건슬링어 쌍권총 {시각, x, y, z, 가로축 회전, 세로축 회전, 화면축 회전, 크기}.
+	 * 양손에 한 자루씩 들고 있어 같은 표를 주 손 · 왼손에 그대로 씁니다 (invert 가 좌우를 뒤집어 대칭이 됩니다).
+	 */
+	private static final float[][] GS_SHOT = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
+			{0.7F, 0.56F, -0.44F, -0.62F, -15F, 0F, 3F, 1.02F},
+			{2.2F, 0.57F, -0.55F, -0.75F, 5F, 0F, -1F, 1.0F},
+			{6.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F}};
+	/**
+	 * 공중 재장전 (25틱) — 손목 털기기 → 앞으로 한 바퀴 돌리기 → 받아 끼우기 → 반동.
+	 * 16.0 → 16.1 은 360도 = 0도 를 바꾸는 자리입니다 (끝난 뒤 fade 가 한 바퀴 더 돌지 않게).
+	 */
+	private static final float[][] GS_RELOAD = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
+			{2.0F, 0.54F, -0.34F, -0.66F, -30F, 4F, -8F, 1.0F},
+			{5.0F, 0.52F, -0.30F, -0.64F, -36F, 6F, -10F, 1.0F},
+			{11.0F, 0.50F, -0.40F, -0.72F, 160F, 4F, -6F, 1.0F},
+			{16.0F, 0.52F, -0.36F, -0.70F, 360F, 2F, -4F, 1.0F},
+			{16.1F, 0.52F, -0.36F, -0.70F, 0F, 2F, -4F, 1.0F},
+			{18.0F, 0.55F, -0.10F, -0.60F, -26F, 0F, 0F, 1.05F},
+			{19.5F, 0.56F, -0.24F, -0.66F, -8F, 0F, 0F, 1.0F},
+			{22.0F, 0.60F, -0.64F, -0.80F, 14F, -3F, 5F, 0.97F},
+			{25.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F}};
+	/** 반동 도약 — 조준한 쪽으로 내질렀다가 크게 뒤로 튀김. */
+	private static final float[][] GS_BOOST = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
+			{1.5F, 0.48F, -0.40F, -0.95F, -18F, 8F, 0F, 1.06F},
+			{3.0F, 0.62F, -0.62F, -0.55F, 26F, -6F, 0F, 1.0F},
+			{8.0F, 0.58F, -0.55F, -0.70F, 8F, -2F, 0F, 1.0F},
+			{12.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F}};
+	/** 공예 난사 — 두 총을 밖으로 벌리고 한 바퀴 (세로축 -360도). */
+	private static final float[][] GS_ACRO = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
+			{2.0F, 0.40F, -0.46F, -0.80F, -10F, -40F, -14F, 1.05F},
+			{8.0F, 0.40F, -0.46F, -0.80F, -10F, -180F, -14F, 1.05F},
+			{14.0F, 0.42F, -0.46F, -0.78F, -10F, -320F, -14F, 1.05F},
+			{15.9F, 0.52F, -0.50F, -0.74F, -4F, -360F, -6F, 1.0F},
+			{16.0F, 0.52F, -0.50F, -0.74F, -4F, 0F, -6F, 1.0F}};
+	/** 사선 앵커 — 오른쪽 총을 바깥으로 치우고 왼손이 와이어를 쎏다. */
+	private static final float[][] GS_ANCHOR = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
+			{2.0F, 0.70F, -0.58F, -0.60F, -12F, 18F, 10F, 1.0F},
+			{7.0F, 0.66F, -0.56F, -0.64F, -6F, 14F, 8F, 1.0F},
+			{12.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F}};
+	/** 차원 회전 포격 — 두 총을 아래로 겨눈 채 유지. */
+	private static final float[][] GS_ULT = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
+			{5.0F, 0.44F, -0.30F, -0.66F, 46F, 6F, -8F, 1.06F},
+			{60.0F, 0.44F, -0.28F, -0.64F, 50F, 6F, -8F, 1.06F},
+			{68.0F, 0.52F, -0.44F, -0.70F, 18F, 2F, -3F, 1.0F}};
+	/** 체공 훈풍 활공 — 팔을 느슬하게 벌린 자세. */
+	private static final float[][] GS_GLIDE = {
+			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
+			{4.0F, 0.66F, -0.60F, -0.66F, -6F, 16F, 12F, 1.0F},
+			{200.0F, 0.66F, -0.60F, -0.66F, -6F, 16F, 12F, 1.0F}};
+
 	/** 바닐라 기본 손 자세 — 키프레임이 끝나면 여기로 돌아옵니다. */
 	private static final float[] BASE = {0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F};
 
@@ -146,7 +203,10 @@ public final class FirstPersonAnim {
 		return mc.player == null ? null
 				: SkillAnims.latestOf(mc.player.getId(), SkillAnimPayload.HK_CHARGE, SkillAnimPayload.IF_SHOT, SkillAnimPayload.IF_CHARGE,
 						SkillAnimPayload.IF_PUNCH, SkillAnimPayload.IF_BLOCK, SkillAnimPayload.IF_SLAM_HIT,
-						SkillAnimPayload.BR_REGROUP);
+						SkillAnimPayload.BR_REGROUP,
+						// 건슬링어는 양손에 한 자루씩 — 왼손 총도 같은 키프레임을 매대로 따릅니다 (invert 가 좌우를 뒤집음)
+						SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_ACRO,
+						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_ULT, SkillAnimPayload.GS_GLIDE);
 	}
 
 	private static final net.minecraft.resources.Identifier VALKYRIE_RIFLE = kr.overbreak.Overbreak.id("valkyrie_rifle");
@@ -245,6 +305,13 @@ public final class FirstPersonAnim {
 			return false;
 		}
 		float[][] keys = switch (play.anim) {
+			case SkillAnimPayload.GS_SHOT -> GS_SHOT;
+			case SkillAnimPayload.GS_RELOAD -> GS_RELOAD;
+			case SkillAnimPayload.GS_BOOST -> GS_BOOST;
+			case SkillAnimPayload.GS_ACRO -> GS_ACRO;
+			case SkillAnimPayload.GS_ANCHOR -> GS_ANCHOR;
+			case SkillAnimPayload.GS_ULT -> GS_ULT;
+			case SkillAnimPayload.GS_GLIDE -> GS_GLIDE;
 			case SkillAnimPayload.BR_REGROUP -> BR_POTION_OFF;
 			case SkillAnimPayload.HK_CHARGE -> HK_SHIELD;
 			case SkillAnimPayload.IF_SHOT -> IF_SHOT_OFF;
@@ -307,7 +374,9 @@ public final class FirstPersonAnim {
 						SkillAnimPayload.SD_REND, SkillAnimPayload.SD_EVADE, SkillAnimPayload.SD_KUNAI, SkillAnimPayload.SD_STRIKE, SkillAnimPayload.SD_STEP,
 						SkillAnimPayload.TH_CAST, SkillAnimPayload.TH_DASH, SkillAnimPayload.TH_FIELD, SkillAnimPayload.TH_SMITE, SkillAnimPayload.TH_ULT,
 						SkillAnimPayload.BR_BASIC, SkillAnimPayload.BR_BASIC_BACK, SkillAnimPayload.BR_BLOW,
-						SkillAnimPayload.BR_WHIRL, SkillAnimPayload.BR_REGROUP, SkillAnimPayload.BR_ULT);
+						SkillAnimPayload.BR_WHIRL, SkillAnimPayload.BR_REGROUP, SkillAnimPayload.BR_ULT,
+						SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_ACRO,
+						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_ULT, SkillAnimPayload.GS_GLIDE);
 	}
 
 	/** 지금 1인칭 동작의 firstperson_item_spin (총 기준, 손끝 축) — 없으면 null. */
@@ -353,6 +422,13 @@ public final class FirstPersonAnim {
 			case SkillAnimPayload.IF_SLAM_HIT -> IF_SLAM_HIT;
 			case SkillAnimPayload.IF_ULT_RISE -> IF_ULT_RISE;
 			case SkillAnimPayload.IF_ULT_DROP -> IF_ULT_DROP;
+			case SkillAnimPayload.GS_SHOT -> GS_SHOT;
+			case SkillAnimPayload.GS_RELOAD -> GS_RELOAD;
+			case SkillAnimPayload.GS_BOOST -> GS_BOOST;
+			case SkillAnimPayload.GS_ACRO -> GS_ACRO;
+			case SkillAnimPayload.GS_ANCHOR -> GS_ANCHOR;
+			case SkillAnimPayload.GS_ULT -> GS_ULT;
+			case SkillAnimPayload.GS_GLIDE -> GS_GLIDE;
 			default -> null;
 		};
 		if (play.anim == SkillAnimPayload.IF_CHARGE && e < end) {

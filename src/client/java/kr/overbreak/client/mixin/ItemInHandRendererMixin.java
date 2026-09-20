@@ -168,6 +168,49 @@ public abstract class ItemInHandRendererMixin {
 		}
 	}
 
+	/**
+	 * 건슬링어 쌀권총 — 양손에 한 자루씩이라 주 손 · 왼손 차례에 각각 그 손의 팔을 그리고,
+	 * 공중 재장전 동안에는 하늘로 털겨 올린 탄창 두 개도 따로 그립니다.
+	 * 탄창은 손을 떠난 물건이라 총 자세가 아니라 카메라 공간 기준입니다 (pop → push 로 되돌림).
+	 */
+	@Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = RENDER_ITEM, shift = At.Shift.AFTER))
+	private void overbreak$gunslingerHands(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack,
+										  ItemStack itemStack, float inverseArmHeight, PoseStack poseStack,
+										  SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+		if (!kr.overbreak.client.anim.GunslingerAnim.pistols(itemStack)) {
+			return;
+		}
+		boolean off = hand == InteractionHand.OFF_HAND;
+		HumanoidArm main = player.getMainArm();
+		// 양손에 한 자루씩 — 이 훅은 손마다 한 번씩 불리므로 그 손의 팔을 그립니다
+		HumanoidArm arm = off ? main.getOpposite() : main;
+		int invert = arm == HumanoidArm.RIGHT ? 1 : -1;
+		if (!player.isInvisible()) {
+			// 바닐라는 1인칭에서 아이템만 그리므로 총을 쥐는 팔을 직접 올립니다.
+			poseStack.pushPose();
+			FirstPersonAnim.gunGrip(poseStack, invert, false);
+			this.renderPlayerArm(poseStack, submitNodeCollector, lightCoords, 0.0F, 0.0F, arm);
+			poseStack.popPose();
+		}
+		// 탄창 두 개는 한 번만 (주 손 차례에)
+		org.joml.Matrix4f[] mags = off ? new org.joml.Matrix4f[0]
+				: kr.overbreak.client.anim.GunslingerAnim.flyingMags(player.getId(), invert, frameInterp);
+		if (mags.length == 0) {
+			return;
+		}
+		poseStack.popPose();
+		poseStack.pushPose();
+		net.minecraft.world.item.ItemDisplayContext ctx = arm == HumanoidArm.RIGHT
+				? net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
+				: net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+		for (org.joml.Matrix4f m : mags) {
+			poseStack.pushPose();
+			poseStack.mulPose(m);
+			this.renderItem(player, kr.overbreak.client.anim.GunslingerAnim.magazineStack(), ctx, poseStack, submitNodeCollector, lightCoords);
+			poseStack.popPose();
+		}
+	}
+
 	@Inject(method = "submitHandsWithItems", at = @At("TAIL"))
 	private void overbreak$offhandArm(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector,
 									  LocalPlayer player, int lightCoords, CallbackInfo ci) {

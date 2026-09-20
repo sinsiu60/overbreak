@@ -100,6 +100,13 @@ public final class PlayerAnimations {
 			case SkillAnimPayload.BR_WHIRL -> "brute.whirl";
 			case SkillAnimPayload.BR_REGROUP -> "brute.regroup";
 			case SkillAnimPayload.BR_ULT -> "brute.ult";
+			case SkillAnimPayload.GS_SHOT -> "gunslinger.shot";
+			case SkillAnimPayload.GS_RELOAD -> "gunslinger.reload";
+			case SkillAnimPayload.GS_BOOST -> "gunslinger.boost";
+			case SkillAnimPayload.GS_ACRO -> "gunslinger.acro";
+			case SkillAnimPayload.GS_ANCHOR -> "gunslinger.anchor";
+			case SkillAnimPayload.GS_ULT -> "gunslinger.ult";
+			case SkillAnimPayload.GS_GLIDE -> "gunslinger.glide";
 			default -> null;
 		};
 	}

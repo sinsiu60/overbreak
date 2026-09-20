@@ -23,6 +23,8 @@ public final class Recoil {
 	private static final float PEACEKEEPER = 1.2F;
 	private static final float FAN = 3.0F;
 	private static final float FAN_YAW = 1.0F;
+	/** 건슬링어 쌍권총 — 연사가 빨라 한 발은 작게. */
+	private static final float PISTOL = 0.5F;
 
 	private static float pendingYaw;
 	private static int fanShots;
@@ -47,6 +49,8 @@ public final class Recoil {
 			kick(ROCKET);
 		} else if (msg.anim() == SkillAnimPayload.SH_SHOT) {
 			kick(PEACEKEEPER);
+		} else if (msg.anim() == SkillAnimPayload.GS_SHOT) {
+			kick(PISTOL);
 		} else if (msg.anim() == SkillAnimPayload.SH_FAN) {
 			// 리볼버 난사: 한 발마다 3도 위로, 좌우는 번갈아 1도 (익히면 손으로 되잡을 수 있는 정해진 모양)
 			fanShots = sinceShot > 10 ? 1 : fanShots + 1;

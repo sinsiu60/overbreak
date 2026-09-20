@@ -57,7 +57,13 @@ public final class HudLayouts {
 					new SlotDef(icon("warrior_slay"), "RMB"),
 					new SlotDef(icon("warrior_fury"), "SHIFT"),
 					new SlotDef(icon("warrior_chain"), "E")),
-					icon("warrior_ult"), 0xFFFF5A4A));
+					icon("warrior_ult"), 0xFFFF5A4A),
+			"gunslinger", new Layout(List.of(
+					new SlotDef(icon("gunslinger_boost"), "RMB"),
+					// 웅크리기만 누르면 활공(패시브)이라, 곡예 난사는 웅크린 채 우클릭입니다
+					new SlotDef(icon("gunslinger_acro"), "S+RMB"),
+					new SlotDef(icon("gunslinger_anchor"), "E")),
+					icon("gunslinger_ult"), 0xFF7FD4FF));
 
 	private HudLayouts() {}
 

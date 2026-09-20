@@ -116,10 +116,16 @@ public final class HudState {
 		if (!InputMode.active()) {
 			return;
 		}
-		// 칸 순서: 우클릭 · 웅크리기 · F, 그리고 Q = 궁극기
-		KeyMapping[] keys = {mc.options.keyUse, mc.options.keyShift, mc.options.keySwapOffhand, mc.options.keyDrop};
+		// 칸 순서: 우클릭 · 웅크리기 · E, 그리고 Q = 궁극기 (0.2 이후 액티브3 키는 E)
+		KeyMapping[] keys = {mc.options.keyUse, mc.options.keyShift, mc.options.keyInventory, mc.options.keyDrop};
+		// 웅크리기 + 우클릭으로 쓰는 칸(건슬링어 곡예 난사)은 둘 다 눌렸을 때만 사용불가로 친다
+		HudLayouts.Layout layout = HudLayouts.get(classId);
+		boolean comboSlot1 = layout != null && layout.slots().size() > 1 && layout.slots().get(1).key().contains("RMB");
 		for (int k = 0; k < keys.length; k++) {
 			boolean down = keys[k].isDown();
+			if (k == 1 && comboSlot1) {
+				down = down && mc.options.keyUse.isDown();
+			}
 			if (down && !PREV_KEYS[k]) {
 				if (k < 3 && k < remaining.length && remaining[k] > 0) {
 					deniedAt[k] = ticks;
