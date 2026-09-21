@@ -35,7 +35,7 @@ public final class GunslingerClientTest implements FabricClientGameTest {
 			}
 			// 3인칭 동작 파일 (뼈대 이름 · 채널 오류는 여기서 걸립니다)
 			for (String name : new String[] {
-					"gunslinger.shot", "gunslinger.shot_left", "gunslinger.reload", "gunslinger.boost", "gunslinger.scatter",
+					"gunslinger.shot", "gunslinger.shot_left", "gunslinger.reload", "gunslinger.boost",
 					"gunslinger.anchor", "gunslinger.ult", "gunslinger.glide"}) {
 				if (kr.overbreak.client.anim.data.PlayerAnimations.get(name) == null) {
 					throw new AssertionError("애니메이션 파일에 없음: " + name);

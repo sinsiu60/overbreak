@@ -1,0 +1,62 @@
+{
+  "_doc": [
+    "돌진 난사 3인칭 몸 동작 값 — F3+T 로 다시 읽힙니다 (재컴파일 없음). 빠진 값은 코드 기본값.",
+    "시각은 스펙 표 그대로 '기본 단계 길이 기준 초': 기 모으기 0~0.10 · 돌진 0.10~0.35 · 난사 들어가기 0.35~0.40 · 난사 0.40~1.25 · 마무리 1.25~1.50",
+    "서버 단계(DashScatter)로 비례해 옮깁니다. 서버의 '제동' 단계가 '난사 들어가기(스키드 · 팔 펼침)' 를 맡습니다.",
+    "키프레임: [초, 값, 이징] — 이징은 앞 키에서 이 키로 가는 곡선 (linear, hold, ease_in_quad, ease_out_quad, ease_in_out_quad, ease_out_cubic, ease_out_expo, ease_out_back, ease_in_out_sine)",
+    "팔 yaw: + = 몸의 왼쪽 (오른팔 기준 안쪽). 왼팔은 오른팔 값의 yaw · abd 부호를 뒤집습니다.",
+    "spray 의 시간 값은 초 (난사 시작 기준 간격 · 길이)"
+  ],
+  "spray": {
+    "armFireInterval": 0.06,
+    "armOffset": 0.03,
+    "snapTime": 0.02,
+    "shotsPerArm": 15,
+    "gunRoll": 30,
+    "recoil": -20,
+    "recoilUp": 0.015,
+    "recoilDown": 0.025,
+    "types": [
+      { "name": "outer",  "weight": 60, "pitch": [-150, -50], "yaw": [-90, -10] },
+      { "name": "sky",    "weight": 15, "pitch": [-178, -155], "yaw": [-30, 0], "recoil": 15 },
+      { "name": "ground", "weight": 10, "pitch": [-45, -20], "yaw": [-60, -10], "recoilScale": 0.5 },
+      { "name": "across", "weight": 15, "pitch": [-100, -70], "yaw": [30, 55] }
+    ]
+  },
+  "root": {
+    "yaw": [[0.35, 0], [0.45, 60, "ease_in_quad"], [0.80, 540, "linear"], [0.85, 560, "ease_out_quad"],
+            [0.90, 520, "ease_in_quad"], [1.20, 200, "linear"], [1.25, 180, "ease_out_cubic"]],
+    "pitch": [[0.00, 0], [0.10, 15, "ease_out_quad"], [0.15, 25, "ease_in_quad"], [0.35, 25, "hold"], [0.40, -10, "ease_out_back"],
+              [0.85, -5, "linear"], [0.90, -5, "ease_in_out_quad"], [1.20, 0, "linear"], [1.25, 0, "ease_out_quad"], [1.50, 0]],
+    "roll":  [[0.00, 0], [0.10, 0, "ease_out_quad"], [0.35, 0, "hold"], [0.40, -15, "ease_out_back"], [0.85, -15, "linear"],
+              [0.90, 15, "ease_in_out_quad"], [1.20, 15, "linear"], [1.25, 0, "ease_out_quad"], [1.50, 0]],
+    "y":     [[0.00, 0], [0.10, -1, "ease_out_quad"], [0.35, -1, "hold"], [0.40, -2, "ease_out_back"], [0.90, -2, "ease_in_out_quad"],
+              [1.20, -1, "linear"], [1.25, 0, "ease_out_quad"], [1.50, 0]],
+    "dashSnap": 0.05,
+    "recoverTurn": 0.15
+  },
+  "wobble": { "yaw": 6, "pitch": 3, "up": 0.012, "down": 0.018 },
+  "twist": { "angle": 15, "time": 0.015 },
+  "head": { "dashPitch": -20, "yaw": 20, "pitchMin": -25, "pitchMax": 0, "snap": 0.02 },
+  "arms": {
+    "pitch": [[0.00, 0], [0.10, -80, "ease_out_quad"], [0.15, 45, "ease_in_quad"], [0.35, 45, "hold"]],
+    "yaw":   [[0.00, 0], [0.10, 40, "ease_out_quad"], [0.15, 0, "ease_in_quad"], [0.35, 0, "hold"]],
+    "abd":   [[0.00, 0], [0.10, 0, "ease_out_quad"], [0.15, 15, "ease_in_quad"], [0.35, 15, "hold"]],
+    "entryPitch": -120,
+    "entryYaw": -60,
+    "gatherAt": 1.33,
+    "gatherPitch": -60,
+    "gatherYaw": 10
+  },
+  "legs": {
+    "rPitch": [[0.00, 0], [0.10, -15, "ease_out_quad"], [0.15, -40, "ease_in_quad"], [0.35, -40, "hold"], [0.40, -50, "ease_out_back"],
+               [0.60, -50, "hold"], [0.65, 0, "ease_out_quad"], [1.25, 0], [1.50, 0, "ease_in_out_quad"]],
+    "lPitch": [[0.00, 0], [0.10, 15, "ease_out_quad"], [0.15, 40, "ease_in_quad"], [0.35, 40, "hold"], [0.40, 25, "ease_out_back"],
+               [0.60, 25, "hold"], [0.65, 0, "ease_out_quad"], [1.25, 0], [1.50, 0, "ease_in_out_quad"]],
+    "abd":    [[0.00, 0], [0.60, 0, "hold"], [0.65, 15, "ease_out_quad"], [1.25, 15], [1.50, 0, "ease_in_out_quad"]]
+  },
+  "stomp": { "from": 0.65, "to": 1.25, "every": 0.10, "lift": -25, "other": 10, "up": 0.04, "down": 0.06 },
+  "air": { "legPitch": -45, "enter": 0.05, "exit": 0.05 },
+  "gunSpin": [[1.25, 0], [1.43, -360, "ease_out_cubic"], [1.50, -360]],
+  "lodDistance": 32
+}

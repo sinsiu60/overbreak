@@ -46,6 +46,13 @@ public abstract class ItemInHandLayerMixin {
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"))
 	private void overbreak$scaleItem(ArmedEntityRenderState state, ItemStackRenderState item, ItemStack itemStack, HumanoidArm arm,
 									 PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+		if (state instanceof AnimRenderState sa) {
+			// 돌진 난사 — 총열 축으로 옆으로 눕혀 쏘기 · 마무리 한 바퀴
+			float roll = kr.overbreak.client.anim.scatter.ScatterView.gunRoll(sa, arm);
+			if (roll != 0.0F) {
+				poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(roll));
+			}
+		}
 		if (state instanceof AnimRenderState a && arm == state.mainArm) {
 			float s = a.overbreak$itemScale();
 			if (s != 1.0F) {

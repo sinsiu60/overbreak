@@ -15,6 +15,9 @@ public abstract class AvatarRendererMixin {
 	@Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V",
 			at = @At("TAIL"))
 	private void overbreak$skillAnim(Avatar entity, AvatarRenderState state, float partialTicks, CallbackInfo ci) {
+		if (kr.overbreak.client.anim.scatter.ScatterView.extract(entity, state, partialTicks)) {
+			return;
+		}
 		ThirdPersonAnim.extract(entity.getId(), state, partialTicks);
 		// 걸음 박자: 늘 달리기 속도라 바닐라 다리 흔들기가 너무 빨라 1인칭 무기 흔들림과 같은 비율로 늦춤
 		state.walkAnimationPos *= kr.overbreak.client.camera.WeaponBob.CADENCE;

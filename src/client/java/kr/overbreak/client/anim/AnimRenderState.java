@@ -21,6 +21,13 @@ public interface AnimRenderState {
 
 	float overbreak$spin();
 
+	/** 돌진 난사 3인칭 자세 · 가중치 (재생 중이 아니면 null · 0). */
+	void overbreak$setScatter(kr.overbreak.client.anim.scatter.ScatterBody.@org.jspecify.annotations.Nullable Pose pose, float weight);
+
+	kr.overbreak.client.anim.scatter.ScatterBody.@org.jspecify.annotations.Nullable Pose overbreak$scatter();
+
+	float overbreak$scatterWeight();
+
 	/** 재장전 중 받치는 손에 든 탄창 (비어 있으면 안 그림). */
 	net.minecraft.client.renderer.item.ItemStackRenderState overbreak$magazine();
 }

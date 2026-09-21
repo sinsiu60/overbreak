@@ -54,10 +54,18 @@ public final class OverbreakClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(SkillAnims::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.fx.Afterimages::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.fx.ScatterSounds::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.anim.scatter.ScatterShots::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.anim.scatter.ScatterView::tick);
+		kr.overbreak.client.anim.scatter.ScatterData.init();
+		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.audio.MatchMusicPlayer::tick);
 		// Blockbench 애니메이션: 모드 기본값 + 게임 폴더 overbreak/animations (저장하면 1초 안에 다시 읽음)
 		PlayerAnimations.reload(false);
 		ClientTickEvents.END_CLIENT_TICK.register(PlayerAnimations::tick);
 		ClientPlayNetworking.registerGlobalReceiver(InputModePayload.TYPE, (payload, context) -> InputMode.receive(payload));
+		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.ScatterPayload.TYPE,
+				(payload, context) -> kr.overbreak.client.anim.scatter.ScatterView.receive(payload));
+		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.MusicPayload.TYPE,
+				(payload, context) -> kr.overbreak.client.audio.MatchMusicPlayer.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.ViewPayload.TYPE,
 				(payload, context) -> kr.overbreak.client.camera.ViewLock.receive(payload));
 		ClientTickEvents.END_CLIENT_TICK.register(InputMode::tick);

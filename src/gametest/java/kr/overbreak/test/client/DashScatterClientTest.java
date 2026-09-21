@@ -107,6 +107,20 @@ public final class DashScatterClientTest implements FabricClientGameTest {
 			ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
 			ctx.takeScreenshot("scatter_air_dash");
 			ctx.waitTicks(Ticks.of(DashScatter.LENGTH));
+			reset(sp);
+
+			// 4) 3인칭 몸 동작 — 단계마다 한 장 (기 모으기 · 돌진 · 난사 들어가기 · 난사 · 마무리)
+			// 공중 시험에서 떨어져 이미 땅 위 — 착지만 기다림
+			ctx.waitTicks(Ticks.of(20));
+			ctx.getInput().lookAt(0.0F, 10.0F);
+			onServer(sp, p -> Classes.byId(Gunslinger.ID).secondary(p));
+			int now = 0;
+			for (int at : new int[] {1, 4, 8, 11, 14, 18, 22, 26, 29}) {
+				ctx.waitTicks(Ticks.of(at - now));
+				now = at;
+				ctx.takeScreenshot("scatter_3p_" + at);
+			}
+			ctx.waitTicks(Ticks.of(DashScatter.LENGTH));
 			onServer(sp, Classes::clear);
 		}
 	}

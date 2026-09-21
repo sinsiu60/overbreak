@@ -218,6 +218,11 @@ public final class TeamMatch {
 		return score[Math.max(0, Math.min(1, team))];
 	}
 
+	/** 매치 포인트 — 어느 팀이든 한 점만 더 내면 이김 (경기가 끝나면 아님). */
+	boolean climax() {
+		return phase != Phase.END && phase != Phase.DRAFT && (score[0] >= WIN - 1 || score[1] >= WIN - 1);
+	}
+
 	public Phase phase() {
 		return phase;
 	}

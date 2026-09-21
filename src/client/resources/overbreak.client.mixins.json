@@ -25,7 +25,8 @@
 		"StunLookMixin",
 		"MinecraftTickRateMixin",
 		"ParticleEngineMixin",
-		"OptionsCameraMixin"
+		"OptionsCameraMixin",
+		"MusicManagerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

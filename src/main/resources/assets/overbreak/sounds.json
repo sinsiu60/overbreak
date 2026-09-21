@@ -49,5 +49,13 @@
       "minecraft:item/armor/equip_iron2",
       "minecraft:item/armor/equip_iron3"
     ]
+  },
+  "music.match_point": {
+    "sounds": [
+      {
+        "name": "overbreak:music/before_the_impact",
+        "stream": true
+      }
+    ]
   }
 }

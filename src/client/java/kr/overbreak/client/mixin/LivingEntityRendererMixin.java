@@ -90,6 +90,10 @@ public abstract class LivingEntityRendererMixin {
 	@Inject(method = "setupRotations(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;FF)V",
 			at = @At("TAIL"))
 	private void overbreak$knockPose(LivingEntityRenderState state, PoseStack poseStack, float bodyRot, float entityScale, CallbackInfo ci) {
+		if (state instanceof kr.overbreak.client.anim.AnimRenderState a) {
+			// 돌진 난사 — 엉덩이 높이를 축으로 모델 전체를 숙이고 기울임
+			kr.overbreak.client.anim.scatter.ScatterView.root(a, poseStack, entityScale);
+		}
 		KnockRenderState ks = (KnockRenderState) state;
 		if (ks.overbreak$rollAngle() != 0.0F) {
 			// 이미 몸 방향(180 - bodyRot)으로 돌아간 좌표계라, 월드 축을 몸 기준으로 되돌려 허리 높이를 축으로 돌림

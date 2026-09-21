@@ -62,6 +62,7 @@ public final class Gunslinger implements PvpClass {
 		// 돌진 난사 도중에 시전자를 보기 시작한 사람에게는 지난 만큼 건너뛰어 동작을 보냅니다
 		net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents.START_TRACKING.register((entity, viewer) -> {
 			if (entity instanceof ServerPlayer caster && stateOrNull(caster) instanceof GunslingerState st && st.scatter != null) {
+				kr.overbreak.net.ScatterPayload.sendTo(viewer, caster, st.scatter.seed(), st.scatter.dashYaw());
 				kr.overbreak.net.SkillAnimPayload.sendTo(viewer, caster, kr.overbreak.net.SkillAnimPayload.GS_SCATTER,
 						DashScatter.LENGTH, st.scatter.elapsedTime());
 			}

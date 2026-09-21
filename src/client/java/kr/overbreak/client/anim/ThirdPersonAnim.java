@@ -219,20 +219,6 @@ public final class ThirdPersonAnim {
 			spin = turn;
 			headSpin = turn;
 		}
-		if (play.anim == SkillAnimPayload.GS_SCATTER) {
-			// 돌진 난사: 난사 단계(0.9초) 동안 몸 전체가 두 바퀴 (바퀴당 0.45초 · 일정한 속도). 실제 시선은 그대로
-			float into = (Math.min(e, end) - kr.overbreak.classes.gunslinger.DashScatter.SCATTER_START)
-					/ kr.overbreak.classes.gunslinger.DashScatter.SCATTER;
-			float turn = -720.0F * Mth.clamp(into, 0.0F, 1.0F);
-			if (e > end) {
-				// 끊기면 가장 가까운 한 바퀴 지점까지 감속하며 마저 돌아 정면으로
-				float target = (float) Math.round(turn / 360.0F) * 360.0F;
-				float q = Mth.clamp((e - end) / fade, 0.0F, 1.0F);
-				turn = Mth.lerp(1.0F - (1.0F - q) * (1.0F - q), turn, target);
-			}
-			spin = turn;
-			headSpin = turn;
-		}
 		a.overbreak$setItemScale(itemScale);
 		// 살육 · 돌개바람은 몸 전체(다리 포함)가 돕니다. 상체만 도는 동작이 필요하면 overbreak$setSpin 을 씁니다.
 		state.bodyRot += spin;
@@ -278,6 +264,10 @@ public final class ThirdPersonAnim {
 	public static void pose(HumanoidModel<?> m, AvatarRenderState state) {
 		AnimRenderState a = (AnimRenderState) state;
 		readyPose(m, state);
+		// 돌진 난사는 바닐라 자세를 통째로 바꾸는 절차 동작 (scatter/ScatterView)
+		if (kr.overbreak.client.anim.scatter.ScatterView.pose(m, state)) {
+			return;
+		}
 		int anim = a.overbreak$anim();
 		float w = a.overbreak$weight();
 		float spin = a.overbreak$spin();

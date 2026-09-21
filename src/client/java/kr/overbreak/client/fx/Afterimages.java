@@ -69,6 +69,10 @@ public final class Afterimages {
 				continue;
 			}
 			boolean sky = SkillAnims.playing(p.getId(), SkillAnimPayload.GS_SCATTER);
+			// 돌진 난사 잔상은 두 틱에 한 장 — 너무 촘촘해 몸이 뭉개져 보였습니다
+			if (sky && (p.tickCount & 1) == 1) {
+				continue;
+			}
 			Deque<Ghost> list = GHOSTS.computeIfAbsent(p.getId(), k -> new ArrayDeque<>());
 			// 반 틱마다 한 장 (60틱이면 틱이 이미 촘촘해 틱마다 한 장)
 			for (float partial : kr.overbreak.core.tick.Ticks.k() > 1.5 ? new float[] {1.0F} : new float[] {0.5F, 1.0F}) {

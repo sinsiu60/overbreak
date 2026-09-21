@@ -104,7 +104,6 @@ public final class PlayerAnimations {
 			case SkillAnimPayload.GS_SHOT_L -> "gunslinger.shot_left";
 			case SkillAnimPayload.GS_RELOAD -> "gunslinger.reload";
 			case SkillAnimPayload.GS_BOOST -> "gunslinger.boost";
-			case SkillAnimPayload.GS_SCATTER -> "gunslinger.scatter";
 			case SkillAnimPayload.GS_ANCHOR -> "gunslinger.anchor";
 			case SkillAnimPayload.GS_ULT -> "gunslinger.ult";
 			case SkillAnimPayload.GS_GLIDE -> "gunslinger.glide";

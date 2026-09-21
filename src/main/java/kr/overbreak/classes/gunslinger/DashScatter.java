@@ -101,14 +101,33 @@ public final class DashScatter implements Effects.Active {
 	private Vec3 dir = Vec3.ZERO;
 	private Vec3 dashFrom = Vec3.ZERO;
 	private int dashTick;
-	private float shotYaw;
-	private int shots;
+	/** 난사 모양 시드 (엔티티 · 시전 틱) — 모든 클라이언트가 같은 팔 방향을 봅니다. */
+	private final int seed;
+	/** 대쉬 방향 = 시전 순간의 시선 yaw (수평). */
+	private final float dashYaw;
 	private int pulses;
 	private boolean slowed;
 
 	private DashScatter(ServerPlayer caster, GunslingerState state) {
 		this.caster = caster;
 		this.state = state;
+		this.seed = seed(caster.getId(), caster.level().getGameTime());
+		this.dashYaw = caster.getYRot();
+	}
+
+	/** 시드 = hash(엔티티, 시전 틱). */
+	static int seed(int entityId, long tick) {
+		long h = entityId * 0x9E3779B97F4A7C15L ^ tick * 0xC2B2AE3D27D4EB4FL;
+		h = (h ^ (h >>> 33)) * 0xFF51AFD7ED558CCDL;
+		return (int) (h ^ (h >>> 33));
+	}
+
+	public int seed() {
+		return seed;
+	}
+
+	public float dashYaw() {
+		return dashYaw;
 	}
 
 	static void cast(ServerPlayer p, GunslingerState st) {
@@ -134,6 +153,7 @@ public final class DashScatter implements Effects.Active {
 		DashScatter s = new DashScatter(p, st);
 		st.scatter = s;
 		SkillAnimPayload.broadcast(p, SkillAnimPayload.GS_SCATTER, -1, LENGTH);
+		kr.overbreak.net.ScatterPayload.broadcast(p, s.seed, s.dashYaw);
 		ViewPayload.send(p, true);
 		s.windupFx();
 		Effects.add(s);
@@ -189,9 +209,6 @@ public final class DashScatter implements Effects.Active {
 				}
 			}
 			case SCATTER -> {
-				while (shots < SHOTS && t >= Ticks.of(SCATTER_START + shots)) {
-					shot();
-				}
 				while (pulses < PULSES && t >= Ticks.of(SCATTER_START + pulses * PULSE_GAP)) {
 					pulse();
 				}
@@ -227,7 +244,8 @@ public final class DashScatter implements Effects.Active {
 	/** 돌진 — 이때의 시선 수평 방향으로 고정 (위아래는 보지 않음). 높이는 붙잡아 둡니다. */
 	private void startDash() {
 		phase = Phase.DASH;
-		dir = Motion.flatLook(caster);
+		double yaw = Math.toRadians(dashYaw);
+		dir = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
 		dashFrom = caster.position();
 		dashTick = t;
 		Motion.dash(caster, dir.x, dir.z, DISTANCE / DASH, DASH, true);
@@ -299,7 +317,6 @@ public final class DashScatter implements Effects.Active {
 
 	private void startScatter() {
 		phase = Phase.SCATTER;
-		shotYaw = caster.getYRot();
 		CrowdControl.mod(caster, Attributes.MOVEMENT_SPEED, SLOW, SCATTER_SPEED, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
 		slowed = true;
 	}
@@ -312,23 +329,8 @@ public final class DashScatter implements Effects.Active {
 
 	// ── 난사 ───────────────────────────────────────────────
 
-	/**
-	 * 보여 주기용 한 발 — 40도씩 돌며 오른손 → 왼손 번갈아. 판정 반경과 같은 5칸 궤적 · 총구 화염 · 탄피.
-	 * 발사음은 클라이언트가 동작 시각에 맞춰 직접 틉니다 (동시 재생 6개로 잘라서).
-	 */
-	private void shot() {
-		ServerLevel level = caster.level();
-		boolean left = shots % 2 == 1;
-		double a = Math.toRadians(shotYaw + shots * SHOT_STEP);
-		Vec3 d = new Vec3(-Math.sin(a), -0.04, Math.cos(a)).normalize();
-		Vec3 side = new Vec3(Math.cos(a), 0, Math.sin(a)).scale(left ? 0.3 : -0.3);
-		Vec3 muzzle = caster.getEyePosition().add(0, -0.35, 0).add(side).add(d.scale(0.45));
-		Tracer.spawn(level, caster, muzzle, muzzle.add(d.scale(RADIUS)), Tracer.GUNSLINGER_SCATTER);
-		Fx.particle(level, ParticleTypes.SMALL_FLAME, muzzle, 1, 0.02, 0.02, 0.02, 0.0);
-		Fx.particle(level, new ItemParticleOption(ParticleTypes.ITEM, Items.GOLD_NUGGET), muzzle.subtract(d.scale(0.3)), 1,
-				0.05, 0.05, 0.05, 0.12);
-		shots++;
-	}
+	// 보여 주기용 탄(궤적 · 총구 화염 · 탄피 · 발사음)은 클라이언트의 3인칭 애니메이션이 발마다 총구 방향을 계산해 냅니다
+	// (스펙 dash_scatter_anim_3p PART 3-5 — 애니메이션이 사격 방향의 유일한 원천). 서버는 판정 펄스만 맡습니다.
 
 	/** 판정 한 번 — 지금 자리 기준 반경 5칸 안의 모든 적 (핑만큼 되감음 · 벽 너머 제외 · 넉백 없음). */
 	private void pulse() {

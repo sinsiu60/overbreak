@@ -22,6 +22,8 @@ public final class OverbreakSounds {
 	public static final Holder<SoundEvent> SCATTER_SHOT = register("skill.dash_scatter.shot");
 	/** 마무리 — 총 돌리기 금속음. */
 	public static final Holder<SoundEvent> SCATTER_SPIN = register("skill.dash_scatter.spin");
+	/** 경기 막판 배경 음악 (매치 포인트 · 대난투 막판) — Before the Impact, 23초부터. */
+	public static final Holder<SoundEvent> MATCH_POINT = register("music.match_point");
 
 	private OverbreakSounds() {}
 

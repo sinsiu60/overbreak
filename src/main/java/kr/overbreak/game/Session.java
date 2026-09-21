@@ -45,6 +45,8 @@ public final class Session {
 	boolean spectating;
 	/** 마지막으로 보낸 점수판 — 바뀐 때만 보냅니다. */
 	kr.overbreak.net.@Nullable ScorePayload lastScore;
+	/** 경기 막판 음악을 켜 두었는가 (MatchMusic 이 바뀐 때만 보냄). */
+	boolean musicOn;
 
 	public static Session of(ServerPlayer p) {
 		return p.getAttachedOrCreate(TYPE);

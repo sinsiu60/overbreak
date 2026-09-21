@@ -84,6 +84,11 @@ public final class Duel {
 		return p == a ? scoreA : scoreB;
 	}
 
+	/** 매치 포인트 — 어느 쪽이든 한 점만 더 내면 이김 (경기가 끝나면 아님). */
+	boolean climax() {
+		return phase != Phase.END && (scoreA >= WIN - 1 || scoreB >= WIN - 1);
+	}
+
 	public Phase phase() {
 		return phase;
 	}

@@ -144,6 +144,18 @@ public final class Brawl {
 		return players.size();
 	}
 
+	/** 막판 — 누군가 이기기까지 {@link MatchMusic#BRAWL_LEFT} 킬 이하로 남음 (경기가 끝나면 아님). */
+	boolean climax() {
+		if (phase != Phase.FIGHT) {
+			return false;
+		}
+		int best = 0;
+		for (int k : kills.values()) {
+			best = Math.max(best, k);
+		}
+		return goal - best <= MatchMusic.BRAWL_LEFT;
+	}
+
 	public Phase phase() {
 		return phase;
 	}

@@ -13,6 +13,8 @@ public abstract class AvatarRenderStateMixin implements AnimRenderState {
 	@Unique private float overbreak$weight;
 	@Unique private float overbreak$itemScale = 1.0F;
 	@Unique private float overbreak$spin;
+	@Unique private kr.overbreak.client.anim.scatter.ScatterBody.Pose overbreak$scatter;
+	@Unique private float overbreak$scatterWeight;
 	@Unique private final net.minecraft.client.renderer.item.ItemStackRenderState overbreak$magazine = new net.minecraft.client.renderer.item.ItemStackRenderState();
 
 	@Override
@@ -21,6 +23,22 @@ public abstract class AvatarRenderStateMixin implements AnimRenderState {
 		this.overbreak$time = time;
 		this.overbreak$end = end;
 		this.overbreak$weight = weight;
+	}
+
+	@Override
+	public void overbreak$setScatter(kr.overbreak.client.anim.scatter.ScatterBody.Pose pose, float weight) {
+		this.overbreak$scatter = pose;
+		this.overbreak$scatterWeight = weight;
+	}
+
+	@Override
+	public kr.overbreak.client.anim.scatter.ScatterBody.Pose overbreak$scatter() {
+		return overbreak$scatter;
+	}
+
+	@Override
+	public float overbreak$scatterWeight() {
+		return overbreak$scatterWeight;
 	}
 
 	@Override
