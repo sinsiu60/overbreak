@@ -33,7 +33,8 @@ public final class Afterimages {
 	/** 막 남은 잔상 → 사라지기 직전 색. */
 	private static final int FRESH = 0x3A64E0;
 	private static final int OLD = 0x0C1A52;
-	/** 굴적의 깃털 돌진 난사 — 하늘색 (총알 궁적과 같은 계열). */
+	/** 궤적의 깃털 돌진 난사 — 하늘색 (총알 궤적과 같은 계열). 스킨에 곱하면 어두운 스킨에서 남색이 되므로 흰 모델에 칠합니다. */
+	private static final net.minecraft.resources.Identifier WHITE = kr.overbreak.Overbreak.id("textures/effect/afterimage_white.png");
 	private static final int SKY_FRESH = 0x8FDBFF;
 	private static final int SKY_OLD = 0x2E7FB8;
 	private static final float ALPHA = 0.62F;
@@ -124,7 +125,7 @@ public final class Afterimages {
 			poseStack.scale(-1.0F, -1.0F, 1.0F);
 			poseStack.scale(0.9375F, 0.9375F, 0.9375F);
 			poseStack.translate(0.0F, -1.501F, 0.0F);
-			collector.submitModel(renderer.getModel(), s, poseStack, RenderTypes.entityTranslucent(renderer.getTextureLocation(s)),
+			collector.submitModel(renderer.getModel(), s, poseStack, RenderTypes.entityTranslucent(g.sky ? WHITE : renderer.getTextureLocation(s)),
 					0xF000F0, OverlayTexture.NO_OVERLAY, color, null, 0, null);
 			poseStack.popPose();
 		}
