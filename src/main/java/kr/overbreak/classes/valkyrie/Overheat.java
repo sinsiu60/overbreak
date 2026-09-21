@@ -55,6 +55,7 @@ final class Overheat implements Effects.Active {
 			return;
 		}
 		Attachments.profile(p).setCooldown(Valkyrie.OVERHEAT, COOLDOWN);
+		Rifle.interrupt(p, st);
 		GroundShape shape = GroundShape.sector(p.level(), p.position(), Aim.facingYawPitch(p)[0], ARC, RADIUS, 0x34FF7A1E, 0xD8FF9A3C);
 		Overheat o = new Overheat(p, st, shape);
 		st.overheat = o;

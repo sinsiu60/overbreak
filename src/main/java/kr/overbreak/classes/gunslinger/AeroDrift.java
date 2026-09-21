@@ -19,7 +19,7 @@ import net.minecraft.world.effect.MobEffects;
  *   활공   : 떨어지기 시작한 뒤 점프 키를 누르고 있으면 떨어지는 속도가 확 줄어듭니다 (최대 2초).
  *            올라가는 동안(그냥 점프 · 반동 도약)에는 켜지지 않습니다 — 점프만 해도 패시브가 켜지던 것 (0.2d).
  *            땅에 닿으면 다시 가득 찹니다. 느린 낙하로 걸어 클라이언트가 그대로 예측합니다 (끊김 없음).
- *   공중 명중: 땅에서 2칸 이상 떠서 맞힌 총알은 무조건 치명타 150%, 그리고 맞힐 때마다
+ *   공중 명중: 땅에서 1.5칸 이상 떠서 맞힌 총알은 무조건 치명타 150%, 그리고 맞힐 때마다
  *            반동 도약 · 사선 앵커의 남은 쿨타임이 0.5초씩 깎입니다.
  *
  * 낙하 피해는 늘 받지 않습니다 ({@link Gunslinger} 의 ALLOW_DAMAGE).
@@ -41,7 +41,7 @@ public final class AeroDrift {
 	private AeroDrift() {}
 
 	/** 공중 치명타가 붙는 높이 (칸) — 발밑으로 이만큼이 비어 있어야 합니다. */
-	public static final double CRIT_HEIGHT = 2.0;
+	public static final double CRIT_HEIGHT = 1.5;
 
 	/**
 	 * 공중 치명타가 붙는가 — 땅에서 {@link #CRIT_HEIGHT} 칸 이상 떠 있을 때 (0.2d).
@@ -108,7 +108,7 @@ public final class AeroDrift {
 		// 궁극기로 공중에 붙잡혀 있는 동안에는 활공이 끼어들지 않습니다
 		// 웅크리기는 돌진 난사라, 활공은 점프 키로 — 다만 떨어지기 시작한 뒤부터만
 		// (누르자마자 켜지면 그냥 점프만 해도 패시브가 켜졌습니다)
-		boolean want = Attachments.profile(p).jumpDown && st.descending && st.glideT > 0 && !st.inUlt();
+		boolean want = Attachments.profile(p).jumpDown && st.descending && st.glideT > 0;
 		if (!want) {
 			stop(p, st);
 			return;

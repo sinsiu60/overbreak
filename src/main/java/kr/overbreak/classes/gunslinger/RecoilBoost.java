@@ -29,7 +29,7 @@ import net.minecraft.world.phys.Vec3;
  *   충격탄은 조준선을 따라 최대 5칸 — 벽에 닿으면 거기서, 아니면 5칸 앞에서 터집니다
  *   터진 자리 반경 3칸에 25 피해 (넉백 있음)
  *   시전자는 조준 방향의 정반대로 튕겨 나갑니다 — 바닥을 보고 쏘면 7칸쯤 솟구칩니다
- *   균열 지대 위에서는 막힙니다 (이동기). 쿨타임 6초 — 차원 회전 포격 중에는 쿨타임 없이 계속 씁니다
+ *   균열 지대 위에서는 막힙니다 (이동기). 쿨타임 6초 — 궤적 해방으로 궤적을 모으는 동안은 1.5초
  */
 public final class RecoilBoost {
 	/** 쿨타임 (시간 단위 · 6초). */
@@ -46,25 +46,25 @@ public final class RecoilBoost {
 	private RecoilBoost() {}
 
 	static void cast(ServerPlayer p, GunslingerState st) {
-		if (st.reloadT > 0 || st.scatter != null) {
+		if (st.scatter != null) {
 			DualPistols.denied(p);
 			return;
 		}
-		boolean free = st.inUlt();
-		if (Attachments.combatant(p).sealT > 0 && !free) {
+		if (Attachments.combatant(p).sealT > 0) {
 			Fx.sound(p, SoundEvents.NOTE_BLOCK_BASS, SoundSource.PLAYERS, 0.8F, 0.5F);
 			Attachments.profile(p).msgT = 30;
 			Hud.actionbar(p, Hud.text("균열 지대 위에서는 이동기를 쓸 수 없다", ChatFormatting.LIGHT_PURPLE));
 			return;
 		}
-		if (!free && Cooldowns.blocked(p, Gunslinger.BOOST, "반동 도약", ChatFormatting.AQUA)) {
+		if (Cooldowns.blocked(p, Gunslinger.BOOST, "반동 도약", ChatFormatting.AQUA)) {
 			return;
 		}
-		if (!free) {
-			Attachments.profile(p).setCooldown(Gunslinger.BOOST, COOLDOWN);
-			// 체공 훈풍 활공 +1초 (포격 중 쿨타임 없는 도약은 제외 — 끝없이 쌓이지 않게)
-			AeroDrift.extend(st);
-		}
+		DualPistols.interrupt(p, st);
+		// 궤적 해방으로 궤적을 모으는 동안은 쿨타임 1.5초 (예고부터는 평소 규칙)
+		boolean ult = st.release != null && st.release.collecting();
+		Attachments.profile(p).setCooldown(Gunslinger.BOOST, ult ? TrailRelease.BOOST_COOLDOWN : COOLDOWN);
+		// 체공 훈풍 활공 +1초
+		AeroDrift.extend(st);
 		ServerLevel level = p.level();
 		Vec3 eye = p.getEyePosition();
 		Vec3 dir = Aim.direction(p);

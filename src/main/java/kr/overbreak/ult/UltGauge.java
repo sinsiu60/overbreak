@@ -57,7 +57,7 @@ public final class UltGauge {
 
 	public static void addRaw(ServerPlayer p, int raw) {
 		PlayerProfile prof = Attachments.profile(p);
-		if (!prof.ultOn) {
+		if (!prof.ultOn || (prof.pvpClass != null && !prof.pvpClass.ultCharging(p))) {
 			return;
 		}
 		prof.ultRaw += raw;

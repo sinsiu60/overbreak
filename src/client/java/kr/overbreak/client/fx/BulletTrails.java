@@ -36,7 +36,7 @@ import org.joml.Vector3fc;
  *     1인칭 본인은 손에 든 총구에 붙여 그리고(ItemInHandRendererMixin → {@link #firstPersonFlash}), 나머지는 월드 총구 자리에 그림
  */
 public final class BulletTrails {
-	private static final Identifier TEXTURE = Overbreak.id("textures/effect/bullet_trail.png");
+	static final Identifier TEXTURE = Overbreak.id("textures/effect/bullet_trail.png");
 	private static final Identifier FLASH = Overbreak.id("textures/effect/muzzle_flash.png");
 	/** 번개 빛줄기 — 폭 방향으로만 가운데가 밝은 텍스처 (길이 방향은 고름). */
 	private static final Identifier LIGHTNING = Overbreak.id("textures/effect/lightning.png");
@@ -443,7 +443,7 @@ public final class BulletTrails {
 	}
 
 	/** 월드 두 점 사이 빛줄기 한 장. 굵기 = base + grow × 카메라 거리. u 는 꼬리(uStart) → 앞(1). */
-	private static void quad(PoseStack.Pose pose, VertexConsumer buffer, Vec3 fromWorld, Vec3 toWorld, Vec3 cam,
+	static void quad(PoseStack.Pose pose, VertexConsumer buffer, Vec3 fromWorld, Vec3 toWorld, Vec3 cam,
 			float base, float grow, int color, float uStart) {
 		Vec3 a = fromWorld.subtract(cam);
 		Vec3 b = toWorld.subtract(cam);

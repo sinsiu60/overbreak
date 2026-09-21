@@ -216,7 +216,10 @@ public final class InputRouter {
 	/** 기절 · 에어본 · 밀쳐내기 · 정신집중 · 게이트. 막히면 거부음. */
 	private static boolean pass(ServerPlayer p, Slot slot) {
 		Combatant c = Attachments.combatant(p);
-		if (c.hardCc() || c.casting || !gate.allow(p, slot)) {
+		// 재장전 때문에 걸린 잠금은 스킬을 막지 않습니다 — 스킬이 나가는 순간 재장전을 끊습니다 (0.2e)
+		PvpClass pc = Attachments.profile(p).pvpClass;
+		boolean casting = c.casting && !(slot != Slot.BASIC && pc != null && pc.reloading(p));
+		if (c.hardCc() || casting || !gate.allow(p, slot)) {
 			if (slot != Slot.BASIC) {
 				Fx.sound(p, SoundEvents.NOTE_BLOCK_BASS, SoundSource.PLAYERS, 0.7F, 0.5F);
 			}

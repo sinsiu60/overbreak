@@ -10,7 +10,8 @@ import kr.overbreak.classes.Classes;
 import kr.overbreak.classes.PvpClass;
 import kr.overbreak.classes.gunslinger.AeroDrift;
 import kr.overbreak.classes.gunslinger.DashScatter;
-import kr.overbreak.classes.gunslinger.AerialBombardment;
+import kr.overbreak.classes.gunslinger.DualPistols;
+import kr.overbreak.classes.gunslinger.TrailRelease;
 import kr.overbreak.classes.gunslinger.Gunslinger;
 import kr.overbreak.classes.gunslinger.GunslingerState;
 import kr.overbreak.classes.gunslinger.RecoilBoost;
@@ -104,7 +105,7 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
-	/** 땅에서 쏘면 20, 땅에서 2칸 이상 떠서 쏘면 치명타 30. 0.2초에 한 발. */
+	/** 땅에서 쏘면 20, 땅에서 1.5칸 이상 떠서 쏘면 치명타 30. 0.2초에 한 발. */
 	@GameTest
 	public void pistolDamageAndFireRate(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5), CHEST_PITCH);
@@ -130,15 +131,15 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
-	/** 공중 치명타는 발밑으로 2칸이 비어 있어야 합니다 — 제자리 점프(1칸)로는 붙지 않음 (0.2d). */
+	/** 공중 치명타는 발밑으로 1.5칸이 비어 있어야 합니다 — 1칸 높이로는 붙지 않음 (0.2e). */
 	@GameTest
-	public void airCritNeedsTwoBlocks(GameTestHelper h) {
+	public void airCritNeedsBlockAndHalf(GameTestHelper h) {
 		FakePlayer low = caster(h, new Vec3(1.5, 1, 1.5), 0.0F);
 		low.setOnGround(false);
 		h.assertTrue(!AeroDrift.airborne(low), "발밑 1칸 — 공중 치명타 아님");
-		FakePlayer high = caster(h, new Vec3(4.5, 2.5, 1.5), 0.0F);
+		FakePlayer high = caster(h, new Vec3(4.5, 1.75, 1.5), 0.0F);
 		high.setOnGround(false);
-		h.assertTrue(AeroDrift.airborne(high), "발밑 2.5칸 — 공중 치명타");
+		h.assertTrue(AeroDrift.airborne(high), "발밑 1.75칸 — 공중 치명타");
 		FakePlayer ground = caster(h, new Vec3(6.5, 0, 1.5), 0.0F);
 		ground.setOnGround(true);
 		h.assertTrue(!AeroDrift.airborne(ground), "땅 — 아님");
@@ -385,45 +386,166 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		});
 	}
 
-	/** 차원 회전 포격 — 솟구친 뒤 0.25초마다 15 (초당 60). */
+	/**
+	 * 궤적 해방 — 수집 중 평타는 탄이 줄지 않고 발마다 궤적 한 줄, 예고 0.5초 뒤 모든 궤적이 폭발.
+	 * 궤적 1칸 안의 적에게 줄당 12 (평타 피해는 평소대로 따로), 궁극기 중에는 게이지가 차지 않음.
+	 */
 	@GameTest(maxTicks = 400)
-	public void bombardmentPulses(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(3.5, 0, 3.5), 90.0F);
+	public void releaseCollectsAndDetonates(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5), CHEST_PITCH);
+		Villager v = dummy(h, new Vec3(1.5, 0, 6.5));
 		p.setOnGround(true);
-		Villager v = dummy(h, new Vec3(3.5, 0, 3.5));
+		GunslingerState st = Gunslinger.state(p);
+		st.ammo = 5;
 		Attachments.profile(p).ultHas = true;
 		gs().ult(p);
+		h.assertTrue(st.release != null && st.release.collecting(), "즉시 발동 · 수집 시작");
+		for (int i = 0; i < 4; i++) {
+			gs().basic(p);
+			classTicks(p, 4);
+		}
+		h.assertTrue(st.ammo == 5, "궁극기 중에는 탄이 줄지 않음 (" + st.ammo + ")");
+		h.assertTrue(st.release.trailCount() == 4 && st.release.critCount() == 0, "4발 = 궤적 4줄 (땅이라 치명 없음)");
+		near(h, dealtBy(v, p), 80, 0.01, "평타 피해는 평소대로 (4 x 20)");
+		int gauge = Attachments.profile(p).ultRaw;
+		h.assertTrue(gauge == 0, "궁극기 중 평타로 게이지가 차지 않음 (" + gauge + ")");
+		st.release.forceTelegraph();
+		gs().basic(p);
+		h.assertTrue(st.release.trailCount() == 4, "예고 중에는 사격 불가");
+		h.runAfterDelay(T.of(TrailRelease.TELEGRAPH) + 3, () -> {
+			h.assertTrue(st.release == null, "폭발 뒤 끝남");
+			near(h, dealtBy(v, p), 80 + 4 * 12, 0.01, "폭발 = 궤적 4줄 x 12 (한 번에)");
+			h.assertTrue(Attachments.profile(p).ultRaw == 0, "폭발 피해로도 게이지가 차지 않음");
+			Classes.clear(p);
+			h.succeed();
+		});
+	}
+
+	/** 폭발 피해 — 여러 줄은 누적 · 치명 궤적 18 · 적 1명당 상한 120 · 1칸 밖은 0. */
+	@GameTest
+	public void releaseDamageMathAndCap(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5), 0.0F);
+		Villager v = dummy(h, new Vec3(4.5, 0, 4.5));
+		Vec3 c = v.position().add(0, 1.0, 0);
+		java.util.List<TrailRelease.Trail> trails = new java.util.ArrayList<>();
+		// 몸을 지나는 줄 12개 (치명 2) + 1.2칸 옆으로 비껴가는 줄 하나
+		for (int i = 0; i < 12; i++) {
+			trails.add(new TrailRelease.Trail(c.add(-3, 0, i * 0.01), c.add(3, 0, i * 0.01), i < 2, 0));
+		}
+		Vec3 off = c.add(0, 0, 1.2 + v.getBbWidth() / 2.0);
+		trails.add(new TrailRelease.Trail(off.add(-3, 0, 0), off.add(3, 0, 0), false, 0));
+		java.util.Map<net.minecraft.world.entity.LivingEntity, int[]> sum = TrailRelease.damage(h.getLevel(), p, trails);
+		int[] got = sum.get(v);
+		h.assertTrue(got != null, "몸을 지나는 궤적에 맞음");
+		near(h, got[0], 10 * TrailRelease.DAMAGE_100 + 2 * TrailRelease.DAMAGE_100 * TrailRelease.CRIT_PERCENT / 100, 0,
+				"누적 (일반 10 x 12 + 치명 2 x 18 = 156, 비껴간 줄 제외)");
+		h.assertTrue(got[1] == 2, "치명 궤적 2줄");
+		h.assertTrue(Math.min(TrailRelease.CAP_100, got[0]) == 12000, "적 1명당 120 상한");
+		near(h, TrailRelease.segmentBoxDistance(new Vec3(0, 5, 0), new Vec3(10, 5, 0), new net.minecraft.world.phys.AABB(4, 0, -1, 6, 3, 1)), 2.0, 1.0E-6,
+				"선분-상자 거리");
+		Classes.clear(p);
+		h.succeed();
+	}
+
+	/** 1초 전 Q 재입력은 무시, 1초 뒤에는 곧장 예고. 궁극기 중 반동 도약 쿨타임 1.5초. */
+	@GameTest(maxTicks = 300)
+	public void releaseEarlyAndBoostCooldown(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 90.0F);
+		p.setOnGround(true);
 		GunslingerState st = Gunslinger.state(p);
-		h.assertTrue(st.inUlt(), "포격 시작");
-		h.assertTrue(Attachments.combatant(p).ccImmune, "포격 중 군중제어 면역");
-		// 솟구침(8) + 포격 1초 — 0.25초마다 한 번씩 네 번 = 60
-		h.runAfterDelay(T.of(AerialBombardment.RISE + 21), () -> {
-			float dealt = dealtBy(v, p);
-			h.assertTrue(dealt >= 30 && dealt <= 75, "1초쯤에 초당 60 언저리 (실측 " + dealt + ")");
-			h.runAfterDelay(T.of(AerialBombardment.DURATION + 10), () -> {
-				h.assertTrue(!Gunslinger.state(p).inUlt(), "3초 뒤 끝남");
-				h.assertTrue(!Attachments.combatant(p).ccImmune, "끝나면 면역 풀림");
+		Attachments.profile(p).ultHas = true;
+		gs().ult(p);
+		h.assertTrue(gs().intercept(p, kr.overbreak.input.InputRouter.Slot.ULT), "궁극기 중 Q 는 해방 요청");
+		h.assertTrue(st.release.collecting(), "1초 전에는 무시");
+		gs().primary(p);
+		h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.BOOST) == T.of(TrailRelease.BOOST_COOLDOWN), "반동 도약 쿨타임 1.5초");
+		h.assertTrue(gs().intercept(p, kr.overbreak.input.InputRouter.Slot.SECONDARY), "궁극기 중 돌진 난사 잠김");
+		h.runAfterDelay(T.of(TrailRelease.EARLY) + 2, () -> {
+			gs().intercept(p, kr.overbreak.input.InputRouter.Slot.ULT);
+			h.assertTrue(st.release != null && !st.release.collecting(), "1초 뒤 Q = 곧장 예고");
+			h.runAfterDelay(T.of(TrailRelease.TELEGRAPH) + 3, () -> {
+				h.assertTrue(st.release == null, "예고 뒤 폭발 · 끝");
 				Classes.clear(p);
 				h.succeed();
 			});
 		});
 	}
 
-	/** 포격 중에는 반동 도약만 쿨타임 없이 통과합니다. */
-	@GameTest(maxTicks = 400)
-	public void bombardmentFreeBoostOnly(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(5.5, 0, 5.5), 90.0F);
+	/** 시전자가 죽으면 폭발 없이 사라짐 (대응 수단). */
+	@GameTest(maxTicks = 300)
+	public void releaseVanishesOnDeath(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5), CHEST_PITCH);
+		Villager v = dummy(h, new Vec3(1.5, 0, 6.5));
 		p.setOnGround(true);
+		GunslingerState st = Gunslinger.state(p);
 		Attachments.profile(p).ultHas = true;
 		gs().ult(p);
-		h.assertTrue(gs().intercept(p, kr.overbreak.input.InputRouter.Slot.TERTIARY), "포격 중 E 잠김");
-		h.assertTrue(gs().intercept(p, kr.overbreak.input.InputRouter.Slot.BASIC), "포격 중 평타 잠김");
-		h.assertTrue(!gs().intercept(p, kr.overbreak.input.InputRouter.Slot.PRIMARY), "포격 중 우클릭은 통과");
+		gs().basic(p);
+		float before = dealtBy(v, p);
+		st.release.forceTelegraph();
+		p.setHealth(0.0F);
+		h.runAfterDelay(T.of(TrailRelease.TELEGRAPH) + 5, () -> {
+			h.assertTrue(st.release == null, "사망으로 사라짐");
+			near(h, dealtBy(v, p), before, 0.01, "폭발 피해 없음");
+			Classes.clear(p);
+			h.succeed();
+		});
+	}
+
+	/** 재장전 중에 스킬을 쓰면 재장전을 끊고 스킬이 나감 (전 직업, 0.2e). */
+	@GameTest
+	public void skillCancelsReload(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 90.0F);
+		p.setOnGround(true);
+		GunslingerState st = Gunslinger.state(p);
+		st.ammo = 3;
+		gs().reload(p);
+		h.assertTrue(st.reloadT > 0 && Attachments.combatant(p).casting, "재장전 중 (잠김)");
+		h.assertTrue(gs().reloading(p), "재장전 중으로 보임 — 스킬 입력은 막지 않음");
 		gs().primary(p);
-		h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.BOOST) == 0, "포격 중 반동 도약은 쿨타임이 붙지 않음");
-		Gunslinger.state(p).bombardment.cancel();
+		h.assertTrue(st.reloadT == 0 && !Attachments.combatant(p).casting, "반동 도약이 재장전을 끊음");
+		h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.BOOST) > 0, "반동 도약은 나감");
+		h.assertTrue(st.ammo == 3, "탄창은 그대로");
 		Classes.clear(p);
 		h.succeed();
+	}
+
+	/** 돌진 난사 — 한 명 맞힐 때마다 2발 장전 (0.2e). */
+	@GameTest(maxTicks = 300)
+	public void scatterHitReloadsTwo(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(3.5, 0, 1.5), 0.0F);
+		p.setOnGround(true);
+		// 가짜 플레이어는 돌진해도 제자리 — 반경 5칸 안에 둠
+		dummy(h, new Vec3(3.5, 0, 4.5));
+		GunslingerState st = Gunslinger.state(p);
+		st.ammo = 0;
+		gs().secondary(p);
+		h.runAfterDelay(T.of(DashScatter.LENGTH) + 6, () -> {
+			h.assertTrue(st.ammo == Math.min(DualPistols.MAG, DashScatter.PULSES * DashScatter.RELOAD_PER_HIT),
+					"6번 맞혀 12발 (탄 " + st.ammo + ")");
+			Classes.clear(p);
+			h.succeed();
+		});
+	}
+
+	/** 사선 앵커 — 끌려가는 중 점프 키를 새로 누르면 와이어를 끊고 그 속도 그대로 (제동 없음). */
+	@GameTest(maxTicks = 200)
+	public void anchorJumpSnapsKeepingMomentum(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(2.5, 1, 1.5), 0.0F);
+		h.setBlock(new net.minecraft.core.BlockPos(2, 2, 12), net.minecraft.world.level.block.Blocks.STONE);
+		Attachments.profile(p).jumpDown = false;
+		gs().tertiary(p);
+		h.runAfterDelay(2, () -> {
+			Vec3 pull = p.getDeltaMovement();
+			h.assertTrue(pull.z > 0.01, "벽 쪽으로 당겨지는 중 (" + pull + ")");
+			Attachments.profile(p).jumpDown = true;
+			h.runAfterDelay(T.of(8), () -> {
+				h.assertTrue(p.getDeltaMovement().z > 0.01, "끊은 뒤에도 속도 유지 — 제동 없음 (" + p.getDeltaMovement() + ")");
+				Attachments.profile(p).jumpDown = false;
+				Classes.clear(p);
+				h.succeed();
+			});
+		});
 	}
 
 	/** 체공 훈풍 — 떨어지기 시작한 뒤에만 점프 키로 활공 (그냥 점프로는 안 켜짐), 착지하면 다시 참. */

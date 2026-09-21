@@ -36,7 +36,7 @@ import org.jspecify.annotations.Nullable;
  * 직업 9 · 궤적의 깃털 — 건슬링어 (공중 기동 원거리형).
  *
  *   체력 180 · 낙하 피해 없음 · 근접 불가 · 게이지 피해 1당 1%
- *   공중에서 싸우는 직업입니다: 땅에서 2칸 이상 떠서 맞힌 총알은 무조건 치명타이며,
+ *   공중에서 싸우는 직업입니다: 땅에서 1.5칸 이상 떠서 맞힌 총알은 무조건 치명타이며,
  *   그 치명타가 다시 반동 도약 · 사선 앵커의 쿨타임을 깎아 공중에 더 오래 머물게 합니다.
  *
  * 조작 (모드 공통 배치에 맞춤)
@@ -44,7 +44,7 @@ import org.jspecify.annotations.Nullable;
  *   RMB         반동 도약
  *   SHIFT       돌진 난사 (활공은 점프 키로 옮겨 웅크리기가 비었습니다)
  *   E           사선 앵커
- *   Q           차원 회전 포격
+ *   Q           궤적 해방
  *   R           재장전
  */
 public final class Gunslinger implements PvpClass {
@@ -61,6 +61,9 @@ public final class Gunslinger implements PvpClass {
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !absorb(entity, source));
 		// 돌진 난사 도중에 시전자를 보기 시작한 사람에게는 지난 만큼 건너뛰어 동작을 보냅니다
 		net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents.START_TRACKING.register((entity, viewer) -> {
+			if (entity instanceof ServerPlayer caster && stateOrNull(caster) instanceof GunslingerState rs && rs.release != null) {
+				rs.release.sendTo(viewer);
+			}
 			if (entity instanceof ServerPlayer caster && stateOrNull(caster) instanceof GunslingerState st && st.scatter != null) {
 				kr.overbreak.net.ScatterPayload.sendTo(viewer, caster, st.scatter.seed(), st.scatter.dashYaw());
 				kr.overbreak.net.SkillAnimPayload.sendTo(viewer, caster, kr.overbreak.net.SkillAnimPayload.GS_SCATTER,
@@ -70,7 +73,7 @@ public final class Gunslinger implements PvpClass {
 	}
 
 	private static final ClassInfo INFO = new ClassInfo("궤적의 깃털", "공중 기동 원거리형", SKY,
-			"쏜 반동으로 날아다니는 곡예 사수. 땅에 발을 붙이는 순간 약해지고, 땅에서 2칸 이상 떠 있는 동안은 모든 총알이 치명타입니다.",
+			"쏜 반동으로 날아다니는 곡예 사수. 땅에 발을 붙이는 순간 약해지고, 땅에서 1.5칸 이상 떠 있는 동안은 모든 총알이 치명타입니다.",
 			List.of(
 					SkillInfo.stat("체력", "180"),
 					SkillInfo.stat("공격력", "발당 20 (공중 30)"),
@@ -79,11 +82,11 @@ public final class Gunslinger implements PvpClass {
 					SkillInfo.stat("낙하 피해", "받지 않음")),
 			List.of(
 					new SkillInfo("패시브", "체공 훈풍", null, "minecraft:feather",
-							"떨어지기 시작하면 점프 키로 활공하고, 2칸 이상 떠서 맞힌 총알은 무조건 치명타",
+							"떨어지기 시작하면 점프 키로 활공하고, 1.5칸 이상 떠서 맞힌 총알은 무조건 치명타",
 							List.of(
 									SkillInfo.stat("활공", "떨어지기 시작한 뒤 점프 키를 누르고 있기 — 낙하 속도 -80%"),
 									SkillInfo.stat("활공 시간", "2초 · 반동 도약 · 사선 앵커를 쓸 때마다 +1초 · 착지하면 2초로"),
-									SkillInfo.stat("공중 치명타", "땅에서 2칸 이상 · 150% (평타 30 · 돌진 난사 10.5)"),
+									SkillInfo.stat("공중 치명타", "땅에서 1.5칸 이상 · 150% (평타 30 · 돌진 난사 18)"),
 									SkillInfo.stat("쿨타임 환급", "공중 명중마다 반동 도약 · 사선 앵커 -0.5초"),
 									SkillInfo.stat("낙하 피해", "언제나 받지 않음")), false),
 					new SkillInfo("LMB", "쌍권총 연사", Overbreak.id("hud/skill/gunslinger_pistols"), null,
@@ -103,39 +106,42 @@ public final class Gunslinger implements PvpClass {
 									SkillInfo.stat("피해", "반경 3칸 25 + 넉백"),
 									SkillInfo.stat("도약", "조준 반대 방향 — 바닥을 보면 약 7칸"),
 									SkillInfo.stat("균열 지대", "봉인됨"),
-									SkillInfo.stat("재사용 대기시간", "6초 (차원 회전 포격 중에는 없음)")), false),
+									SkillInfo.stat("재사용 대기시간", "6초 (궤적 해방 중에는 1.5초)")), false),
 					new SkillInfo("SHIFT", "돌진 난사", Overbreak.id("hud/skill/gunslinger_acro"), null,
-							"앞으로 6칸 치고 나가 멈춰 선 뒤 두 바퀴 돌며 사방을 쓸어 버림",
+							"바라보는 방향으로 6칸 치고 나가 멈춘 뒤, 분신이 8칸 안을 휘저으며 반경 5칸을 쓸어 버림",
 							List.of(
 									SkillInfo.stat("분류", "이동기 · 광역"),
-									SkillInfo.stat("돌진", "시선의 수평 방향 6칸 (0.25초) · 적을 뚫고 지나감 · 높이 유지"),
+									SkillInfo.stat("돌진", "바라보는 방향 6칸 (0.25초) · 땅에서 아래를 보면 정면 · 적을 뚫고 지나감"),
 									SkillInfo.stat("난사", "0.15초마다 6번 · 반경 5칸 안 모든 적 (벽 너머 제외)"),
-									SkillInfo.stat("피해", "한 번당 7 (전부 42 · 공중 63)"),
-									SkillInfo.stat("난사 중", "이동 속도 ×0.5 · 넉백 없음"),
-									SkillInfo.stat("시점", "쓰는 동안 3인칭 · 끝나면 원래대로"),
+									SkillInfo.stat("피해", "한 번당 12 (전부 72 · 공중 108)"),
+									SkillInfo.stat("난사 중", "이동 속도 ×0.5 · 넉백 없음 · 공중이면 떠 있음"),
+									SkillInfo.stat("시점", "쓰는 동안 3인칭 고정 (F5 로도 1인칭으로 안 바뀜) · 끝나면 원래대로"),
 									SkillInfo.stat("끊김", "기절 · 에어본 — 난사 전이면 난사 없이 끝"),
 									SkillInfo.stat("균열 지대", "봉인됨 (쿨타임 안 씀)"),
 									SkillInfo.stat("재사용 대기시간", "8초 (쓰는 즉시)")), false),
 					new SkillInfo("E", "사선 앵커", Overbreak.id("hud/skill/gunslinger_anchor"), null,
-							"12칸 와이어를 쏘아 붙는 곳으로 끌려감",
+							"16칸 와이어를 쏘아 붙는 곳으로 끌려감",
 							List.of(
 									SkillInfo.stat("분류", "이동기 · 군중제어"),
-									SkillInfo.stat("사거리", "12칸"),
+									SkillInfo.stat("사거리", "16칸"),
 									SkillInfo.stat("적중", "20 피해 · 0.5초 기절 · 그 적의 머리 위로"),
 									SkillInfo.stat("벽 적중", "그 지점으로 당겨짐"),
 									SkillInfo.stat("헛방", "쿨타임 절반만"),
+									SkillInfo.stat("점프로 끊기", "끌려가는 중 점프 키 — 와이어를 끊고 그 속도 그대로 날아감"),
 									SkillInfo.stat("균열 지대", "봉인됨"),
 									SkillInfo.stat("재사용 대기시간", "7초")), false),
-					new SkillInfo("Q", "차원 회전 포격", Overbreak.id("hud/skill/gunslinger_ult"), null,
-							"공중에 멈춰 선 채 지름 10칸을 3초간 갈아엎음",
+					new SkillInfo("Q", "궤적 해방", Overbreak.id("hud/skill/gunslinger_ult"), null,
+							"5초 동안 쏜 총알의 궤적을 공중에 남겼다가 한꺼번에 터뜨림",
 							List.of(
-									SkillInfo.stat("분류", "광역 · 채널링"),
-									SkillInfo.stat("솟구침", "약 6칸 (0.4초)"),
-									SkillInfo.stat("포격", "3초 · 0.25초마다 15 (초당 60 · 최대 180)"),
-									SkillInfo.stat("범위", "조준한 땅의 반경 5칸"),
-									SkillInfo.stat("포격 중", "반동 도약 쿨타임 없음 (공중 이동)"),
-									SkillInfo.stat("군중제어", "면역"),
-									SkillInfo.stat("충전", "피해 1당 1%")), true)));
+									SkillInfo.stat("분류", "광역 · 지연 폭발"),
+									SkillInfo.stat("발동", "즉시 · 5초 동안 탄창 무한 · 재장전 없음"),
+									SkillInfo.stat("궤적", "평타 1발당 1줄 · 최대 25줄 · 총구 → 적중 지점 / 벽 / 16칸"),
+									SkillInfo.stat("치명 궤적", "공중(1.5칸 이상)에서 쏜 궤적"),
+									SkillInfo.stat("해방", "5초 뒤 또는 1초 뒤부터 Q · 0.5초 예고 (사격 불가)"),
+									SkillInfo.stat("폭발", "궤적 1칸 안 적에게 줄당 12 (치명 18) · 적 1명당 최대 120"),
+									SkillInfo.stat("반동 도약", "궁극기 동안 쿨타임 1.5초"),
+									SkillInfo.stat("대응", "시전자가 죽으면 폭발 없이 사라짐"),
+									SkillInfo.stat("충전", "피해 1당 1% · 궁극기 중에는 차지 않음")), true)));
 
 	@Override
 	public String id() {
@@ -171,7 +177,7 @@ public final class Gunslinger implements PvpClass {
 			DualPistols.cancelReload(p, st);
 			AeroDrift.stop(p, st);
 			st.scatter = null;
-			st.bombardment = null;
+			st.release = null;
 		}
 		Attachments.combatant(p).ccImmune = false;
 	}
@@ -184,16 +190,17 @@ public final class Gunslinger implements PvpClass {
 						.line("직업 · 궤적의 깃털", ChatFormatting.DARK_GRAY).blank()
 						.bold("[LMB] 쌍권총 연사", ChatFormatting.AQUA)
 						.line(" 16칸 히트스캔 · 발당 20 · 0.2초에 1발. 탄창 18발 (R 재장전 1.25초)", ChatFormatting.GRAY)
-						.line(" 땅에서 2칸 이상 떠서 맞히면 치명타 150% (30).", ChatFormatting.GRAY).blank()
+						.line(" 땅에서 1.5칸 이상 떠서 맞히면 치명타 150% (30).", ChatFormatting.GRAY).blank()
 						.bold("[RMB] 반동 도약", ChatFormatting.AQUA)
 						.line(" 조준한 곳에 반경 3칸 25 + 넉백, 그 반동으로 정반대로 약 7칸. 쿨타임 6초", ChatFormatting.GRAY).blank()
 						.bold("[웅크리기] 돌진 난사", ChatFormatting.AQUA)
-						.line(" 앞으로 6칸 돌진 → 제동 → 반경 5칸에 0.15초마다 6번 · 한 번당 7. 쿨타임 8초", ChatFormatting.GRAY).blank()
+						.line(" 바라보는 방향으로 6칸 돌진 → 제동 → 반경 5칸에 0.15초마다 6번 · 한 번당 12. 쿨타임 8초", ChatFormatting.GRAY).blank()
 						.bold("[E] 사선 앵커", ChatFormatting.AQUA)
-						.line(" 12칸 와이어 · 적중 20 + 0.5초 기절 + 머리 위로 · 벽이면 그 자리로. 쿨타임 7초", ChatFormatting.GRAY).blank()
+						.line(" 16칸 와이어 · 적중 20 + 0.5초 기절 + 머리 위로 · 벽이면 그 자리로. 쿨타임 7초", ChatFormatting.GRAY)
+						.line(" 끌려가는 중 점프 키를 누르면 와이어를 끊고 그 속도 그대로 날아갑니다.", ChatFormatting.GRAY).blank()
 						.bold("[패시브] 체공 훈풍", ChatFormatting.AQUA)
 						.line(" 떨어지기 시작한 뒤 점프 키를 누르고 있으면 2초 활공 (반동 도약 · 사선 앵커마다 +1초)", ChatFormatting.GRAY)
-						.line(" 2칸 이상 떠서 맞히면 치명타 · 이동기 쿨타임 -0.5초 · 낙하 피해 없음", ChatFormatting.GRAY).blank()
+						.line(" 1.5칸 이상 떠서 맞히면 치명타 · 이동기 쿨타임 -0.5초 · 낙하 피해 없음", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build()));
 		// 쌍권총 — 양손에 한 자루씩. 왼손 총은 모습만 있는 소품이라 버리기 · 칸 고정에 걸리지 않습니다
 		inv.setItem(Inventory.SLOT_OFFHAND, SkillItems.prop("overbreak:gunslinger_pistols",
@@ -212,13 +219,14 @@ public final class Gunslinger implements PvpClass {
 
 	@Override
 	public ItemStack ultItem() {
-		return SkillItems.ult("firework_rocket", Hud.bold("차원 회전 포격", ChatFormatting.AQUA), SkillItems.lore()
+		return SkillItems.ult("feather", Hud.bold("궤적 해방", ChatFormatting.AQUA), SkillItems.lore()
 				.line("궁극기 · 궤적의 깃털", ChatFormatting.DARK_GRAY).blank()
-				.bold("[아이템 버리기 Q] 차원 회전 포격", ChatFormatting.AQUA)
-				.line(" 약 6칸 솟구쳐 공중에 멈춘 뒤 3초 동안 포격합니다.", ChatFormatting.GRAY)
-				.line(" 조준한 땅의 반경 5칸에 0.25초마다 15 — 초당 60, 최대 180.", ChatFormatting.GRAY)
-				.line(" 포격 중에는 반동 도약을 쿨타임 없이 써서 자리를 옮길 수 있습니다.", ChatFormatting.GRAY)
-				.line(" 포격 중에는 군중 제어에 걸리지 않지만 피해는 그대로 받습니다.", ChatFormatting.RED).build());
+				.bold("[아이템 버리기 Q] 궤적 해방", ChatFormatting.AQUA)
+				.line(" 5초 동안 탄창 무한 · 쏜 총알의 궤적이 하늘색 선으로 공중에 남습니다 (최대 25줄).", ChatFormatting.GRAY)
+				.line(" 시간이 다 되거나 1초 뒤 Q 를 다시 누르면 0.5초 예고 후 모든 궤적이 동시에 폭발.", ChatFormatting.GRAY)
+				.line(" 궤적 1칸 안의 적에게 줄당 12 (공중에서 쏜 궤적 18), 적 1명당 최대 120.", ChatFormatting.GRAY)
+				.line(" 궁극기 동안 반동 도약 쿨타임 1.5초.", ChatFormatting.GRAY)
+				.line(" 쓰는 사람이 죽으면 궤적은 폭발 없이 사라집니다.", ChatFormatting.RED).build());
 	}
 
 	// ── 스킬 ────────────────────────────────────────────────
@@ -231,12 +239,7 @@ public final class Gunslinger implements PvpClass {
 	/** 우클릭 — 반동 도약. */
 	@Override
 	public void primary(ServerPlayer p) {
-		GunslingerState st = state(p);
-		boolean ult = st.inUlt();
-		RecoilBoost.cast(p, st);
-		if (ult && st.bombardment != null) {
-			st.bombardment.loosen();
-		}
+		RecoilBoost.cast(p, state(p));
 	}
 
 	/** 웅크리기 — 돌진 난사. 활공은 점프 키라 서로 겹치지 않습니다. */
@@ -252,7 +255,7 @@ public final class Gunslinger implements PvpClass {
 
 	@Override
 	public void ult(ServerPlayer p) {
-		AerialBombardment.cast(p, state(p));
+		TrailRelease.cast(p, state(p));
 	}
 
 	@Override
@@ -260,14 +263,34 @@ public final class Gunslinger implements PvpClass {
 		DualPistols.manualReload(p, state(p));
 	}
 
-	/** 포격 중에는 반동 도약만 받습니다 (다른 스킬 · 평타는 잠김). */
+	@Override
+	public boolean reloading(ServerPlayer p) {
+		GunslingerState st = stateOrNull(p);
+		return st != null && st.reloadT > 0;
+	}
+
+	/**
+	 * 궤적 해방 중 Q 는 조기 해방 (발동 1초 뒤부터 — 그 전에는 무시).
+	 * 돌진 난사는 궁극기 동안 쓰지 않습니다 (평타 · 반동 도약 · 사선 앵커는 그대로).
+	 */
 	@Override
 	public boolean intercept(ServerPlayer p, InputRouter.Slot slot) {
 		GunslingerState st = state(p);
-		if (st.bombardment == null) {
+		if (st.release == null) {
 			return false;
 		}
-		return slot != InputRouter.Slot.PRIMARY;
+		if (slot == InputRouter.Slot.ULT) {
+			st.release.requestRelease();
+			return true;
+		}
+		return slot == InputRouter.Slot.SECONDARY;
+	}
+
+	/** 궤적 해방 중에는 게이지가 차지 않습니다 (평타 · 폭발 모두). */
+	@Override
+	public boolean ultCharging(ServerPlayer p) {
+		GunslingerState st = stateOrNull(p);
+		return st == null || st.release == null;
 	}
 
 	@Override
@@ -291,17 +314,18 @@ public final class Gunslinger implements PvpClass {
 		PlayerProfile prof = Attachments.profile(p);
 		GunslingerState st = state(p);
 		return List.of(
-				new SkillSlot(prof.cooldown(BOOST), RecoilBoost.COOLDOWN, st.inUlt()),
+				new SkillSlot(prof.cooldown(BOOST), st.release != null && st.release.collecting() ? TrailRelease.BOOST_COOLDOWN : RecoilBoost.COOLDOWN, false),
 				new SkillSlot(prof.cooldown(SCATTER), DashScatter.COOLDOWN, st.scatter != null),
 				new SkillSlot(prof.cooldown(ANCHOR), WireAnchor.COOLDOWN, false));
 	}
 
-	/** 무기 칸 옆: 탄창 (N/18). 조준점 아래: 재장전 · 포격 남은 시간 · 활공 남은 시간. */
+	/** 무기 칸 옆: 탄창 (N/18). 조준점 아래: 재장전 · 궤적 해방 남은 시간 · 활공 남은 시간. */
 	@Override
 	public HudExtra hudExtra(ServerPlayer p) {
 		GunslingerState st = state(p);
-		if (st.bombardment != null) {
-			return new HudExtra(st.ammo, DualPistols.MAG, st.bombardment.remainingPercent(), HudExtra.METER_DURATION);
+		if (st.release != null) {
+			// 궤적 수 · 치명 궤적 수 · 해방 안내는 클라이언트가 받은 궤적으로 직접 그립니다 (client/fx/TrailView)
+			return new HudExtra(st.ammo, DualPistols.MAG, st.release.remainingPercent(), HudExtra.METER_DURATION);
 		}
 		if (st.reloadT > 0) {
 			int reload = Ticks.of(DualPistols.RELOAD);

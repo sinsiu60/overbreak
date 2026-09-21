@@ -60,6 +60,7 @@ final class Deadeye implements Effects.Active {
 			return;
 		}
 		UltGauge.consume(p);
+		Peacekeeper.interrupt(p, st);
 		if (st.fan != null) {
 			st.fan.cancel();
 		}

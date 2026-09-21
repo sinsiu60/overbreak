@@ -130,12 +130,14 @@ public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duratio
 	public static final int GS_SCATTER = 52;
 	/** 건슬링어 사선 앵커 (왼손을 앞으로 내뻗어 와이어 발사). */
 	public static final int GS_ANCHOR = 53;
-	/** 건슬링어 차원 회전 포격 (떠서 아래를 겨눈 채 연속 사격). duration 을 씁니다. */
-	public static final int GS_ULT = 54;
+	/** 건슬링어 궤적 해방 예고 — 두 총을 손가락으로 한 바퀴 돌림 (0.5초). duration 을 씁니다. */
+	public static final int GS_RELEASE_TWIRL = 54;
 	/** 건슬링어 체공 훈풍 활공 (두 팔을 벌리고 미끄러짐). 서버가 멈춥니다. */
 	public static final int GS_GLIDE = 55;
 	/** 건슬링어 쌀권총 — 왼손 차례. 오른손({@link #GS_SHOT}) 과 번갈아 나갑니다. */
 	public static final int GS_SHOT_L = 56;
+	/** 건슬링어 궤적 해방 폭발 — 두 총을 교차해 들어 올림. */
+	public static final int GS_RELEASE_SNAP = 57;
 
 	public static final Type<SkillAnimPayload> TYPE = new Type<>(Overbreak.id("skill_anim"));
 	public static final StreamCodec<ByteBuf, SkillAnimPayload> CODEC = StreamCodec.composite(

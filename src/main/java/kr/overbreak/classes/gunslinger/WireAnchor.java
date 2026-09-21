@@ -25,7 +25,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * [E] 사선 앵커 — 12칸짜리 와이어를 쏘아 붙는 곳으로 끌려갑니다.
+ * [E] 사선 앵커 — 16칸짜리 와이어를 쏘아 붙는 곳으로 끌려갑니다.
  *
  *   적에게 맞으면 : 20 피해 · 0.5초 기절 · 그 적의 <b>머리 위</b>로 끌려갑니다 (바로 공중 치명타 각)
  *   벽에 맞으면   : 그 지점으로 빠르게 당겨집니다
@@ -35,7 +35,7 @@ import org.jspecify.annotations.Nullable;
 public final class WireAnchor implements Effects.Active {
 	/** 쿨타임 (시간 단위 · 7초). */
 	public static final int COOLDOWN = 140;
-	static final double RANGE = 12.0;
+	static final double RANGE = 16.0;
 	/** 적중 피해 x100 (20.0). */
 	static final int DAMAGE_100 = 2000;
 	/** 기절 (시간 단위 · 0.5초). */
@@ -50,15 +50,18 @@ public final class WireAnchor implements Effects.Active {
 	private final Vec3 anchor;
 	private final @Nullable LivingEntity target;
 	private int t;
+	/** 점프 키를 누르고 있었는가 — 쓸 때 이미 누르고 있던 것은 끊기로 치지 않습니다. */
+	private boolean jumpHeld;
 
 	private WireAnchor(ServerPlayer caster, Vec3 anchor, @Nullable LivingEntity target) {
 		this.caster = caster;
 		this.anchor = anchor;
 		this.target = target;
+		this.jumpHeld = Attachments.profile(caster).jumpDown;
 	}
 
 	static void cast(ServerPlayer p, GunslingerState st) {
-		if (st.reloadT > 0 || st.scatter != null || st.inUlt()) {
+		if (st.scatter != null) {
 			DualPistols.denied(p);
 			return;
 		}
@@ -71,6 +74,7 @@ public final class WireAnchor implements Effects.Active {
 		if (Cooldowns.blocked(p, Gunslinger.ANCHOR, "사선 앵커", ChatFormatting.AQUA)) {
 			return;
 		}
+		DualPistols.interrupt(p, st);
 		ServerLevel level = p.level();
 		Vec3 eye = p.getEyePosition();
 		Vec3 dir = Aim.direction(p);
@@ -128,6 +132,13 @@ public final class WireAnchor implements Effects.Active {
 			return false;
 		}
 		t++;
+		// 끌려가는 중 점프 키를 새로 누르면 와이어를 끊고 지금 속도 그대로 날아갑니다 (0.2e)
+		boolean jump = Attachments.profile(caster).jumpDown;
+		if (jump && !jumpHeld && t > 1) {
+			snap();
+			return false;
+		}
+		jumpHeld = jump;
 		// 적을 걸었으면 그 적이 움직여도 머리 위를 따라갑니다
 		Vec3 goal = target != null && target.isAlive()
 				? target.position().add(0, target.getBbHeight() + OVERHEAD, 0)
@@ -148,6 +159,14 @@ public final class WireAnchor implements Effects.Active {
 		caster.resetFallDistance();
 		Fx.particle(caster.level(), ParticleTypes.END_ROD, caster.position().add(0, 0.9, 0), 2, 0.2, 0.2, 0.2, 0.01);
 		return true;
+	}
+
+	/** 와이어 끊기 — 제동하지 않으므로 마지막으로 실은 속도로 계속 날아갑니다. */
+	private void snap() {
+		caster.resetFallDistance();
+		Fx.particle(caster.level(), Fx.dust(SKY, 0.9F), caster.position().add(0, 1, 0), 10, 0.25, 0.3, 0.25, 0);
+		Fx.particle(caster.level(), ParticleTypes.END_ROD, caster.position().add(0, 1, 0), 4, 0.15, 0.2, 0.15, 0.05);
+		Fx.sound(caster, SoundEvents.CHAIN_BREAK, SoundSource.PLAYERS, 0.9F, 1.5F);
 	}
 
 	@Override

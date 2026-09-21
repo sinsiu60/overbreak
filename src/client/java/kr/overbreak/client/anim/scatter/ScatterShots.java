@@ -65,7 +65,7 @@ public final class ScatterShots {
 			BulletTrails.receive(new TracerPayload(p.getId(), cm[0].x, cm[0].y, cm[0].z, end.x, end.y, end.z, TracerPayload.GUNSLINGER_SCATTER));
 			Vec3 kick = cm[1].cross(new Vec3(0, 1, 0)).normalize().scale(s.left() ? -0.12 : 0.12).add(0, 0.12, 0);
 			mc.level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, Items.GOLD_NUGGET), cm[0].x, cm[0].y, cm[0].z, kick.x, kick.y, kick.z);
-			ScatterSounds.shoot(mc, p);
+			ScatterSounds.shoot(mc, p, cm[0]);
 			return;
 		}
 		float dashYaw = ScatterView.dashYaw(p.getId(), p.getYRot());
@@ -78,6 +78,6 @@ public final class ScatterShots {
 		// 탄피 — 총 옆으로 튀어나감
 		Vec3 kick = m[1].cross(new Vec3(0, 1, 0)).normalize().scale(s.left() ? -0.12 : 0.12).add(0, 0.12, 0);
 		mc.level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, Items.GOLD_NUGGET), tip.x, tip.y, tip.z, kick.x, kick.y, kick.z);
-		ScatterSounds.shoot(mc, p);
+		ScatterSounds.shoot(mc, p, tip);
 	}
 }

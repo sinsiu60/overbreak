@@ -67,6 +67,7 @@ final class Rocket implements Effects.Active {
 			return;
 		}
 		Attachments.profile(p).setCooldown(Valkyrie.ROCKET, COOLDOWN);
+		Rifle.interrupt(p, Valkyrie.state(p));
 		Vec3 dir = Aim.direction(p).normalize();
 		Vec3 start = p.getEyePosition().add(dir.scale(0.6));
 		float[] yp = Local.yawPitch(dir);

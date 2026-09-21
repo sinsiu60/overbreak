@@ -57,8 +57,8 @@ final class CombatRoll implements Effects.Active {
 		CrowdControl.track(p);
 		st.guardT = Ticks.of(GUARD);
 		// 구르면 탄창이 가득 찹니다 (0.1 버전)
+		Peacekeeper.interrupt(p, st);
 		st.ammo = Peacekeeper.MAG;
-		st.reloadT = 0;
 		CombatRoll r = new CombatRoll(p, st);
 		st.roll = r;
 		SkillAnimPayload.broadcast(p, SkillAnimPayload.SH_ROLL, -1);

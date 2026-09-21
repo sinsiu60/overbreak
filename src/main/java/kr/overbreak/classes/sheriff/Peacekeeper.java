@@ -140,6 +140,14 @@ final class Peacekeeper {
 		startReload(p, st);
 	}
 
+	/** 스킬이 나가는 순간 재장전을 끊습니다 (0.2e) — 탄창은 그대로. */
+	static void interrupt(ServerPlayer p, SheriffState st) {
+		if (st.reloadT > 0) {
+			st.reloadT = 0;
+			SkillAnimPayload.stop(p, SkillAnimPayload.SH_RELOAD);
+		}
+	}
+
 	static void startReload(ServerPlayer p, SheriffState st) {
 		if (st.reloadT > 0) {
 			return;

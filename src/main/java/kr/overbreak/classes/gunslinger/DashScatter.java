@@ -82,7 +82,9 @@ public final class DashScatter implements Effects.Active {
 	/** 판정 반경 (칸). 탄 궤적 길이도 같습니다. */
 	public static final double RADIUS = 5.0;
 	/** 펄스 한 번의 피해 x100 (7.0 — 스펙 0.7 을 체력 10배 기준으로). */
-	public static final int DAMAGE_100 = 700;
+	public static final int DAMAGE_100 = 1200;
+	/** 적 한 명을 맞힐 때마다 장전되는 탄 (0.2e). */
+	public static final int RELOAD_PER_HIT = 2;
 	/** 보여 주기용 탄 수 (0.05초마다 한 발 · 오른손 → 왼손 번갈아). */
 	public static final int SHOTS = 18;
 	/** 한 발마다 도는 각 — 18발이면 두 바퀴. */
@@ -139,10 +141,6 @@ public final class DashScatter implements Effects.Active {
 		if (st.scatter != null || st.inUlt()) {
 			return;
 		}
-		if (st.reloadT > 0) {
-			DualPistols.denied(p);
-			return;
-		}
 		// 이동기 봉인 — 쿨타임을 쓰지 않고 거부
 		if (Attachments.combatant(p).sealT > 0) {
 			Fx.sound(p, SoundEvents.NOTE_BLOCK_BASS, SoundSource.PLAYERS, 0.8F, 0.5F);
@@ -153,6 +151,7 @@ public final class DashScatter implements Effects.Active {
 		if (Cooldowns.blocked(p, Gunslinger.SCATTER, "돌진 난사", ChatFormatting.AQUA)) {
 			return;
 		}
+		DualPistols.interrupt(p, st);
 		Attachments.profile(p).setCooldown(Gunslinger.SCATTER, COOLDOWN);
 		Attachments.combatant(p).casting = true;
 		DashScatter s = new DashScatter(p, st);
@@ -243,7 +242,6 @@ public final class DashScatter implements Effects.Active {
 			Vec3 muzzle = Local.fromEyes(caster, side * 0.3, -0.2, 0.45);
 			Fx.particleExcept(level, caster, ParticleTypes.SMALL_FLAME, muzzle.x, muzzle.y, muzzle.z, 2, 0.02, 0.02, 0.02, 0.0);
 		}
-		Fx.sound(caster, OverbreakSounds.SCATTER_WINDUP, SoundSource.PLAYERS, 0.6F, 1.2F);
 	}
 
 	/**
@@ -269,7 +267,6 @@ public final class DashScatter implements Effects.Active {
 		CrowdControl.track(caster);
 		ServerLevel level = caster.level();
 		Fx.ring(level, caster.position(), 0.8, 12, 0.05, ParticleTypes.CLOUD);
-		Fx.sound(caster, OverbreakSounds.SCATTER_DASH, SoundSource.PLAYERS, 0.8F, 1.0F);
 	}
 
 	/** 돌진 중 속도선 · 궤적 (0.05초마다 한 벌). */
@@ -333,7 +330,6 @@ public final class DashScatter implements Effects.Active {
 			Vec3 at = caster.position().add(d.scale(0.6)).add(0, 0.1, 0);
 			Fx.particle(level, ParticleTypes.POOF, at, 1, 0.05, 0.02, 0.05, 0.03);
 		}
-		Fx.sound(caster, OverbreakSounds.SCATTER_BRAKE, SoundSource.PLAYERS, 0.7F, 0.9F);
 	}
 
 	private void startScatter() {
@@ -346,7 +342,6 @@ public final class DashScatter implements Effects.Active {
 		phase = Phase.RECOVER;
 		unslow();
 		hover(false);
-		Fx.sound(caster, OverbreakSounds.SCATTER_SPIN, SoundSource.PLAYERS, 0.5F, 1.5F);
 	}
 
 	// ── 난사 ───────────────────────────────────────────────
@@ -377,9 +372,15 @@ public final class DashScatter implements Effects.Active {
 			}
 			Fx.particle(level, ParticleTypes.CRIT, e.getX(), e.getY() + 1, e.getZ(), 5, 0.25, 0.35, 0.25, 0.2);
 			any = true;
+			// 한 명 맞힐 때마다 쌍권총에 2발 장전 (0.2e)
+			state.ammo = Math.min(DualPistols.MAG, state.ammo + RELOAD_PER_HIT);
 		}
 		if (air && any) {
 			AeroDrift.onAirHit(caster);
+		}
+		// 적중음은 시전자 본인에게만, 펄스당 한 번 (소리는 클라이언트가 틉니다 — 서버는 이 스킬 소리를 방송하지 않음)
+		if (any) {
+			kr.overbreak.net.ScatterHitPayload.send(caster, air);
 		}
 		// 판정 반경을 한 번 깜빡여 보여 줍니다 (0.1초)
 		GroundShape.flash(level, center, 0.0F, 360.0, RADIUS, 0x307FD4FF, 0xE07FD4FF, 2);

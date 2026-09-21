@@ -17,6 +17,15 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 public abstract class OptionsCameraMixin {
 	@ModifyVariable(method = "setCameraType", at = @At("HEAD"), argsOnly = true)
 	private CameraType overbreak$skipFrontView(CameraType type) {
-		return type == CameraType.THIRD_PERSON_FRONT && InputMode.active() ? CameraType.FIRST_PERSON : type;
+		if (type == CameraType.THIRD_PERSON_FRONT && InputMode.active()) {
+			type = CameraType.FIRST_PERSON;
+		}
+		// 스킬이 3인칭을 잡고 있는 동안(돌진 난사)은 F5 로도 1인칭이 되지 않습니다 (0.2e) — 풀 때는 잡기를 먼저 놓아서 여기 걸리지 않음
+		if (type == CameraType.FIRST_PERSON && kr.overbreak.client.camera.ViewLock.held()) {
+			type = CameraType.THIRD_PERSON_BACK;
+		}
+		// 3인칭 → 1인칭이면 0.3초 동안 카메라를 당겨 들어옴 (0.2e)
+		kr.overbreak.client.camera.ViewTransition.changed(((Options) (Object) this).getCameraType(), type);
+		return type;
 	}
 }

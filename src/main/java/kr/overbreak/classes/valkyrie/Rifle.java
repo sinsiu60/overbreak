@@ -106,6 +106,14 @@ public final class Rifle {
 		startReload(p, st);
 	}
 
+	/** 스킬이 나가는 순간 재장전을 끊습니다 (0.2e) — 탄창은 그대로. */
+	static void interrupt(ServerPlayer p, ValkyrieState st) {
+		if (st.reloadT > 0) {
+			st.reloadT = 0;
+			SkillAnimPayload.stop(p, SkillAnimPayload.VK_RELOAD);
+		}
+	}
+
 	private static void startReload(ServerPlayer p, ValkyrieState st) {
 		st.reloadT = Ticks.of(RELOAD);
 		SkillAnimPayload.broadcast(p, SkillAnimPayload.VK_RELOAD, -1);

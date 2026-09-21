@@ -82,6 +82,7 @@ public final class SkillHud {
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("health_bars"), HealthBars::render);
 		// 황야의 무법자 조준 화면 (가장자리 어둠 · 조준 표식) — 체력바보다 먼저 깔아 표식이 위에 오게
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("deadeye"), DeadeyeHud::render);
+		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("trail_release"), kr.overbreak.client.fx.TrailView::hud);
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("shade_screen"), ShadeScreen::render);
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("thunder_screen"), ThunderScreen::render);
 		// 피격 피드백 (방향 표시 · 붉은 가장자리) — 조준점 아래, 화면 효과보다 위

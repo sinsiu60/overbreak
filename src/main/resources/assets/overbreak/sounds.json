@@ -1,53 +1,57 @@
 {
-  "skill.dash_scatter.windup": {
-    "subtitle": "subtitles.overbreak.dash_scatter.windup",
-    "sounds": [
-      "minecraft:item/crossbow/loading_end"
-    ]
-  },
-  "skill.dash_scatter.dash": {
-    "subtitle": "subtitles.overbreak.dash_scatter.dash",
-    "sounds": [
-      "minecraft:item/trident/riptide1",
-      "minecraft:item/trident/riptide2",
-      "minecraft:item/trident/riptide3"
-    ]
-  },
-  "skill.dash_scatter.brake": {
-    "subtitle": "subtitles.overbreak.dash_scatter.brake",
-    "sounds": [
-      "minecraft:dig/gravel1",
-      "minecraft:dig/gravel2",
-      "minecraft:dig/gravel3"
-    ]
-  },
   "skill.dash_scatter.shot": {
-    "subtitle": "subtitles.overbreak.dash_scatter.shot",
+    "subtitle": "subtitles.overbreak.skill.dash_scatter.shot",
     "sounds": [
       {
-        "name": "minecraft:fireworks/blast1",
-        "volume": 0.6
+        "name": "overbreak:skill/dash_scatter/shot1",
+        "attenuation_distance": 24
       },
       {
-        "name": "minecraft:item/crossbow/shoot1",
-        "volume": 0.55
+        "name": "overbreak:skill/dash_scatter/shot2",
+        "attenuation_distance": 24
       },
       {
-        "name": "minecraft:item/crossbow/shoot2",
-        "volume": 0.55
+        "name": "overbreak:skill/dash_scatter/shot3",
+        "attenuation_distance": 24
       },
       {
-        "name": "minecraft:item/crossbow/shoot3",
-        "volume": 0.55
+        "name": "overbreak:skill/dash_scatter/shot4",
+        "attenuation_distance": 24
       }
     ]
   },
-  "skill.dash_scatter.spin": {
-    "subtitle": "subtitles.overbreak.dash_scatter.spin",
+  "skill.dash_scatter.hit": {
+    "subtitle": "subtitles.overbreak.skill.dash_scatter.hit",
     "sounds": [
-      "minecraft:item/armor/equip_iron1",
-      "minecraft:item/armor/equip_iron2",
-      "minecraft:item/armor/equip_iron3"
+      "overbreak:skill/dash_scatter/hit1",
+      "overbreak:skill/dash_scatter/hit2"
+    ]
+  },
+  "skill.dash_scatter.tail": {
+    "subtitle": "subtitles.overbreak.skill.dash_scatter.tail",
+    "sounds": [
+      {
+        "name": "overbreak:skill/dash_scatter/tail",
+        "attenuation_distance": 32
+      }
+    ]
+  },
+  "skill.dash_scatter.cock": {
+    "subtitle": "subtitles.overbreak.skill.dash_scatter.cock",
+    "sounds": [
+      "overbreak:skill/dash_scatter/cock"
+    ]
+  },
+  "skill.dash_scatter.whoosh": {
+    "subtitle": "subtitles.overbreak.skill.dash_scatter.whoosh",
+    "sounds": [
+      "overbreak:skill/dash_scatter/whoosh"
+    ]
+  },
+  "skill.dash_scatter.casings": {
+    "subtitle": "subtitles.overbreak.skill.dash_scatter.casings",
+    "sounds": [
+      "overbreak:skill/dash_scatter/casings"
     ]
   },
   "music.match_point": {

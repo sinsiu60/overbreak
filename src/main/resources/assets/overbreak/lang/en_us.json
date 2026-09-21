@@ -2,9 +2,10 @@
   "key.overbreak.skill_info": "Skill Info",
   "key.category.overbreak.overbreak": "OVERBREAK",
   "key.overbreak.reload": "Reload",
-  "subtitles.overbreak.dash_scatter.windup": "Gun hammer cocks",
-  "subtitles.overbreak.dash_scatter.dash": "Dash whooshes",
-  "subtitles.overbreak.dash_scatter.brake": "Boots skid",
-  "subtitles.overbreak.dash_scatter.shot": "Pistol fires",
-  "subtitles.overbreak.dash_scatter.spin": "Pistols spin"
+  "subtitles.overbreak.skill.dash_scatter.shot": "Dual pistols spray",
+  "subtitles.overbreak.skill.dash_scatter.hit": "Spray hits",
+  "subtitles.overbreak.skill.dash_scatter.tail": "Gunfire echoes",
+  "subtitles.overbreak.skill.dash_scatter.cock": "Pistol cocks",
+  "subtitles.overbreak.skill.dash_scatter.whoosh": "Dash",
+  "subtitles.overbreak.skill.dash_scatter.casings": "Shell casings fall"
 }

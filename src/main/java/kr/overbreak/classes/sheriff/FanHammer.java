@@ -53,10 +53,11 @@ final class FanHammer implements Effects.Active {
 		if (st.fan != null) {
 			return;
 		}
-		if (st.reloadT > 0 || st.ammo <= 0) {
+		if (st.ammo <= 0) {
 			Peacekeeper.denied(p);
 			return;
 		}
+		Peacekeeper.interrupt(p, st);
 		Attachments.combatant(p).casting = true;
 		FanHammer f = new FanHammer(p, st);
 		st.fan = f;

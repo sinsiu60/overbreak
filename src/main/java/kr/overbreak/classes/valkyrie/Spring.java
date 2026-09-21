@@ -47,6 +47,7 @@ final class Spring {
 			return;
 		}
 		Attachments.profile(p).setCooldown(Valkyrie.SPRING, COOLDOWN);
+		Rifle.interrupt(p, st);
 		Motion.launch(p, Aim.direction(p), POWER);
 		st.floating = true;
 		st.floatGrace = Ticks.of(GRACE);

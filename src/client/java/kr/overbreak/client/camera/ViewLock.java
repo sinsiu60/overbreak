@@ -11,7 +11,7 @@ import org.jspecify.annotations.Nullable;
  *
  *   잡을 때 지금 시점을 적어 두고 어깨 너머 3인칭으로 바꿉니다.
  *   풀 때 적어 둔 시점으로 되돌립니다 — 원래 3인칭이었으면 그대로 3인칭입니다.
- *   잡혀 있는 동안 F5 를 눌러 바꾸면 그 시점을 존중해서, 풀 때 되돌리지 않습니다.
+ *   잡혀 있는 동안에는 F5 를 눌러도 1인칭이 되지 않습니다 (OptionsCameraMixin, 0.2e).
  */
 public final class ViewLock {
 	/** 잡기 전의 시점 (null = 잡고 있지 않음). */

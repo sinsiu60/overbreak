@@ -52,6 +52,14 @@ public abstract class ItemInHandLayerMixin {
 			if (roll != 0.0F) {
 				poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(roll));
 			}
+			// 궤적 해방 예고 — 방아쇠 손가락을 축으로 총을 한 바퀴 (0.5초, 끝으로 갈수록 느려짐)
+			if (sa.overbreak$anim() == kr.overbreak.net.SkillAnimPayload.GS_RELEASE_TWIRL && sa.overbreak$weight() > 0.0F) {
+				float x = net.minecraft.util.Mth.clamp(sa.overbreak$time() / Math.max(1.0F, sa.overbreak$end()), 0.0F, 1.0F);
+				float turn = 360.0F * (1.0F - (1.0F - x) * (1.0F - x) * (1.0F - x));
+				poseStack.translate(0.0F, 0.1F, 0.0F);
+				poseStack.mulPose(com.mojang.math.Axis.XP.rotationDegrees(-turn));
+				poseStack.translate(0.0F, -0.1F, 0.0F);
+			}
 		}
 		if (state instanceof AnimRenderState a && arm == state.mainArm) {
 			float s = a.overbreak$itemScale();

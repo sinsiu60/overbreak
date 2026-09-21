@@ -176,12 +176,6 @@ public final class FirstPersonAnim {
 			{2.0F, 0.70F, -0.58F, -0.60F, -12F, 18F, 10F, 1.0F},
 			{7.0F, 0.66F, -0.56F, -0.64F, -6F, 14F, 8F, 1.0F},
 			{12.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F}};
-	/** 차원 회전 포격 — 두 총을 아래로 겨눈 채 유지. */
-	private static final float[][] GS_ULT = {
-			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
-			{5.0F, 0.44F, -0.30F, -0.66F, 46F, 6F, -8F, 1.06F},
-			{60.0F, 0.44F, -0.28F, -0.64F, 50F, 6F, -8F, 1.06F},
-			{68.0F, 0.52F, -0.44F, -0.70F, 18F, 2F, -3F, 1.0F}};
 	/** 체공 훈풍 활공 — 팔을 느슬하게 벌린 자세. */
 	private static final float[][] GS_GLIDE = {
 			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
@@ -252,7 +246,7 @@ public final class FirstPersonAnim {
 						SkillAnimPayload.BR_REGROUP,
 						// 건슬링어는 양손에 한 자루씩 — 왼손 총도 같은 키프레임을 그대로 따릅니다 (invert 가 좌우를 뒤집음)
 						SkillAnimPayload.GS_SHOT_L, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_SCATTER,
-						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_ULT, SkillAnimPayload.GS_GLIDE);
+						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_GLIDE);
 	}
 
 	private static final net.minecraft.resources.Identifier VALKYRIE_RIFLE = kr.overbreak.Overbreak.id("valkyrie_rifle");
@@ -360,7 +354,6 @@ public final class FirstPersonAnim {
 			case SkillAnimPayload.GS_RELOAD -> GS_RELOAD;
 			case SkillAnimPayload.GS_BOOST -> GS_BOOST;
 			case SkillAnimPayload.GS_ANCHOR -> GS_ANCHOR;
-			case SkillAnimPayload.GS_ULT -> GS_ULT;
 			case SkillAnimPayload.GS_GLIDE -> GS_GLIDE;
 			case SkillAnimPayload.BR_REGROUP -> BR_POTION_OFF;
 			case SkillAnimPayload.HK_CHARGE -> HK_SHIELD;
@@ -426,7 +419,7 @@ public final class FirstPersonAnim {
 						SkillAnimPayload.BR_BASIC, SkillAnimPayload.BR_BASIC_BACK, SkillAnimPayload.BR_BLOW,
 						SkillAnimPayload.BR_WHIRL, SkillAnimPayload.BR_REGROUP, SkillAnimPayload.BR_ULT,
 						SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_SCATTER,
-						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_ULT, SkillAnimPayload.GS_GLIDE);
+						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_GLIDE);
 	}
 
 	/** 지금 1인칭 동작의 firstperson_item_spin (총 기준, 손끝 축) — 없으면 null. */
@@ -480,7 +473,6 @@ public final class FirstPersonAnim {
 			case SkillAnimPayload.GS_RELOAD -> GS_RELOAD;
 			case SkillAnimPayload.GS_BOOST -> GS_BOOST;
 			case SkillAnimPayload.GS_ANCHOR -> GS_ANCHOR;
-			case SkillAnimPayload.GS_ULT -> GS_ULT;
 			case SkillAnimPayload.GS_GLIDE -> GS_GLIDE;
 			default -> null;
 		};

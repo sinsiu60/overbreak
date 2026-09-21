@@ -36,7 +36,7 @@ public final class GunslingerClientTest implements FabricClientGameTest {
 			// 3인칭 동작 파일 (뼈대 이름 · 채널 오류는 여기서 걸립니다)
 			for (String name : new String[] {
 					"gunslinger.shot", "gunslinger.shot_left", "gunslinger.reload", "gunslinger.boost",
-					"gunslinger.anchor", "gunslinger.ult", "gunslinger.glide"}) {
+					"gunslinger.anchor", "gunslinger.glide", "gunslinger.release_twirl", "gunslinger.release_snap"}) {
 				if (kr.overbreak.client.anim.data.PlayerAnimations.get(name) == null) {
 					throw new AssertionError("애니메이션 파일에 없음: " + name);
 				}
@@ -83,15 +83,36 @@ public final class GunslingerClientTest implements FabricClientGameTest {
 				ctx.waitTicks(Ticks.of(8));
 				reset(sp);
 
+				// 궤적 해방 — 이리저리 쏘아 궤적을 남기고 (적 팀에게도 보이는 선), 예고 → 폭발
 				onServer(sp, p -> {
 					UltGauge.fill(p);
 					gs().ult(p);
 				});
-				shots(ctx, "gs_" + tag + "_ult", 6, 20);
-				onServer(sp, p -> {
-					if (Gunslinger.state(p).bombardment != null) {
-						Gunslinger.state(p).bombardment.cancel();
+				for (int i = 0; i < 10; i++) {
+					float yaw = -40.0F + i * 9.0F;
+					float pitch = (i % 3 - 1) * 6.0F;
+					onServer(sp, p -> {
+						p.setYRot(yaw);
+						p.setXRot(pitch);
+						gs().basic(p);
+					});
+					ctx.waitTicks(Ticks.of(4));
+				}
+				ctx.runOnClient(mc -> {
+					int n = kr.overbreak.client.fx.TrailView.count(mc.player.getId());
+					if (n != 10) {
+						throw new AssertionError("궤적 10줄이어야 함: " + n);
 					}
+				});
+				ctx.takeScreenshot("gs_" + tag + "_ult_trails");
+				onServer(sp, p -> Gunslinger.state(p).release.forceTelegraph());
+				shots(ctx, "gs_" + tag + "_ult_telegraph", 3, 8);
+				ctx.waitTicks(Ticks.of(3));
+				ctx.takeScreenshot("gs_" + tag + "_ult_burst");
+				ctx.runOnClient(mc -> mc.player.setYRot(0.0F));
+				onServer(sp, p -> {
+					p.setYRot(0.0F);
+					p.setXRot(4.0F);
 				});
 				reset(sp);
 				ctx.waitTicks(Ticks.of(20));
@@ -132,6 +153,37 @@ public final class GunslingerClientTest implements FabricClientGameTest {
 			ctx.runOnClient(mc -> {
 				if (mc.options.getCameraType() != CameraType.FIRST_PERSON) {
 					throw new AssertionError("끝났는데 1인칭으로 돌아오지 않음: " + mc.options.getCameraType());
+				}
+			});
+			// 돌진 난사 중에는 F5 로도 1인칭이 되지 않음 (0.2e)
+			onServer(sp, p -> {
+				Attachments.profile(p).cooldowns.clear();
+				gs().secondary(p);
+			});
+			ctx.waitTicks(Ticks.of(4));
+			ctx.runOnClient(mc -> {
+				mc.options.setCameraType(CameraType.FIRST_PERSON);
+				if (mc.options.getCameraType() != CameraType.THIRD_PERSON_BACK) {
+					throw new AssertionError("돌진 난사 중 F5 로 1인칭이 됨");
+				}
+			});
+			ctx.waitTicks(Ticks.of(kr.overbreak.classes.gunslinger.DashScatter.LENGTH + 5));
+
+			// 3인칭 → 1인칭 전환 0.3초 — 카메라가 뒤에서 당겨 들어옴
+			ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
+			ctx.waitTicks(Ticks.of(10));
+			ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+			ctx.waitTicks(1);
+			ctx.runOnClient(mc -> {
+				if (!kr.overbreak.client.camera.ViewTransition.active()) {
+					throw new AssertionError("1인칭으로 바꾼 직후 전환 중이 아님");
+				}
+			});
+			ctx.takeScreenshot("gs_view_transition_mid");
+			ctx.waitTicks(Ticks.of(12));
+			ctx.runOnClient(mc -> {
+				if (kr.overbreak.client.camera.ViewTransition.active() || mc.gameRenderer.mainCamera().isDetached()) {
+					throw new AssertionError("0.3초 뒤에도 전환이 끝나지 않음");
 				}
 			});
 			onServer(sp, Classes::clear);

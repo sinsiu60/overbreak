@@ -27,9 +27,10 @@ public final class GunslingerState {
 	public boolean descending;
 
 	public @Nullable DashScatter scatter;
-	public @Nullable AerialBombardment bombardment;
+	/** 궤적 해방 (궁극기) — 수집 · 예고 동안. */
+	public @Nullable TrailRelease release;
 
 	public boolean inUlt() {
-		return bombardment != null;
+		return release != null;
 	}
 }

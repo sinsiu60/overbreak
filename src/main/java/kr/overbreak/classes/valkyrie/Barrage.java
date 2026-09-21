@@ -55,6 +55,7 @@ final class Barrage implements Effects.Active {
 
 	static void cast(ServerPlayer p, ValkyrieState st) {
 		UltGauge.consume(p);
+		Rifle.interrupt(p, st);
 		Barrage b = new Barrage(p, st);
 		st.barrage = b;
 		st.holdT = 0;

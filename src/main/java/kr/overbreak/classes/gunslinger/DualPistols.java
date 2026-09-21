@@ -38,7 +38,15 @@ public final class DualPistols {
 	private DualPistols() {}
 
 	static void fire(ServerPlayer p, GunslingerState st) {
-		if (st.shotCd > 0 || st.inUlt()) {
+		if (st.shotCd > 0) {
+			return;
+		}
+		// 궤적 해방: 예고 0.5초 동안은 사격 불가, 수집 중에는 탄창 무한 · 재장전 없음
+		if (st.release != null) {
+			if (st.release.collecting()) {
+				shoot(p, st, Aim.direction(p), DAMAGE_100);
+				st.shotCd = Ticks.of(GAP);
+			}
 			return;
 		}
 		if (st.reloadT > 0) {
@@ -76,13 +84,17 @@ public final class DualPistols {
 		st.leftMuzzle = !st.leftMuzzle;
 		Vec3 muzzle = Local.offset(eye, yp[0], yp[1], side, -0.20, 0.42);
 		Tracer.spawn(level, p, muzzle, hit.end(), left ? Tracer.GUNSLINGER_L : Tracer.GUNSLINGER);
+		boolean air = AeroDrift.airborne(p);
+		// 궤적 해방: 이 한 발의 궤적을 월드에 남김 (서버 히트스캔 결과 그대로)
+		if (st.release != null) {
+			st.release.onShot(muzzle, hit.end(), air);
+		}
 		// 쓴 쪽 손만 반동이 나가도록 번호를 나눕니다 (1인칭 · 3인칭 공통)
 		SkillAnimPayload.broadcast(p, left ? SkillAnimPayload.GS_SHOT_L : SkillAnimPayload.GS_SHOT, -1);
 		Fx.sound(p, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.34F, 2.0F);
 		Fx.sound(p, SoundEvents.PISTON_EXTEND, SoundSource.PLAYERS, 0.45F, 1.4F);
 		Fx.particleExcept(level, p, ParticleTypes.SMOKE, muzzle.x, muzzle.y, muzzle.z, 3, 0.04, 0.04, 0.04, 0.01);
 
-		boolean air = AeroDrift.airborne(p);
 		LivingEntity victim = hit.target();
 		if (victim != null) {
 			int damage = air ? damage100 * AeroDrift.CRIT_PERCENT / 100 : damage100;
@@ -139,7 +151,15 @@ public final class DualPistols {
 		SkillAnimPayload.broadcast(p, SkillAnimPayload.GS_RELOAD, -1);
 	}
 
-	/** 재장전이 끊겼을 때 (사망 · 직업 해제) — 잠금만 풀고 탄창은 그대로. */
+	/**
+	 * 스킬이 나가는 순간 재장전을 끊습니다 (0.2e) — 탄창은 그대로, 잠금 · 동작만 풉니다.
+	 * 스킬이 잠금을 새로 걸기 전에 불러야 합니다.
+	 */
+	static void interrupt(ServerPlayer p, GunslingerState st) {
+		cancelReload(p, st);
+	}
+
+	/** 재장전이 끊겼을 때 (사망 · 직업 해제 · 스킬) — 잠금만 풀고 탄창은 그대로. */
 	static void cancelReload(ServerPlayer p, GunslingerState st) {
 		if (st.reloadT > 0) {
 			st.reloadT = 0;

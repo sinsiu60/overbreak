@@ -51,6 +51,19 @@ public interface PvpClass {
 	/** 재장전 키 R (모드 클라이언트, net/ReloadPayload) — 탄창이 있는 직업만. */
 	default void reload(ServerPlayer p) {}
 
+	/**
+	 * 재장전 중인가 — 재장전 중에 스킬 키를 누르면 재장전을 끊고 스킬이 나갑니다 (0.2e).
+	 * 재장전으로 걸린 잠금(casting)은 스킬 입력을 막지 않습니다. 평타는 그대로 막힙니다.
+	 */
+	default boolean reloading(ServerPlayer p) {
+		return false;
+	}
+
+	/** 지금 궁극기 게이지가 차는가 — 궁극기 도중에는 막는 직업이 있습니다 (궤적 해방). */
+	default boolean ultCharging(ServerPlayer p) {
+		return true;
+	}
+
 	/** 게이지 100% 에 hotbar 3 에 넣을 아이템. 없으면 EMPTY. */
 	default ItemStack ultItem() {
 		return ItemStack.EMPTY;

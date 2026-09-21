@@ -74,6 +74,7 @@ final class Flashbang implements Effects.Active {
 			return;
 		}
 		Attachments.profile(p).setCooldown(Sheriff.FLASH, COOLDOWN);
+		Peacekeeper.interrupt(p, Sheriff.state(p));
 		Vec3 dir = Aim.direction(p).normalize();
 		// 왼손 앞 (^x 는 왼쪽이 양수)
 		Vec3 start = Local.offset(p.getEyePosition(), p.getYRot(), p.getXRot(), 0.3, -0.2, 0.6);
