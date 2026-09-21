@@ -214,7 +214,7 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 	 * 가짜 플레이어는 움직이지 않으므로 돌진이 실어 주는 속도로 봅니다.
 	 */
 	@GameTest(maxTicks = 300)
-	public void scatterCastAndHorizontalDash(GameTestHelper h) {
+	public void scatterCastAndLookDash(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), -60.0F);
 		p.setOnGround(true);
 		gs().secondary(p);
@@ -227,8 +227,8 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 			h.assertTrue(st.scatter != null && st.scatter.phase() == DashScatter.Phase.DASH, "돌진 중");
 			Vec3 v = p.getDeltaMovement();
 			double expect = kr.overbreak.core.tick.Ticks.speed(DashScatter.DISTANCE / DashScatter.DASH);
-			near(h, v.y, 0.0, 1.0E-6, "위를 봐도 세로 속도 0 (수평 · 높이 유지)");
-			near(h, v.z, expect, 1.0E-3, "바라본 +Z 로 초당 24칸");
+			near(h, v.y, expect * Math.sin(Math.toRadians(60)), 1.0E-3, "위(60도)를 보면 그 방향으로 솟음");
+			near(h, v.z, expect * Math.cos(Math.toRadians(60)), 1.0E-3, "앞으로는 cos 60 만큼");
 			near(h, v.x, 0.0, 1.0E-6, "옆으로는 안 감");
 			h.runAfterDelay(T.of(DashScatter.LENGTH), () -> {
 				h.assertTrue(st.scatter == null, "1.6초 뒤 끝남");
@@ -312,6 +312,20 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 				h.succeed();
 			});
 		});
+	}
+
+	/** 땅 위에서 아래를 보고 쓰면 정면(수평)으로 · 공중에서 아래를 보면 그 방향으로. */
+	@GameTest
+	public void scatterDirectionRules(GameTestHelper h) {
+		Vec3 ground = DashScatter.direction(0.0F, 40.0F, true);
+		near(h, ground.y, 0.0, 1.0E-9, "땅 + 아래 → 수평");
+		near(h, ground.z, 1.0, 1.0E-9, "땅 + 아래 → 정면");
+		Vec3 air = DashScatter.direction(0.0F, 40.0F, false);
+		near(h, air.y, -Math.sin(Math.toRadians(40)), 1.0E-9, "공중 + 아래 → 아래로");
+		Vec3 up = DashScatter.direction(90.0F, -30.0F, true);
+		near(h, up.y, Math.sin(Math.toRadians(30)), 1.0E-9, "땅 + 위 → 위로");
+		near(h, up.x, -Math.cos(Math.toRadians(30)), 1.0E-9, "yaw 90 → -X");
+		h.succeed();
 	}
 
 	/** 서버가 받아 주는 거리는 7.5칸 — 넘게 가 있으면 제동 때 되돌립니다. */

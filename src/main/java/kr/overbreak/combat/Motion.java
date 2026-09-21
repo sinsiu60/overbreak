@@ -65,6 +65,22 @@ public final class Motion {
 		c.dashPower = power;
 		c.dashT = kr.overbreak.core.tick.Ticks.of(ticks);
 		c.dashHold = hold;
+		c.dashY = 0;
+	}
+
+	/**
+	 * 바라보는 방향(위아래 포함) 돌진 — 방향 벡터 길이와 상관없이 {@code power} 칸/시간 단위로 곧게 나갑니다.
+	 * 중력은 받지 않습니다 (세로 속도도 매 틱 다시 실음).
+	 */
+	public static void dash(LivingEntity e, Vec3 dir, double power, int ticks) {
+		dash(e, dir.x, dir.z, power, ticks, true);
+		Attachments.combatant(e).dashY = dir.y;
+	}
+
+	/** 제동 — 세로 속도까지 0 (위로 돌진한 뒤 계속 솟구치지 않게). */
+	public static void stop(LivingEntity e) {
+		brake(e);
+		pushRaw(e, Vec3.ZERO);
 	}
 
 	/**
@@ -85,13 +101,14 @@ public final class Motion {
 			return;
 		}
 		c.dashT--;
-		double len = Math.sqrt(c.dashX * c.dashX + c.dashZ * c.dashZ);
+		double dy = c.dashHold ? c.dashY : 0;
+		double len = Math.sqrt(c.dashX * c.dashX + dy * dy + c.dashZ * c.dashZ);
 		if (c.dashPower <= 0 || len < 1.0E-4) {
 			brake(e);
 			return;
 		}
 		double k = c.dashPower / len;
-		double vy = c.dashHold ? 0 : e.getDeltaMovement().y;
+		double vy = c.dashHold ? dy * k * kr.overbreak.core.tick.Ticks.step() : e.getDeltaMovement().y;
 		double step = kr.overbreak.core.tick.Ticks.step();
 		pushRaw(e, new Vec3(c.dashX * k * step, vy, c.dashZ * k * step));
 	}

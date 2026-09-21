@@ -56,6 +56,8 @@ public final class Combatant {
 	public double dashPower;
 	public double dashX;
 	public double dashZ;
+	/** 세로 방향 (dashHold 일 때만 — 바라보는 방향으로 위아래도 나가는 돌진). */
+	public double dashY;
 	/** 돌진하는 동안 세로 속도를 0 으로 붙잡습니다. */
 	public boolean dashHold;
 

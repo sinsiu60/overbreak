@@ -19,7 +19,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 돌진 난사 — 진짜 플레이어로 움직임을 잽니다 (가짜 플레이어는 서버에서 움직이지 않아 거리를 못 잽니다).
  *
- *   스펙 PART 9: 평지 6칸 · 위를 봐도 수평 · 공중에서 높이 유지 · 웅크리기를 누른 채 난간 쪽으로 써도 안 끊김
+ *   바라보는 방향으로 6칸 (땅에서 아래를 보면 정면) · 공중에서 높이 유지 · 웅크리기를 누른 채 난간 쪽으로 써도 안 끊김
  *   웅크리기 키를 실제로 눌러 쓰므로 입력 → 스킬 → 즉시 연출(예측 재생)까지 한 길로 지나갑니다.
  */
 public final class DashScatterClientTest implements FabricClientGameTest {
@@ -38,8 +38,8 @@ public final class DashScatterClientTest implements FabricClientGameTest {
 			sp.getConnection().waitForChunksRender();
 			ctx.waitTicks(Ticks.of(20));
 
-			// 1) 평지 — 위를 보고 써도 수평으로 6칸
-			ctx.getInput().lookAt(0.0F, -60.0F);
+			// 1) 땅에서 위(30도)를 보고 — 바라본 방향 그대로 6칸 (앞 5.2 · 위 3)
+			ctx.getInput().lookAt(0.0F, -30.0F);
 			Vec3 a0 = pos(ctx);
 			ctx.getInput().holdKey(o -> o.keyShift);
 			// 누른 즉시(서버 확인 전) 본인 화면에 연출이 시작됐는가
@@ -52,15 +52,27 @@ public final class DashScatterClientTest implements FabricClientGameTest {
 			ctx.waitTicks(Ticks.of(DashScatter.SCATTER_START) + 3);
 			ctx.getInput().releaseKey(o -> o.keyShift);
 			Vec3 a1 = pos(ctx);
-			double flat = Math.hypot(a1.x - a0.x, a1.z - a0.z);
-			if (Math.abs(flat - DashScatter.DISTANCE) > TOL) {
-				throw new AssertionError("평지 돌진 " + flat + "칸 (6칸이어야 함)");
+			double up = a1.distanceTo(a0);
+			if (Math.abs(up - DashScatter.DISTANCE) > TOL || Math.abs(a1.y - a0.y - 3.0) > TOL) {
+				throw new AssertionError("위를 보고 돌진 " + up + "칸, 높이 " + (a1.y - a0.y) + " (6칸 · 위로 3칸이어야 함)");
 			}
-			if (Math.abs(a1.y - a0.y) > 0.3) {
-				throw new AssertionError("위를 보고 썼는데 높이가 " + (a1.y - a0.y) + " 바뀜 (수평이어야 함)");
+			System.out.println("[DashScatterClientTest] 위 30도 돌진 " + up + "칸, 높이 변화 " + (a1.y - a0.y));
+			ctx.takeScreenshot("scatter_up_done");
+			ctx.waitTicks(Ticks.of(DashScatter.LENGTH) + Ticks.of(20));
+			reset(sp);
+
+			// 1-2) 땅에서 아래(45도)를 보고 — 바닥으로 처박히지 않고 정면으로 6칸
+			ctx.getInput().lookAt(0.0F, 45.0F);
+			Vec3 d0 = pos(ctx);
+			ctx.getInput().holdKey(o -> o.keyShift);
+			ctx.waitTicks(Ticks.of(DashScatter.SCATTER_START) + 4);
+			ctx.getInput().releaseKey(o -> o.keyShift);
+			Vec3 d1 = pos(ctx);
+			double flat = Math.hypot(d1.x - d0.x, d1.z - d0.z);
+			if (Math.abs(flat - DashScatter.DISTANCE) > TOL || Math.abs(d1.y - d0.y) > 0.3) {
+				throw new AssertionError("땅에서 아래를 보고 돌진 " + flat + "칸, 높이 " + (d1.y - d0.y) + " (수평 6칸이어야 함)");
 			}
-			System.out.println("[DashScatterClientTest] 평지 돌진 " + flat + "칸, 높이 변화 " + (a1.y - a0.y));
-			ctx.takeScreenshot("scatter_flat_done");
+			System.out.println("[DashScatterClientTest] 땅 아래 45도 돌진 수평 " + flat + "칸, 높이 변화 " + (d1.y - d0.y));
 			ctx.waitTicks(Ticks.of(DashScatter.LENGTH));
 			reset(sp);
 
@@ -106,7 +118,21 @@ public final class DashScatterClientTest implements FabricClientGameTest {
 			System.out.println("[DashScatterClientTest] 공중 돌진 중 내려간 높이 " + (c0.y - c1.y));
 			ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
 			ctx.takeScreenshot("scatter_air_dash");
+			// 난사 동안은 떨어지지 않고 그 자리에 떠 있음
+			ctx.waitTicks(Ticks.of(DashScatter.SCATTER_START - DashScatter.BRAKE_START) + 2);
+			Vec3 c2 = pos(ctx);
+			ctx.waitTicks(Ticks.of(DashScatter.RECOVER_START - DashScatter.SCATTER_START) - 4);
+			Vec3 c3 = pos(ctx);
+			if (Math.abs(c3.y - c2.y) > 0.05) {
+				throw new AssertionError("공중 난사 중 높이가 " + (c3.y - c2.y) + " 바뀜 (떠 있어야 함)");
+			}
+			System.out.println("[DashScatterClientTest] 공중 난사 중 높이 변화 " + (c3.y - c2.y));
 			ctx.waitTicks(Ticks.of(DashScatter.LENGTH));
+			onServer(sp, p -> {
+				if (p.isNoGravity()) {
+					throw new AssertionError("끝난 뒤에도 중력이 꺼져 있음");
+				}
+			});
 			reset(sp);
 
 			// 4) 3인칭 몸 동작 — 단계마다 한 장 (기 모으기 · 돌진 · 난사 들어가기 · 난사 · 마무리)

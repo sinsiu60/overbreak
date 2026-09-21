@@ -105,6 +105,10 @@ public final class DashScatter implements Effects.Active {
 	private final int seed;
 	/** 대쉬 방향 = 시전 순간의 시선 yaw (수평). */
 	private final float dashYaw;
+	/** 시전 순간의 시선 pitch (+ 아래) — 바라보는 방향으로 위아래도 돌진합니다. */
+	private final float dashPitch;
+	/** 공중에서 제동했으면 난사가 끝날 때까지 그 높이에 떠 있음 (중력 끔). */
+	private boolean hovering;
 	private int pulses;
 	private boolean slowed;
 
@@ -113,6 +117,7 @@ public final class DashScatter implements Effects.Active {
 		this.state = state;
 		this.seed = seed(caster.getId(), caster.level().getGameTime());
 		this.dashYaw = caster.getYRot();
+		this.dashPitch = caster.getXRot();
 	}
 
 	/** 시드 = hash(엔티티, 시전 틱). */
@@ -241,14 +246,23 @@ public final class DashScatter implements Effects.Active {
 		Fx.sound(caster, OverbreakSounds.SCATTER_WINDUP, SoundSource.PLAYERS, 0.6F, 1.2F);
 	}
 
-	/** 돌진 — 이때의 시선 수평 방향으로 고정 (위아래는 보지 않음). 높이는 붙잡아 둡니다. */
+	/**
+	 * 돌진 — 시전 순간 바라본 방향 그대로 (위아래 포함) 6칸. 중력은 받지 않습니다.
+	 * 땅 위에서 수평보다 아래를 보고 있었으면 정면(수평)으로 나갑니다 — 바닥에 처박히지 않게.
+	 */
+	public static Vec3 direction(float yawDeg, float pitchDeg, boolean onGround) {
+		double yaw = Math.toRadians(yawDeg);
+		double pitch = onGround && pitchDeg > 0.0F ? 0.0 : Math.toRadians(pitchDeg);
+		double flat = Math.cos(pitch);
+		return new Vec3(-Math.sin(yaw) * flat, -Math.sin(pitch), Math.cos(yaw) * flat);
+	}
+
 	private void startDash() {
 		phase = Phase.DASH;
-		double yaw = Math.toRadians(dashYaw);
-		dir = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
+		dir = direction(dashYaw, dashPitch, caster.onGround());
 		dashFrom = caster.position();
 		dashTick = t;
-		Motion.dash(caster, dir.x, dir.z, DISTANCE / DASH, DASH, true);
+		Motion.dash(caster, dir, DISTANCE / DASH, DASH);
 		// 속도를 싣는 창을 한 틱 늘립니다 — 서버가 실은 속도는 클라이언트에 한 틱 늦게 닿아 첫 틱만큼(0.4칸) 모자랐습니다
 		// (실측 5.6칸). 속도 공식(거리 / 돌진 길이)은 그대로 두고 제동도 한 틱 뒤로 미룹니다.
 		Attachments.combatant(caster).dashT += 1;
@@ -280,6 +294,10 @@ public final class DashScatter implements Effects.Active {
 		if (caster.horizontalCollision) {
 			return true;
 		}
+		// 위로 가다 천장에, 아래로 가다 바닥에 닿음
+		if (caster.verticalCollision && Math.abs(dir.y) > 0.1) {
+			return true;
+		}
 		ServerLevel level = caster.level();
 		double step = Ticks.speed(DISTANCE / DASH) + caster.getBbWidth() * 0.5 + 0.05;
 		for (double up : new double[] {0.7, 1.5}) {
@@ -292,17 +310,20 @@ public final class DashScatter implements Effects.Active {
 		return false;
 	}
 
-	/** 제동 — 수평 속도 0. 서버가 받아 주는 거리(7.5칸)를 넘었으면 거기로 되돌립니다. */
+	/** 제동 — 속도 0 (세로까지). 서버가 받아 주는 거리(7.5칸)를 넘었으면 거기로 되돌립니다. */
 	private void startBrake() {
 		phase = Phase.BRAKE;
-		Motion.brake(caster);
+		Motion.stop(caster);
+		// 공중이면 제동 · 난사 동안 떨어지지 않고 그 자리에 떠서 쏨 (마무리에서 다시 떨어짐)
+		if (!caster.onGround()) {
+			hover(true);
+		}
 		Vec3 now = caster.position();
-		double dx = now.x - dashFrom.x;
-		double dz = now.z - dashFrom.z;
-		double flat = Math.sqrt(dx * dx + dz * dz);
-		if (flat > MAX_DISTANCE) {
-			Vec3 clamp = dashFrom.add(dx / flat * MAX_DISTANCE, 0, dz / flat * MAX_DISTANCE);
-			caster.teleportTo(caster.level(), clamp.x, now.y, clamp.z, Relative.ROTATION, 0.0F, 0.0F, false);
+		Vec3 moved = now.subtract(dashFrom);
+		double dist = moved.length();
+		if (dist > MAX_DISTANCE) {
+			Vec3 clamp = dashFrom.add(moved.scale(MAX_DISTANCE / dist));
+			caster.teleportTo(caster.level(), clamp.x, clamp.y, clamp.z, Relative.ROTATION, 0.0F, 0.0F, false);
 		}
 		ServerLevel level = caster.level();
 		// 앞쪽 부채꼴로 흙먼지
@@ -324,6 +345,7 @@ public final class DashScatter implements Effects.Active {
 	private void startRecover() {
 		phase = Phase.RECOVER;
 		unslow();
+		hover(false);
 		Fx.sound(caster, OverbreakSounds.SCATTER_SPIN, SoundSource.PLAYERS, 0.5F, 1.5F);
 	}
 
@@ -380,6 +402,23 @@ public final class DashScatter implements Effects.Active {
 
 	// ── 정리 ───────────────────────────────────────────────
 
+	private void hover(boolean on) {
+		if (hovering == on) {
+			return;
+		}
+		hovering = on;
+		caster.setNoGravity(on);
+		if (on) {
+			caster.setDeltaMovement(caster.getDeltaMovement().multiply(1, 0, 1));
+			caster.hurtMarked = true;
+		}
+	}
+
+	/** 시험용: 공중에 떠 있는 중인가. */
+	public boolean hovering() {
+		return hovering;
+	}
+
 	private void unslow() {
 		if (slowed) {
 			CrowdControl.unmod(caster, Attributes.MOVEMENT_SPEED, SLOW);
@@ -396,6 +435,7 @@ public final class DashScatter implements Effects.Active {
 			Motion.brake(caster);
 		}
 		unslow();
+		hover(false);
 		Attachments.combatant(caster).casting = false;
 		if (interrupted) {
 			SkillAnimPayload.stop(caster, SkillAnimPayload.GS_SCATTER);
