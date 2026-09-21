@@ -73,6 +73,13 @@ public abstract class LivingEntityRendererMixin {
 		if (state instanceof net.minecraft.client.renderer.entity.state.AvatarRenderState avatar
 				&& SkillAnims.playing(avatar.id, SkillAnimPayload.TH_DASH)) {
 			ci.cancel();
+			return;
+		}
+		// 돌진 난사: 본체 대신 8칸 안을 옮겨 다니는 분신 (+ 분신이 남긴 잔상)
+		if ((Object) this instanceof net.minecraft.client.renderer.entity.player.AvatarRenderer<?> renderer
+				&& state instanceof net.minecraft.client.renderer.entity.state.AvatarRenderState avatar
+				&& kr.overbreak.client.fx.Afterimages.submitClone(renderer, avatar, poseStack, collector)) {
+			ci.cancel();
 		}
 	}
 

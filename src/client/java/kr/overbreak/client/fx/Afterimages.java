@@ -70,11 +70,16 @@ public final class Afterimages {
 				continue;
 			}
 			boolean sky = SkillAnims.playing(p.getId(), SkillAnimPayload.GS_SCATTER);
+			Deque<Ghost> list = GHOSTS.computeIfAbsent(p.getId(), k -> new ArrayDeque<>());
+			float e = kr.overbreak.client.anim.scatter.ScatterClone.elapsed(p.getId(), 1.0F);
+			if (sky && !(e < kr.overbreak.client.anim.scatter.ScatterClone.HIDE_FROM)) {
+				// 본체가 숨은 동안은 하늘색 공격 분신이 잔상 노릇을 합니다 (ScatterClone)
+				continue;
+			}
 			// 돌진 난사 잔상은 두 틱에 한 장 — 너무 촘촘해 몸이 뭉개져 보였습니다
 			if (sky && (p.tickCount & 1) == 1) {
 				continue;
 			}
-			Deque<Ghost> list = GHOSTS.computeIfAbsent(p.getId(), k -> new ArrayDeque<>());
 			// 반 틱마다 한 장 (60틱이면 틱이 이미 촘촘해 틱마다 한 장)
 			for (float partial : kr.overbreak.core.tick.Ticks.k() > 1.5 ? new float[] {1.0F} : new float[] {0.5F, 1.0F}) {
 				if (r.createRenderState(p, partial) instanceof AvatarRenderState state) {
@@ -129,6 +134,66 @@ public final class Afterimages {
 					0xF000F0, OverlayTexture.NO_OVERLAY, color, null, 0, null);
 			poseStack.popPose();
 		}
+	}
+
+	/** 하늘색 공격 분신 색 — 잔상보다 밝게. */
+	private static final int CLONE_RGB = 0xB4EBFF;
+
+	/**
+	 * 돌진 난사 중이면 본체 대신 분신들을 그립니다 — 본체 모습(스킨, 점점 투명) + 하늘색 공격 분신들. poseStack 은 본체 발밑.
+	 * @return 그렸으면 true (본체는 그리지 않음)
+	 */
+	public static boolean submitClone(AvatarRenderer<?> renderer, AvatarRenderState current, PoseStack poseStack, SubmitNodeCollector collector) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.level == null) {
+			return false;
+		}
+		float partial = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+		float e = kr.overbreak.client.anim.scatter.ScatterClone.elapsed(current.id, partial);
+		if (!kr.overbreak.client.anim.scatter.ScatterClone.hidden(e)) {
+			return false;
+		}
+		if (!(mc.level.getEntity(current.id) instanceof AbstractClientPlayer self)) {
+			return false;
+		}
+		net.minecraft.world.phys.Vec3 center = new net.minecraft.world.phys.Vec3(current.x, current.y, current.z);
+		submit(renderer, current, poseStack, collector);
+		EntityRenderer<? super AbstractClientPlayer, ?> r = mc.getEntityRenderDispatcher().getRenderer(self);
+		net.minecraft.resources.Identifier skin = renderer.getTextureLocation(current);
+		for (var c : kr.overbreak.client.anim.scatter.ScatterClone.attackers(self, e, center, partial)) {
+			if (r.createRenderState(self, partial) instanceof AvatarRenderState s) {
+				drawClone(renderer, current, s, c, poseStack, collector, WHITE, CLONE_RGB);
+			}
+		}
+		var phantom = kr.overbreak.client.anim.scatter.ScatterClone.phantom(self, e, center, partial);
+		if (phantom != null) {
+			// 본체 상태는 이번 프레임에 그리지 않으므로 본체 모습 분신에 그대로 씀
+			drawClone(renderer, current, current, phantom, poseStack, collector, skin, 0xFFFFFF);
+		}
+		return true;
+	}
+
+	private static void drawClone(AvatarRenderer<?> renderer, AvatarRenderState current, AvatarRenderState s,
+			kr.overbreak.client.anim.scatter.ScatterClone.Clone c, PoseStack poseStack, SubmitNodeCollector collector,
+			net.minecraft.resources.Identifier texture, int rgb) {
+		if (c.alpha() <= 0.01F) {
+			return;
+		}
+		double ox = current.x;
+		double oy = current.y;
+		double oz = current.z;
+		kr.overbreak.client.anim.scatter.ScatterClone.dress(s, c);
+		poseStack.pushPose();
+		poseStack.translate(s.x - ox, s.y - oy, s.z - oz);
+		poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - s.bodyRot));
+		kr.overbreak.client.anim.scatter.ScatterView.root((kr.overbreak.client.anim.AnimRenderState) s, poseStack, 1.0F);
+		poseStack.scale(-1.0F, -1.0F, 1.0F);
+		poseStack.scale(0.9375F, 0.9375F, 0.9375F);
+		poseStack.translate(0.0F, -1.501F, 0.0F);
+		int color = ((int) (c.alpha() * 255.0F) << 24) | rgb;
+		collector.submitModel(renderer.getModel(), s, poseStack, RenderTypes.entityTranslucent(texture),
+				0xF000F0, OverlayTexture.NO_OVERLAY, color, null, 0, null);
+		poseStack.popPose();
 	}
 
 	private static int lerpRgb(float t, int a, int b) {

@@ -57,6 +57,17 @@ public final class ScatterShots {
 
 	private static void fire(Minecraft mc, AbstractClientPlayer p, ScatterBody.Shot s) {
 		int seed = ScatterView.seed(p.getId());
+		ScatterClone.Clone f = ScatterClone.shooter(p, s.at(), p.position(), 1.0F);
+		if (f != null) {
+			Vec3[] cm = ScatterClone.muzzle(f, s.left(), seed, s.index());
+			double len = f.aim() != null ? Math.min(ScatterClone.LEASH + 2.0, cm[0].distanceTo(f.aim()) + 0.6) : DashScatter.RADIUS;
+			Vec3 end = cm[0].add(cm[1].scale(len));
+			BulletTrails.receive(new TracerPayload(p.getId(), cm[0].x, cm[0].y, cm[0].z, end.x, end.y, end.z, TracerPayload.GUNSLINGER_SCATTER));
+			Vec3 kick = cm[1].cross(new Vec3(0, 1, 0)).normalize().scale(s.left() ? -0.12 : 0.12).add(0, 0.12, 0);
+			mc.level.addParticle(new ItemParticleOption(ParticleTypes.ITEM, Items.GOLD_NUGGET), cm[0].x, cm[0].y, cm[0].z, kick.x, kick.y, kick.z);
+			ScatterSounds.shoot(mc, p);
+			return;
+		}
 		float dashYaw = ScatterView.dashYaw(p.getId(), p.getYRot());
 		ScatterBody.Pose pose = ScatterBody.pose(p.getId(), seed, s.at(), p.onGround(), false);
 		float yaw = dashYaw + pose.rootYaw() + pose.wobbleYaw();

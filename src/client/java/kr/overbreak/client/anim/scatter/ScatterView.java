@@ -112,6 +112,10 @@ public final class ScatterView {
 		state.bodyRot = yaw;
 		a.overbreak$setScatter(p, w);
 		a.overbreak$set(SkillAnimPayload.GS_SCATTER, e, play.end(), w);
+		if (ScatterClone.hidden(e)) {
+			// 본체가 숨은 동안 — 그림자도 없음 (분신만 보임)
+			state.shadowRadius = 0.0F;
+		}
 		a.overbreak$setSpin(0.0F);
 		a.overbreak$setItemScale(1.0F);
 		return true;

@@ -138,6 +138,10 @@ public final class DashScatterClientTest implements FabricClientGameTest {
 			// 4) 3인칭 몸 동작 — 단계마다 한 장 (기 모으기 · 돌진 · 난사 들어가기 · 난사 · 마무리)
 			// 공중 시험에서 떨어져 이미 땅 위 — 착지만 기다림
 			ctx.waitTicks(Ticks.of(20));
+			// 돌진 끝자리 둘레에 적 둘 — 분신이 옮겨 다니며 쏘는 대상
+			sp.getServer().runCommand("execute as @p at @s run summon minecraft:zombie ~3 ~ ~8.5 {NoAI:1b,Invulnerable:1b}");
+			sp.getServer().runCommand("execute as @p at @s run summon minecraft:zombie ~-3 ~ ~9.5 {NoAI:1b,Invulnerable:1b}");
+			ctx.waitTicks(Ticks.of(5));
 			ctx.getInput().lookAt(0.0F, 10.0F);
 			onServer(sp, p -> Classes.byId(Gunslinger.ID).secondary(p));
 			int now = 0;
