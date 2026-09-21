@@ -117,7 +117,8 @@ public final class AeroDrift {
 		st.gliding = true;
 		// 재장전 동안에는 활공 동작을 띄우지 않습니다 — 공중 재장전(1.25초)을 통째로 덧어써 끊어먹었습니다.
 		// 느린 낙하는 그대로 먹히고, 재장전이 끝나면 그때 동작이 들어옵니다.
-		boolean showAnim = st.reloadT <= 0;
+		// 돌진 난사 동안도 마찬가지 — 난사 몸 동작을 덮어썼습니다.
+		boolean showAnim = st.reloadT <= 0 && st.scatter == null;
 		if (showAnim && !st.glideAnim) {
 			st.glideAnim = true;
 			SkillAnimPayload.broadcast(p, SkillAnimPayload.GS_GLIDE, -1);

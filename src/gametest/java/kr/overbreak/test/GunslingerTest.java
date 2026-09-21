@@ -504,6 +504,30 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
+	/** 돌진 난사 중에도 활공 동작을 띄우지 않습니다 — 난사 몸 동작을 덮어썼습니다 (0.2d). */
+	@GameTest(maxTicks = 200)
+	public void glideAnimWaitsForScatter(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 4, 1.5), 0.0F);
+		GunslingerState st = Gunslinger.state(p);
+		Vec3 at = p.position();
+		p.setOnGround(false);
+		Attachments.profile(p).jumpDown = true;
+		classTicks(p, 1);
+		p.setPos(at.x, at.y - 0.1, at.z);
+		gs().secondary(p);
+		h.assertTrue(st.scatter != null, "돌진 난사 중");
+		classTicks(p, 4);
+		h.assertTrue(st.gliding, "난사 중에도 활공(느린 낙하)은 먹힘");
+		h.assertTrue(!st.glideAnim, "난사 중에는 활공 동작을 띄우지 않음");
+		st.scatter.cancel();
+		p.setPos(at.x, at.y - 0.3, at.z);
+		classTicks(p, 2);
+		h.assertTrue(st.glideAnim, "난사가 끝나면 활공 동작이 들어옴");
+		Attachments.profile(p).jumpDown = false;
+		Classes.clear(p);
+		h.succeed();
+	}
+
 	@Override
 	public void invokeTestMethod(GameTestHelper h, Method method) throws ReflectiveOperationException {
 		method.invoke(this, h);
