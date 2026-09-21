@@ -33,12 +33,15 @@ public final class Afterimages {
 	/** 막 남은 잔상 → 사라지기 직전 색. */
 	private static final int FRESH = 0x3A64E0;
 	private static final int OLD = 0x0C1A52;
+	/** 굴적의 깃털 돌진 난사 — 하늘색 (총알 궁적과 같은 계열). */
+	private static final int SKY_FRESH = 0x8FDBFF;
+	private static final int SKY_OLD = 0x2E7FB8;
 	private static final float ALPHA = 0.62F;
 	/** 카메라에서 이만큼(칸) 안의 잔상은 안 그리고, 다음 NEAR_FADE 칸에 걸쳐 서서히 보이게 합니다. */
 	private static final double NEAR_HIDE = 2.0;
 	private static final float NEAR_FADE = 1.5F;
 
-	private record Ghost(AvatarRenderState state, float born) {}
+	private record Ghost(AvatarRenderState state, float born, boolean sky) {}
 
 	private static final Map<Integer, Deque<Ghost>> GHOSTS = new HashMap<>();
 	private static float ticks;
@@ -65,11 +68,12 @@ public final class Afterimages {
 			if (!(r instanceof AvatarRenderer<?>)) {
 				continue;
 			}
+			boolean sky = SkillAnims.playing(p.getId(), SkillAnimPayload.GS_SCATTER);
 			Deque<Ghost> list = GHOSTS.computeIfAbsent(p.getId(), k -> new ArrayDeque<>());
 			// 반 틱마다 한 장 (60틱이면 틱이 이미 촘촘해 틱마다 한 장)
 			for (float partial : kr.overbreak.core.tick.Ticks.k() > 1.5 ? new float[] {1.0F} : new float[] {0.5F, 1.0F}) {
 				if (r.createRenderState(p, partial) instanceof AvatarRenderState state) {
-					list.addLast(new Ghost(state, (float) (ticks - kr.overbreak.core.tick.Ticks.step() + kr.overbreak.client.ClientClock.partial(partial))));
+					list.addLast(new Ghost(state, (float) (ticks - kr.overbreak.core.tick.Ticks.step() + kr.overbreak.client.ClientClock.partial(partial)), sky));
 				}
 			}
 			while (list.size() > MAX) {
@@ -108,7 +112,7 @@ public final class Afterimages {
 			if (alpha <= 0.01F) {
 				continue;
 			}
-			int rgb = lerpRgb(age, FRESH, OLD);
+			int rgb = g.sky ? lerpRgb(age, SKY_FRESH, SKY_OLD) : lerpRgb(age, FRESH, OLD);
 			int color = ((int) (alpha * 255.0F) << 24) | rgb;
 			poseStack.pushPose();
 			poseStack.translate(s.x - current.x, s.y - current.y, s.z - current.z);

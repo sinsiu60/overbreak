@@ -18,7 +18,7 @@ import net.minecraft.sounds.SoundSource;
 /**
  * 돌진 난사 발사음 — 서버가 아니라 클라이언트가 동작 시각에 맞춰 직접 틉니다 (스펙 PART 7-2).
  *
- *   0.05초마다 한 발 · 18발. 볼륨 0.9, 피치 0.9~1.1 무작위
+ *   0.05초마다 한 발 · 18발. 볼륨 0.6, 피치 1.1~1.3 무작위 (0.2d — 폭발음이 너무 무거워 가벼운 발사음으로)
  *   동시에 울리는 발사음은 6개까지 — 넘으면 가장 오래된 것부터 끊습니다 (여러 명이 한꺼번에 써도 소리가 뭉개지지 않게)
  *   보는 사람 모두가 자기 화면의 동작 시각대로 들으므로 총구 불꽃 · 예광탄과 소리가 어긋나지 않습니다
  */
@@ -71,8 +71,8 @@ public final class ScatterSounds {
 		while (PLAYING.size() >= VOICES) {
 			mc.getSoundManager().stop(PLAYING.removeFirst());
 		}
-		float pitch = 0.9F + p.getRandom().nextFloat() * 0.2F;
-		SoundInstance s = new SimpleSoundInstance(OverbreakSounds.SCATTER_SHOT.value(), SoundSource.PLAYERS, 0.9F, pitch,
+		float pitch = 1.1F + p.getRandom().nextFloat() * 0.2F;
+		SoundInstance s = new SimpleSoundInstance(OverbreakSounds.SCATTER_SHOT.value(), SoundSource.PLAYERS, 0.6F, pitch,
 				p.getRandom(), p.getX(), p.getEyeY() - 0.3, p.getZ());
 		mc.getSoundManager().play(s);
 		PLAYING.addLast(s);
