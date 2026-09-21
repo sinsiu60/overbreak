@@ -1,16 +1,12 @@
 package kr.overbreak.client.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import kr.overbreak.classes.Classes;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 /**
- * 시야각: 늘 달리기 속도(Classes.SPRINT_BASE, +30%) 는 시야를 넓히지 않습니다 — 바닐라는 이동속도만큼 시야가 넓어져
- * 그대로 두면 계속 달리는 것처럼 화면이 벌어져 보입니다. 둔화 · 가속 같은 다른 속도 변화는 그대로 반영됩니다.
+ * 시야각: 이동 속도는 시야를 넓히거나 좁히지 않습니다 (달리기 · 둔화 · 가속 모두) — 스킬 연출의 줌만 반영됩니다.
  */
 @Mixin(AbstractClientPlayer.class)
 public abstract class AbstractClientPlayerFovMixin {
@@ -34,16 +30,10 @@ public abstract class AbstractClientPlayerFovMixin {
 		}
 	}
 
+	/** 이동 속도 비율을 늘 1 로 — 달리기 · 둔화 · 가속 어떤 속도 변화도 시야각을 바꾸지 않습니다. */
 	@ModifyExpressionValue(method = "getFieldOfViewModifier",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;getAttributeValue(Lnet/minecraft/core/Holder;)D"))
-	private double overbreak$ignoreSprintBase(double speed) {
-		AbstractClientPlayer self = (AbstractClientPlayer) (Object) this;
-		// 틱레이트 이동 보정(속도를 줄여 1초 거리를 맞춤)은 시야를 좁히지 않게 되돌림
-		speed /= kr.overbreak.core.tick.MovementScale.speedFactor(self);
-		AttributeInstance inst = self.getAttribute(Attributes.MOVEMENT_SPEED);
-		if (inst != null && inst.getModifier(Classes.SPRINT_BASE) != null) {
-			return speed / (1.0 + Classes.SPRINT_BASE_RATIO);
-		}
-		return speed;
+	private double overbreak$ignoreSpeed(double speed) {
+		return ((AbstractClientPlayer) (Object) this).getAbilities().getWalkingSpeed();
 	}
 }
