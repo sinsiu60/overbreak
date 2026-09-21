@@ -52,6 +52,8 @@ public final class BulletTrails {
 	private static final float VK_LINGER = 10.0F;
 	/** 총구 화염 시간 (틱). */
 	private static final float FLASH_TICKS = 2.0F;
+	/** 돌진 난사 궤적이 남는 시간 (1/20초 단위). */
+	private static final float SCATTER_LIFE = 5.0F;
 	/** 1인칭 연사 포탑 총구 끝 (손 기준, 블록 — 주 손이 오른손일 때). */
 	private static final Vector3f FP_MUZZLE = new Vector3f(-0.08F, 0.125F, -0.76F);
 
@@ -64,8 +66,8 @@ public final class BulletTrails {
 				return LIGHTNING_BIG_LIFE;
 			}
 			if (style == TracerPayload.GUNSLINGER_SCATTER) {
-				// 돌진 난사 방사 궤적 — 0.1초 (18발이 두 바퀴를 도는 동안 겹겹이 쌓이지 않게)
-				return 2;
+				// 돌진 난사 방사 궤적 — 0.25초 (굵고 밝게 남았다가 사라짐)
+				return (int) SCATTER_LIFE + 1;
 			}
 			return style == TracerPayload.VALKYRIE ? (int) Math.ceil(from.distanceTo(to) / VK_SPEED + VK_LINGER) + 1 : LIFE;
 		}
@@ -141,8 +143,9 @@ public final class BulletTrails {
 					continue;
 				}
 				if (gunStyle(t.style)) {
-					if (t.style == TracerPayload.GUNSLINGER || t.style == TracerPayload.GUNSLINGER_L
-							|| t.style == TracerPayload.GUNSLINGER_SCATTER) {
+					if (t.style == TracerPayload.GUNSLINGER_SCATTER) {
+						drawScatter(p, buffer, t.from, t.to, cam, age);
+					} else if (t.style == TracerPayload.GUNSLINGER || t.style == TracerPayload.GUNSLINGER_L) {
 						// 굴적의 깃털은 하늘색 권총입니다
 						drawValkyrie(p, buffer, t.from, t.to, cam, age, 0x7FD4FF, 0x4FB8FF, 0xEAF9FF);
 					} else {
@@ -171,7 +174,9 @@ public final class BulletTrails {
 				Shot shot = SHOTS.get(t.owner);
 				Vec3 dir = t.to.subtract(t.from).normalize();
 				Vec3 center = t.from.add(dir.scale(0.2)).subtract(cam);
-				flash(p, buffer, toF(center), toF(center.scale(-1.0)), toF(dir), 0.35F, age, shot == null ? 0.0F : shot.spin);
+				boolean sky = t.style == TracerPayload.GUNSLINGER_SCATTER;
+				flash(p, buffer, toF(center), toF(center.scale(-1.0)), toF(dir), sky ? 0.42F : 0.35F, age, shot == null ? 0.0F : shot.spin,
+						sky ? 0x5CCBFF : 0xFFA530, sky ? 0xF0FBFF : 0xFFFBE8);
 			}
 		});
 	}
@@ -232,6 +237,12 @@ public final class BulletTrails {
 	 */
 	private static void flash(PoseStack.Pose pose, VertexConsumer buffer, Vector3f center, Vector3f toCamera, Vector3f forward,
 			float size, float age, float spinDeg) {
+		flash(pose, buffer, center, toCamera, forward, size, age, spinDeg, 0xFFA530, 0xFFFBE8);
+	}
+
+	/** 불꽃 색(겉 · 속)을 직접 정해 그립니다 — 돌진 난사는 하늘색. */
+	private static void flash(PoseStack.Pose pose, VertexConsumer buffer, Vector3f center, Vector3f toCamera, Vector3f forward,
+			float size, float age, float spinDeg, int outerRgb, int coreRgb) {
 		float k = 1.0F - Mth.clamp(age / FLASH_TICKS, 0.0F, 1.0F);
 		if (k <= 0.0F) {
 			return;
@@ -247,8 +258,8 @@ public final class BulletTrails {
 		Vector3f r = new Vector3f(a).mul(Mth.cos(spin)).add(new Vector3f(b).mul(Mth.sin(spin)));
 		Vector3f u = new Vector3f(n).cross(r).normalize();
 		float s = size * (0.7F + 0.5F * k);
-		int outer = ARGB.color(Math.round(230.0F * k), 0xFFA530);
-		int core = ARGB.color(Math.round(255.0F * k), 0xFFFBE8);
+		int outer = ARGB.color(Math.round(230.0F * k), outerRgb);
+		int core = ARGB.color(Math.round(255.0F * k), coreRgb);
 		billboard(pose, buffer, center, r, u, s, outer);
 		billboard(pose, buffer, center, r, u, s * 0.45F, core);
 		// 불줄기: 총구 방향으로 늘인 같은 텍스처 (화면을 향하게 옆으로 폄)
@@ -320,6 +331,35 @@ public final class BulletTrails {
 			int alpha = Math.round(bulletAlpha * 255.0F);
 			quad(pose, buffer, a, b, cam, 0.09F, 0.01F, ARGB.color(Math.round(alpha * 0.8F), glowRgb), 0.0F);
 			quad(pose, buffer, a, b, cam, 0.038F, 0.0045F, ARGB.color(alpha, coreRgb), 0.0F);
+		}
+	}
+
+	/**
+	 * 돌진 난사: 사방으로 흩어지는 하늘색 궤적 — 평타 궤적보다 두세 배 굵고 밝게, 0.25초 동안 남았다가 옅어짐.
+	 * 탄두는 반경(5칸) 끝까지 0.1초에 닿습니다.
+	 */
+	private static void drawScatter(PoseStack.Pose pose, VertexConsumer buffer, Vec3 from, Vec3 to, Vec3 cam, float age) {
+		double dist = from.distanceTo(to);
+		if (dist < 1.0E-3) {
+			return;
+		}
+		double head = Math.min(dist, (age + 1.0) * VK_SPEED);
+		double f = head / dist;
+		float k = 1.0F - Mth.clamp(age / SCATTER_LIFE, 0.0F, 1.0F);
+		if (k <= 0.0F) {
+			return;
+		}
+		Vec3 tip = from.lerp(to, f);
+		// 넓은 하늘색 빛 + 가운데 밝은 줄
+		quad(pose, buffer, from, tip, cam, 0.085F, 0.012F, ARGB.color(Math.round(0.55F * k * 255.0F), 0x4FC3FF), 0.3F);
+		quad(pose, buffer, from, tip, cam, 0.032F, 0.006F, ARGB.color(Math.round(0.95F * k * 255.0F), 0xBFEEFF), 0.3F);
+		// 탄두: 끝에 닿은 뒤 1틱 동안 꺼짐
+		float bulletAlpha = 1.0F - Mth.clamp((float) (age + 1.0 - dist / VK_SPEED), 0.0F, 1.0F);
+		if (bulletAlpha > 0.0F) {
+			Vec3 a = from.lerp(to, Math.max(0.0, head - VK_BULLET) / dist);
+			int alpha = Math.round(bulletAlpha * 255.0F);
+			quad(pose, buffer, a, tip, cam, 0.16F, 0.02F, ARGB.color(Math.round(alpha * 0.8F), 0x5CCBFF), 0.0F);
+			quad(pose, buffer, a, tip, cam, 0.06F, 0.008F, ARGB.color(alpha, 0xF0FBFF), 0.0F);
 		}
 	}
 

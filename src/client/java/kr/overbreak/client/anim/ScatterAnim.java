@@ -182,11 +182,12 @@ public final class ScatterAnim {
 
 	private static final Fov[] FOV = {
 			new Fov(0.0F, 1.00F, Ease.LINEAR),
-			new Fov(at(DASH_START, DASH, 0.0F), 0.95F, Ease.QUAD_OUT),
-			new Fov(at(DASH_START, DASH, 0.4F), 1.20F, Ease.EXPO_OUT),
-			new Fov(at(BRAKE_START, BRAKE, 0.0F), 1.20F, Ease.HOLD),
-			new Fov(at(BRAKE_START, BRAKE, 0.7F), 1.05F, Ease.QUAD_OUT),
-			new Fov(at(RECOVER_START, RECOVER, 0.0F), 1.05F, Ease.HOLD),
+			new Fov(at(DASH_START, DASH, 0.0F), 0.96F, Ease.QUAD_OUT),
+			new Fov(at(DASH_START, DASH, 0.4F), 1.25F, Ease.EXPO_OUT),
+			new Fov(at(BRAKE_START, BRAKE, 0.0F), 1.25F, Ease.HOLD),
+			// 난사 동안 넓은 시야를 유지 — 사방으로 쏘는 궤적이 화면에 다 들어오게
+			new Fov(at(BRAKE_START, BRAKE, 0.7F), 1.18F, Ease.QUAD_OUT),
+			new Fov(at(RECOVER_START, RECOVER, 0.0F), 1.18F, Ease.HOLD),
 			new Fov(LENGTH, 1.00F, Ease.QUAD_IN_OUT)};
 
 	/** 제동 순간 흔들림 (도) · 길이 (1/20초 단위 · 0.1초). */
