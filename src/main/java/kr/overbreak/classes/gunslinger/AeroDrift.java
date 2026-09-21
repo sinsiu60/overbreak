@@ -16,9 +16,10 @@ import net.minecraft.world.effect.MobEffects;
 /**
  * [패시브] 체공 훈풍 — 건슬링어를 공중에 붙잡아 두는 두 가지 이득.
  *
- *   활공   : 공중에서 점프 키를 누르고 있으면 떨어지는 속도가 확 줄어듭니다 (최대 2초).
+ *   활공   : 떨어지기 시작한 뒤 점프 키를 누르고 있으면 떨어지는 속도가 확 줄어듭니다 (최대 2초).
+ *            올라가는 동안(그냥 점프 · 반동 도약)에는 켜지지 않습니다 — 점프만 해도 패시브가 켜지던 것 (0.2d).
  *            땅에 닿으면 다시 가득 찹니다. 느린 낙하로 걸어 클라이언트가 그대로 예측합니다 (끊김 없음).
- *   공중 명중: 공중에서 맞힌 총알은 무조건 치명타 150%, 그리고 맞힐 때마다
+ *   공중 명중: 땅에서 2칸 이상 떠서 맞힌 총알은 무조건 치명타 150%, 그리고 맞힐 때마다
  *            반동 도약 · 사선 앵커의 남은 쿨타임이 0.5초씩 깎입니다.
  *
  * 낙하 피해는 늘 받지 않습니다 ({@link Gunslinger} 의 ALLOW_DAMAGE).
@@ -28,6 +29,9 @@ public final class AeroDrift {
 	public static final int GLIDE = 40;
 	/** 상태 초기값 (틱). */
 	public static final int GLIDE_TICKS_INIT = 40 * 3;
+	/** 반동 도약 · 사선 앵커를 쓸 때마다 늘어나는 활공 시간 (시간 단위 · 1초). */
+	public static final int EXTEND = 20;
+
 	/** 공중 명중 치명타 배율 (%). */
 	public static final int CRIT_PERCENT = 150;
 	/** 공중 명중 한 번에 깎이는 쿨타임 (시간 단위 · 0.5초). */
@@ -36,9 +40,22 @@ public final class AeroDrift {
 
 	private AeroDrift() {}
 
-	/** 지금 공중에 떠 있는가 — 치명타 · 반동 벡터 판정의 기준. */
+	/** 공중 치명타가 붙는 높이 (칸) — 발밑으로 이만큼이 비어 있어야 합니다. */
+	public static final double CRIT_HEIGHT = 2.0;
+
+	/**
+	 * 공중 치명타가 붙는가 — 땅에서 {@link #CRIT_HEIGHT} 칸 이상 떠 있을 때 (0.2d).
+	 * 예전에는 발만 떼도(제자리 점프 한 번) 치명타였습니다. 발 가운데에서 바로 아래로 재서,
+	 * 그 사이에 단단한 블록이 없으면 떠 있는 것으로 봅니다 (물 위는 받침이 없으니 떠 있는 것).
+	 */
 	public static boolean airborne(ServerPlayer p) {
-		return !p.onGround();
+		if (p.onGround()) {
+			return false;
+		}
+		net.minecraft.world.phys.Vec3 feet = p.position();
+		return p.level().clip(new net.minecraft.world.level.ClipContext(feet, feet.subtract(0, CRIT_HEIGHT, 0),
+				net.minecraft.world.level.ClipContext.Block.COLLIDER, net.minecraft.world.level.ClipContext.Fluid.NONE, p))
+				.getType() == net.minecraft.world.phys.HitResult.Type.MISS;
 	}
 
 	/** 공중에서 한 발 맞혔을 때 — 반동 도약 · 사선 앵커 쿨타임 환급. */
@@ -57,22 +74,41 @@ public final class AeroDrift {
 		}
 	}
 
+	/**
+	 * 이동기를 썼다 — 활공 시간 1초 연장 (2초 위로도 쌓임).
+	 * 땅에서 쏘아 올라가도 날아가지 않게, 땅에 있는 동안에는 2초 아래로만 채우고 깎지 않습니다.
+	 * 쌓인 시간은 다음에 착지하는 순간 2초로 돌아갑니다.
+	 */
+	static void extend(GunslingerState st) {
+		st.glideT += Ticks.of(EXTEND);
+	}
+
 	/** 직업 틱 — 활공 충전 · 유지 · 해제. */
 	static void tick(ServerPlayer p, GunslingerState st) {
 		boolean ground = p.onGround();
+		// 떨어지기 시작했는가 — 서버의 플레이어 속도는 클라이언트 이동을 따라오지 않아 높이 변화로 봅니다
+		double y = p.getY();
+		if (ground) {
+			st.descending = false;
+		} else if (!Double.isNaN(st.lastY) && y < st.lastY - 1.0E-3) {
+			st.descending = true;
+		}
+		st.lastY = y;
 		if (ground && !st.wasGround) {
-			// 착지: 활공을 다시 채웁니다
+			// 착지: 활공을 2초로 되돌립니다 (쌓였던 연장분은 여기서 사라짐)
 			st.glideT = Ticks.of(GLIDE);
 		}
 		st.wasGround = ground;
 		if (ground) {
-			st.glideT = Ticks.of(GLIDE);
+			// 땅에서는 2초까지 채우기만 — 땅에서 쓴 이동기의 연장분을 지우지 않습니다
+			st.glideT = Math.max(st.glideT, Ticks.of(GLIDE));
 			stop(p, st);
 			return;
 		}
 		// 궁극기로 공중에 붙잡혀 있는 동안에는 활공이 끼어들지 않습니다
-		// 웅크리기는 곡예 난사라, 활공은 공중에서 점프 키를 누르고 있을 때입니다
-		boolean want = Attachments.profile(p).jumpDown && st.glideT > 0 && !st.inUlt();
+		// 웅크리기는 돌진 난사라, 활공은 점프 키로 — 다만 떨어지기 시작한 뒤부터만
+		// (누르자마자 켜지면 그냥 점프만 해도 패시브가 켜졌습니다)
+		boolean want = Attachments.profile(p).jumpDown && st.descending && st.glideT > 0 && !st.inUlt();
 		if (!want) {
 			stop(p, st);
 			return;

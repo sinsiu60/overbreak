@@ -32,6 +32,8 @@ public record TracerPayload(int ownerId, double fx, double fy, double fz, double
 	public static final int GUNSLINGER = 5;
 	/** 건슬링어 쌀권총 — 왼손 총. 1인칭에서 총구 자리가 반대라 스타일을 나눕니다. */
 	public static final int GUNSLINGER_L = 6;
+	/** 건슬링어 돌진 난사 — 판정 반경(5칸) 만큼만 뻗는 짧은 하늘색 궤적, 0.1초. */
+	public static final int GUNSLINGER_SCATTER = 7;
 	private static final double RANGE = 96.0;
 
 	public static final Type<TracerPayload> TYPE = new Type<>(Overbreak.id("tracer"));

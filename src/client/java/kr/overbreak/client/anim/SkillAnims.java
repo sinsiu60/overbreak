@@ -24,6 +24,9 @@ public final class SkillAnims {
 		/** 서버가 정한 길이 (틱). 0 이면 번호마다 정해진 길이. */
 		int duration;
 		double stopTick = Double.NEGATIVE_INFINITY;
+		/** 서버 확인 전에 누른 즉시 틀어 둔 재생 (본인 화면만). */
+		boolean predicted;
+		boolean confirmed;
 
 		Play(int anim, double start, int hiddenId, int duration) {
 			this.anim = anim;
@@ -49,6 +52,8 @@ public final class SkillAnims {
 	}
 
 	private static double ticks;
+	/** 누른 뒤 서버 확인을 기다리는 시간 (1/20초 단위). 이 안에 안 오면 거부된 것으로 보고 되돌립니다. */
+	static final double CONFIRM_WINDOW = 8.0;
 	private static final Map<Integer, List<Play>> PLAYS = new HashMap<>();
 
 	private SkillAnims() {}
@@ -104,7 +109,7 @@ public final class SkillAnims {
 			case SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_SHOT_L -> 6.0F;
 			case SkillAnimPayload.GS_RELOAD -> 25.0F;
 			case SkillAnimPayload.GS_BOOST -> 12.0F;
-			case SkillAnimPayload.GS_ACRO -> 16.0F;
+			case SkillAnimPayload.GS_SCATTER -> kr.overbreak.classes.gunslinger.DashScatter.LENGTH;
 			case SkillAnimPayload.GS_ANCHOR -> 12.0F;
 			case SkillAnimPayload.GS_ULT -> 68.0F;
 			case SkillAnimPayload.GS_GLIDE -> 200.0F;
@@ -115,7 +120,9 @@ public final class SkillAnims {
 
 	/** 끝난 뒤 원래 자세로 돌아가는 시간 (틱). */
 	public static float fade(int anim) {
-		return anim == SkillAnimPayload.SLAY ? 5.0F : anim == SkillAnimPayload.KNOCKDOWN ? 6.0F : 4.0F;
+		// 돌진 난사가 끊기면 0.1초 만에 기본 자세로 (스펙 PART 2-4)
+		return anim == SkillAnimPayload.SLAY ? 5.0F : anim == SkillAnimPayload.KNOCKDOWN ? 6.0F
+				: anim == SkillAnimPayload.GS_SCATTER ? 2.0F : 4.0F;
 	}
 
 	public static void receive(SkillAnimPayload msg) {
@@ -131,10 +138,29 @@ public final class SkillAnims {
 		}
 		if (msg.anim() > 0) {
 			int anim = msg.anim();
+			// 누른 즉시 틀어 둔 재생이 있으면 처음부터 다시 틀지 않고 그대로 확인만 합니다 (다시 틀면 핑만큼 덜컹임)
+			if (msg.elapsed() == 0) {
+				for (Play p : list) {
+					if (p.anim == anim && p.predicted && !p.confirmed && p.stopTick == Double.NEGATIVE_INFINITY
+							&& ticks - p.start <= CONFIRM_WINDOW) {
+						p.confirmed = true;
+						if (msg.duration() > 0) {
+							p.duration = msg.duration();
+						}
+						return;
+					}
+				}
+			}
+			// 늦게 받았거나 단계를 건너뛴 재생 — 지난 만큼 앞당겨 시작, 이미 끝났으면 틀지 않음
+			int skip = Math.max(0, msg.elapsed());
+			float planned = msg.duration() > 0 ? msg.duration() : length(anim);
+			if (skip > 0 && skip >= planned) {
+				return;
+			}
 			// 기본 공격 정방향 · 역방향은 같은 동작의 두 모습이라 서로 덮어씁니다
 			boolean basic = anim == SkillAnimPayload.BASIC || anim == SkillAnimPayload.BASIC_BACK;
 			list.removeIf(p -> p.anim == anim || basic && (p.anim == SkillAnimPayload.BASIC || p.anim == SkillAnimPayload.BASIC_BACK));
-			list.add(new Play(anim, ticks, msg.hiddenId(), msg.duration()));
+			list.add(new Play(anim, ticks - skip, msg.hiddenId(), msg.duration()));
 		} else {
 			for (Play p : list) {
 				if (p.anim == -msg.anim() && p.stopTick == Double.NEGATIVE_INFINITY) {
@@ -144,12 +170,32 @@ public final class SkillAnims {
 		}
 	}
 
+	/**
+	 * 누른 즉시 본인 화면에서 먼저 틉니다 (서버 확인 전 · 스펙 PART 8-1).
+	 * 서버가 같은 번호를 보내면 그대로 이어 가고, {@link #CONFIRM_WINDOW} 안에 안 오면 기본 자세로 되돌립니다.
+	 */
+	public static void predict(int entityId, int anim) {
+		List<Play> list = PLAYS.computeIfAbsent(entityId, k -> new ArrayList<>());
+		list.removeIf(p -> p.anim == anim);
+		Play p = new Play(anim, ticks, -1, 0);
+		p.predicted = true;
+		list.add(p);
+	}
+
 	public static void tick(Minecraft mc) {
 		if (mc.level == null) {
 			PLAYS.clear();
 			return;
 		}
 		ticks = kr.overbreak.client.ClientClock.now();
+		// 확인이 오지 않은 예측 재생은 거부된 것 — 이미 난 연출은 두고 자세만 되돌립니다
+		for (List<Play> list : PLAYS.values()) {
+			for (Play p : list) {
+				if (p.predicted && !p.confirmed && p.stopTick == Double.NEGATIVE_INFINITY && ticks - p.start > CONFIRM_WINDOW) {
+					p.stopTick = ticks;
+				}
+			}
+		}
 		PLAYS.values().forEach(list -> list.removeIf(p -> ticks - p.start >= p.end() + fade(p.anim)));
 		PLAYS.values().removeIf(List::isEmpty);
 	}

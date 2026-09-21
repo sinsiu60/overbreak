@@ -34,6 +34,9 @@ public final class Afterimages {
 	private static final int FRESH = 0x3A64E0;
 	private static final int OLD = 0x0C1A52;
 	private static final float ALPHA = 0.62F;
+	/** 카메라에서 이만큼(칸) 안의 잔상은 안 그리고, 다음 NEAR_FADE 칸에 걸쳐 서서히 보이게 합니다. */
+	private static final double NEAR_HIDE = 2.0;
+	private static final float NEAR_FADE = 1.5F;
 
 	private record Ghost(AvatarRenderState state, float born) {}
 
@@ -53,9 +56,9 @@ public final class Afterimages {
 		}
 		ticks = (float) kr.overbreak.client.ClientClock.now();
 		for (AbstractClientPlayer p : mc.level.players()) {
-			// 그림자 가르기 · 그림자 걸음 · 곡예 난사 (도는 동안 산데비스탄처럼 잔상이 남음)
+			// 그림자 가르기 · 그림자 걸음 · 돌진 난사 (치고 나가 도는 동안 산데비스탄처럼 잔상이 남음)
 			if (!(SkillAnims.playing(p.getId(), SkillAnimPayload.SD_REND) || SkillAnims.playing(p.getId(), SkillAnimPayload.SD_STEP)
-					|| SkillAnims.playing(p.getId(), SkillAnimPayload.GS_ACRO)) || p.isInvisible()) {
+					|| SkillAnims.playing(p.getId(), SkillAnimPayload.GS_SCATTER)) || p.isInvisible()) {
 				continue;
 			}
 			EntityRenderer<? super AbstractClientPlayer, ?> r = mc.getEntityRenderDispatcher().getRenderer(p);
@@ -87,6 +90,8 @@ public final class Afterimages {
 			return;
 		}
 		float now = (float) (ticks + kr.overbreak.client.ClientClock.partial(Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false)));
+		net.minecraft.client.Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
+		net.minecraft.world.phys.Vec3 cam = camera.isInitialized() ? camera.position() : null;
 		for (Ghost g : list) {
 			float age = Mth.clamp((now - g.born) / LIFE, 0.0F, 1.0F);
 			if (age >= 1.0F) {
@@ -96,6 +101,10 @@ public final class Afterimages {
 			// 막 생긴 잔상은 캐릭터와 겹쳐 보이지 않게 옅게 시작
 			float fadeIn = Mth.clamp((now - g.born) / 1.5F, 0.0F, 1.0F);
 			float alpha = ALPHA * (1.0F - age) * (1.0F - age) * fadeIn;
+			// 카메라 바로 앞의 잔상은 지웁니다 — 3인칭에서 앞으로 돌진하면 지나온 자리(잔상)가 카메라 쪽에 남아
+			// 화면을 통째로 가렸습니다 (돌진 난사 · 그림자 가르기 공통)
+			double near = cam == null ? 99.0 : cam.distanceTo(new net.minecraft.world.phys.Vec3(s.x, s.y + 1.0, s.z));
+			alpha *= Mth.clamp((float) (near - NEAR_HIDE) / NEAR_FADE, 0.0F, 1.0F);
 			if (alpha <= 0.01F) {
 				continue;
 			}

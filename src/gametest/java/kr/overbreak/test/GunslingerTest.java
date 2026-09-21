@@ -8,8 +8,8 @@ import java.util.UUID;
 import com.mojang.authlib.GameProfile;
 import kr.overbreak.classes.Classes;
 import kr.overbreak.classes.PvpClass;
-import kr.overbreak.classes.gunslinger.AeroAcrobatics;
 import kr.overbreak.classes.gunslinger.AeroDrift;
+import kr.overbreak.classes.gunslinger.DashScatter;
 import kr.overbreak.classes.gunslinger.AerialBombardment;
 import kr.overbreak.classes.gunslinger.Gunslinger;
 import kr.overbreak.classes.gunslinger.GunslingerState;
@@ -104,7 +104,7 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
-	/** 땅에서 쏘면 20, 공중에서 쏘면 치명타 30. 0.2초에 한 발. */
+	/** 땅에서 쏘면 20, 땅에서 2칸 이상 떠서 쏘면 치명타 30. 0.2초에 한 발. */
 	@GameTest
 	public void pistolDamageAndFireRate(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5), CHEST_PITCH);
@@ -119,7 +119,8 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		gs().basic(p);
 		near(h, dealtBy(v, p), 40, 0.01, "0.2초 뒤 한 발 더");
 
-		FakePlayer air = caster(h, new Vec3(5.5, 0, 0.5), CHEST_PITCH);
+		// 3칸 위에서 내려다보고 쏨
+		FakePlayer air = caster(h, new Vec3(5.5, 3, 0.5), 31.0F);
 		Villager v2 = dummy(h, new Vec3(5.5, 0, 6.5));
 		air.setOnGround(false);
 		gs().basic(air);
@@ -129,10 +130,28 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
+	/** 공중 치명타는 발밑으로 2칸이 비어 있어야 합니다 — 제자리 점프(1칸)로는 붙지 않음 (0.2d). */
+	@GameTest
+	public void airCritNeedsTwoBlocks(GameTestHelper h) {
+		FakePlayer low = caster(h, new Vec3(1.5, 1, 1.5), 0.0F);
+		low.setOnGround(false);
+		h.assertTrue(!AeroDrift.airborne(low), "발밑 1칸 — 공중 치명타 아님");
+		FakePlayer high = caster(h, new Vec3(4.5, 2.5, 1.5), 0.0F);
+		high.setOnGround(false);
+		h.assertTrue(AeroDrift.airborne(high), "발밑 2.5칸 — 공중 치명타");
+		FakePlayer ground = caster(h, new Vec3(6.5, 0, 1.5), 0.0F);
+		ground.setOnGround(true);
+		h.assertTrue(!AeroDrift.airborne(ground), "땅 — 아님");
+		Classes.clear(low);
+		Classes.clear(high);
+		Classes.clear(ground);
+		h.succeed();
+	}
+
 	/** 공중 명중마다 반동 도약 · 사선 앵커 쿨타임이 0.5초씩 깎입니다. */
 	@GameTest
 	public void airHitRefundsCooldowns(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5), CHEST_PITCH);
+		FakePlayer p = caster(h, new Vec3(1.5, 3, 0.5), 31.0F);
 		Villager v = dummy(h, new Vec3(1.5, 0, 6.5));
 		p.setOnGround(false);
 		Attachments.profile(p).setCooldown(Gunslinger.BOOST, RecoilBoost.COOLDOWN);
@@ -189,42 +208,129 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
-	/** 곡예 난사 — 웅크리기 단독 · 반경 8칸 안 모든 적에게 8번 · 도는 동안 무적 (0.2d). */
-	@GameTest(maxTicks = 200)
-	public void acrobaticsHitsEveryoneInRadius(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(3.5, 0, 3.5), 0.0F);
+	/**
+	 * 돌진 난사 — 시전 즉시 쿨타임 8초 · 기 모으기 뒤 돌진.
+	 * 위를 보고 써도 수평으로 나가고, 높이를 붙잡습니다 (세로 속도 0).
+	 * 가짜 플레이어는 움직이지 않으므로 돌진이 실어 주는 속도로 봅니다.
+	 */
+	@GameTest(maxTicks = 300)
+	public void scatterCastAndHorizontalDash(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), -60.0F);
 		p.setOnGround(true);
-		// 뒤쪽 · 옆쪽 적도 맞아야 합니다 (조준을 보지 않습니다)
-		Villager front = dummy(h, new Vec3(3.5, 0, 5.5));
-		Villager back = dummy(h, new Vec3(3.5, 0, 1.5));
 		gs().secondary(p);
 		GunslingerState st = Gunslinger.state(p);
-		h.assertTrue(st.acrobatics != null, "웅크리기 = 곡예 난사");
-		h.assertTrue(Gunslinger.absorb(p, h.getLevel().damageSources().generic()), "도는 동안 무적");
-		h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.ACRO) == T.of(AeroAcrobatics.COOLDOWN), "쿨타임 9초");
-		h.runAfterDelay(T.of(AeroAcrobatics.DURATION + 6), () -> {
-			h.assertTrue(st.acrobatics == null, "0.8초 뒤 끝남");
-			h.assertTrue(!Gunslinger.absorb(p, h.getLevel().damageSources().generic()), "끝나면 무적 풀림");
-			float total = AeroAcrobatics.SHOTS * 15.0F;
-			near(h, dealtBy(front, p), total, 0.01, "앞쪽 적 8번 전부");
-			near(h, dealtBy(back, p), total, 0.01, "등 뒤 적도 8번 전부");
+		h.assertTrue(st.scatter != null, "웅크리기 = 돌진 난사");
+		h.assertTrue(Attachments.combatant(p).casting, "쓰는 동안 평타 · 스킬 잠김");
+		h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.SCATTER) == T.of(DashScatter.COOLDOWN), "쿨타임 8초 즉시");
+		h.assertTrue(st.scatter.phase() == DashScatter.Phase.WINDUP, "기 모으기부터");
+		h.runAfterDelay(T.of(DashScatter.DASH_START) + 3, () -> {
+			h.assertTrue(st.scatter != null && st.scatter.phase() == DashScatter.Phase.DASH, "돌진 중");
+			Vec3 v = p.getDeltaMovement();
+			double expect = kr.overbreak.core.tick.Ticks.speed(DashScatter.DISTANCE / DashScatter.DASH);
+			near(h, v.y, 0.0, 1.0E-6, "위를 봐도 세로 속도 0 (수평 · 높이 유지)");
+			near(h, v.z, expect, 1.0E-3, "바라본 +Z 로 초당 24칸");
+			near(h, v.x, 0.0, 1.0E-6, "옆으로는 안 감");
+			h.runAfterDelay(T.of(DashScatter.LENGTH), () -> {
+				h.assertTrue(st.scatter == null, "1.6초 뒤 끝남");
+				h.assertTrue(!Attachments.combatant(p).casting, "끝나면 잠금 풀림");
+				Classes.clear(p);
+				h.succeed();
+			});
+		});
+	}
+
+	/** 난사 — 반경 5칸 안 적은 6번 × 7 = 42, 밖은 0. 넉백 없음. */
+	@GameTest(maxTicks = 300)
+	public void scatterPulsesHitRadius(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);
+		p.setOnGround(true);
+		Villager in = dummy(h, new Vec3(1.5, 0, 4.5));
+		Villager out = dummy(h, new Vec3(7.5, 0, 7.5));
+		gs().secondary(p);
+		h.runAfterDelay(T.of(DashScatter.LENGTH) + 6, () -> {
+			near(h, dealtBy(in, p), DashScatter.PULSES * DashScatter.DAMAGE_100 / 100.0, 0.01, "반경 안 6번 × 7 = 42");
+			near(h, dealtBy(out, p), 0, 0.01, "5칸 밖은 안 맞음");
+			h.assertTrue(in.getDeltaMovement().horizontalDistance() < 0.01, "넉백 없음");
 			Classes.clear(p);
 			h.succeed();
 		});
 	}
 
-	/** 반경 밖(8칸 초과)은 맞지 않습니다. */
-	@GameTest(maxTicks = 200)
-	public void acrobaticsSpareOutOfRange(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(0.5, 0, 0.5), 0.0F);
+	/** 벽 너머 적은 맞지 않고, 벽에 막힌 돌진은 곧장 제동으로 건너뜁니다. */
+	@GameTest(maxTicks = 300)
+	public void scatterWallBlocksAndSkipsToBrake(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);
 		p.setOnGround(true);
-		// 구역 대각선 끝 — 약 9.9칸로 8칸을 넘습니다
-		Villager far = dummy(h, new Vec3(7.5, 0, 7.5));
+		// 가짜 플레이어는 벽 쪽으로 움직이지 않으므로, 바로 앞(반 칸)에 벽을 세웁니다
+		for (int x = 0; x < 4; x++) {
+			for (int y = 0; y < 3; y++) {
+				h.setBlock(new net.minecraft.core.BlockPos(x, y, 2), net.minecraft.world.level.block.Blocks.STONE);
+			}
+		}
+		Villager behind = dummy(h, new Vec3(1.5, 0, 3.5));
 		gs().secondary(p);
-		h.runAfterDelay(T.of(AeroAcrobatics.DURATION + 6), () -> {
-			near(h, dealtBy(far, p), 0, 0.01, "8칸 밖은 안 맞음");
+		GunslingerState st = Gunslinger.state(p);
+		// 건너뛰지 않았다면 1.6초(32) — 건너뛰면 돌진 대부분이 빠져 30 전에 끝납니다
+		h.runAfterDelay(T.of(30), () -> {
+			h.assertTrue(st.scatter == null, "벽에 막혀 제동으로 건너뛰어 일찍 끝남");
+			near(h, dealtBy(behind, p), 0, 0.01, "벽 너머는 안 맞음");
 			Classes.clear(p);
 			h.succeed();
+		});
+	}
+
+	/** 이동기 봉인(균열 지대) — 쿨타임을 쓰지 않고 거부. */
+	@GameTest
+	public void scatterSealedRejectedWithoutCooldown(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);
+		Attachments.combatant(p).sealT = 100;
+		gs().secondary(p);
+		h.assertTrue(Gunslinger.state(p).scatter == null, "봉인 중에는 안 나감");
+		h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.SCATTER) == 0, "쿨타임도 안 씀");
+		Attachments.combatant(p).sealT = 0;
+		Classes.clear(p);
+		h.succeed();
+	}
+
+	/** 돌진 중 기절 — 난사 없이 그 자리에서 끝 (쿨타임은 그대로). */
+	@GameTest(maxTicks = 300)
+	public void scatterStunDuringDashCancels(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);
+		p.setOnGround(true);
+		Villager v = dummy(h, new Vec3(1.5, 0, 3.5));
+		gs().secondary(p);
+		GunslingerState st = Gunslinger.state(p);
+		h.runAfterDelay(T.of(DashScatter.DASH_START) + 3, () -> {
+			h.assertTrue(st.scatter != null && st.scatter.phase() == DashScatter.Phase.DASH, "돌진 중");
+			kr.overbreak.cc.CrowdControl.stun(p, 20);
+			h.runAfterDelay(T.of(DashScatter.LENGTH), () -> {
+				h.assertTrue(st.scatter == null, "끊겨서 끝남");
+				h.assertTrue(!Attachments.combatant(p).casting, "잠금 풀림");
+				near(h, dealtBy(v, p), 0, 0.01, "난사는 나가지 않음");
+				h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.SCATTER) > 0, "쿨타임은 돌려주지 않음");
+				Classes.clear(p);
+				h.succeed();
+			});
+		});
+	}
+
+	/** 서버가 받아 주는 거리는 7.5칸 — 넘게 가 있으면 제동 때 되돌립니다. */
+	@GameTest(maxTicks = 300)
+	public void scatterClampsOvershoot(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);
+		p.setOnGround(true);
+		Vec3 start = p.position();
+		gs().secondary(p);
+		h.runAfterDelay(T.of(DashScatter.DASH_START) + 3, () -> {
+			// 조작된 클라이언트처럼 한 번에 10칸 앞으로
+			p.setPos(start.x, start.y, start.z + 10.0);
+			h.runAfterDelay(T.of(DashScatter.DASH) + 3, () -> {
+				double flat = Math.sqrt(Math.pow(p.getX() - start.x, 2) + Math.pow(p.getZ() - start.z, 2));
+				near(h, flat, DashScatter.MAX_DISTANCE, 0.05, "7.5칸으로 되돌림");
+				Gunslinger.state(p).scatter.cancel();
+				Classes.clear(p);
+				h.succeed();
+			});
 		});
 	}
 
@@ -306,15 +412,24 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
-	/** 체공 훈풍 — 공중에서 웅크리면 활공, 착지하면 다시 참. */
+	/** 체공 훈풍 — 떨어지기 시작한 뒤에만 점프 키로 활공 (그냥 점프로는 안 켜짐), 착지하면 다시 참. */
 	@GameTest(maxTicks = 200)
-	public void aeroDriftGlide(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(1.5, 3, 1.5), 0.0F);
+	public void aeroDriftGlideNeedsDescent(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 4, 1.5), 0.0F);
 		GunslingerState st = Gunslinger.state(p);
+		Vec3 at = p.position();
 		p.setOnGround(false);
 		Attachments.profile(p).jumpDown = true;
-		classTicks(p, 4);
-		h.assertTrue(st.gliding, "공중 + 점프 키 = 활공");
+		classTicks(p, 1);
+		// 올라가는 중 (점프 직후)
+		p.setPos(at.x, at.y + 0.2, at.z);
+		classTicks(p, 1);
+		h.assertTrue(!st.gliding, "올라가는 동안에는 점프 키를 눌러도 활공 안 함");
+		// 정점을 지나 떨어지기 시작
+		p.setPos(at.x, at.y + 0.1, at.z);
+		classTicks(p, 1);
+		h.assertTrue(st.descending && st.gliding, "떨어지기 시작하면 활공");
+		classTicks(p, 3);
 		h.assertTrue(st.glideT < T.of(AeroDrift.GLIDE), "활공 시간이 줄어듦 (" + st.glideT + ")");
 		h.assertTrue(p.hasEffect(net.minecraft.world.effect.MobEffects.SLOW_FALLING), "느린 낙하");
 		Attachments.profile(p).jumpDown = false;
@@ -322,7 +437,31 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.assertTrue(!st.gliding, "점프 키를 떼면 멈춤");
 		p.setOnGround(true);
 		classTicks(p, 1);
-		h.assertTrue(st.glideT == T.of(AeroDrift.GLIDE), "착지하면 다시 가득 참");
+		h.assertTrue(st.glideT == T.of(AeroDrift.GLIDE) && !st.descending, "착지하면 다시 가득 참");
+		Classes.clear(p);
+		h.succeed();
+	}
+
+	/** 반동 도약 · 사선 앵커를 쓸 때마다 활공 +1초 — 땅에서 써도 남고, 착지하면 2초로. */
+	@GameTest(maxTicks = 200)
+	public void glideExtendsOnSkills(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(3.5, 0, 3.5), 90.0F);
+		GunslingerState st = Gunslinger.state(p);
+		p.setOnGround(true);
+		classTicks(p, 1);
+		int base = T.of(AeroDrift.GLIDE);
+		gs().primary(p);
+		near(h, st.glideT, base + T.of(AeroDrift.EXTEND), 0, "반동 도약 +1초");
+		classTicks(p, 1);
+		near(h, st.glideT, base + T.of(AeroDrift.EXTEND), 0, "땅에 있어도 연장분은 남음");
+		gs().tertiary(p);
+		near(h, st.glideT, base + 2 * T.of(AeroDrift.EXTEND), 0, "사선 앵커 +1초 (쌓임)");
+		// 날아올랐다가 착지하면 2초로
+		p.setOnGround(false);
+		classTicks(p, 1);
+		p.setOnGround(true);
+		classTicks(p, 1);
+		near(h, st.glideT, base, 0, "착지하면 2초로 돌아감");
 		Classes.clear(p);
 		h.succeed();
 	}
@@ -330,10 +469,13 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 	/** 재장전 중에는 활공 동작을 띄우지 않습니다 — 공중 재장전 동작을 덮어써 끊어먹었습니다 (0.2d). */
 	@GameTest(maxTicks = 200)
 	public void glideAnimWaitsForReload(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(1.5, 3, 1.5), 0.0F);
+		FakePlayer p = caster(h, new Vec3(1.5, 4, 1.5), 0.0F);
 		GunslingerState st = Gunslinger.state(p);
+		Vec3 at = p.position();
 		p.setOnGround(false);
 		Attachments.profile(p).jumpDown = true;
+		classTicks(p, 1);
+		p.setPos(at.x, at.y - 0.1, at.z);
 		st.ammo = 3;
 		gs().reload(p);
 		classTicks(p, 4);

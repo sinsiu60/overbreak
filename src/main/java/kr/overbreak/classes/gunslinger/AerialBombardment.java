@@ -72,15 +72,15 @@ public final class AerialBombardment implements Effects.Active {
 			return;
 		}
 		UltGauge.consume(p);
-		if (st.acrobatics != null) {
-			st.acrobatics.cancel();
+		if (st.scatter != null) {
+			st.scatter.cancel();
 		}
 		DualPistols.cancelReload(p, st);
 		AeroDrift.stop(p, st);
 		AerialBombardment b = new AerialBombardment(p, st);
 		st.bombardment = b;
 		Attachments.combatant(p).ccImmune = true;
-		SkillAnimPayload.broadcast(p, SkillAnimPayload.GS_ULT, -1, Ticks.of(LENGTH));
+		SkillAnimPayload.broadcast(p, SkillAnimPayload.GS_ULT, -1, LENGTH);
 		ServerLevel level = p.level();
 		Fx.sound(p, SoundEvents.BREEZE_JUMP, SoundSource.PLAYERS, 1.4F, 0.8F);
 		Fx.sound(p, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.3F, 1.4F);

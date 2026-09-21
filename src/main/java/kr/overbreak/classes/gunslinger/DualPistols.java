@@ -123,7 +123,7 @@ public final class DualPistols {
 
 	/** R 키 — 이미 재장전 중 · 가득 참 · 곡예 난사 · 궁극기 · 기절 중이면 무시. */
 	static void manualReload(ServerPlayer p, GunslingerState st) {
-		if (st.reloadT > 0 || st.ammo >= MAG || st.acrobatics != null || st.inUlt() || Attachments.combatant(p).hardCc()) {
+		if (st.reloadT > 0 || st.ammo >= MAG || st.scatter != null || st.inUlt() || Attachments.combatant(p).hardCc()) {
 			return;
 		}
 		startReload(p, st);

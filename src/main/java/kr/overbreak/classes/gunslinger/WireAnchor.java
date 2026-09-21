@@ -58,7 +58,7 @@ public final class WireAnchor implements Effects.Active {
 	}
 
 	static void cast(ServerPlayer p, GunslingerState st) {
-		if (st.reloadT > 0 || st.acrobatics != null || st.inUlt()) {
+		if (st.reloadT > 0 || st.scatter != null || st.inUlt()) {
 			DualPistols.denied(p);
 			return;
 		}
@@ -87,6 +87,8 @@ public final class WireAnchor implements Effects.Active {
 		}
 		SkillAnimPayload.broadcast(p, SkillAnimPayload.GS_ANCHOR, -1);
 		wire(level, eye, end);
+		// 체공 훈풍 활공 +1초 (헛방이어도 쏘았으면)
+		AeroDrift.extend(st);
 		Fx.sound(p, SoundEvents.CROSSBOW_SHOOT, SoundSource.PLAYERS, 0.9F, 1.7F);
 		if (victim == null && !wall) {
 			// 헛방 — 쿨타임 절반

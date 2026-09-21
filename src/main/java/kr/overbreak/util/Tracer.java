@@ -20,6 +20,7 @@ public final class Tracer {
 	public static final int LIGHTNING_BIG = TracerPayload.LIGHTNING_BIG;
 	public static final int GUNSLINGER = TracerPayload.GUNSLINGER;
 	public static final int GUNSLINGER_L = TracerPayload.GUNSLINGER_L;
+	public static final int GUNSLINGER_SCATTER = TracerPayload.GUNSLINGER_SCATTER;
 
 	private Tracer() {}
 

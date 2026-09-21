@@ -21,14 +21,13 @@ public final class GunslingerState {
 	public boolean glideAnim;
 	/** 발이 땅에 닿아 있었는가 (직전 틱) — 착지 순간을 잡습니다. */
 	public boolean wasGround = true;
+	/** 지난 틱 높이 — 떨어지기 시작했는지 잽니다. */
+	public double lastY = Double.NaN;
+	/** 이번 체공에서 떨어지기 시작했는가 (정점을 지났거나 난간에서 발을 떼냈음). 착지하면 다시 false. */
+	public boolean descending;
 
-	public @Nullable AeroAcrobatics acrobatics;
+	public @Nullable DashScatter scatter;
 	public @Nullable AerialBombardment bombardment;
-
-	/** 무적 프레임 중인가 (곡예 난사). */
-	public boolean iframes() {
-		return acrobatics != null && acrobatics.spinning();
-	}
 
 	public boolean inUlt() {
 		return bombardment != null;

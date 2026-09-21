@@ -132,6 +132,11 @@ public final class HudState {
 				down = down && mc.options.keyUse.isDown();
 			}
 			if (down && !PREV_KEYS[k]) {
+				if (k == 1 && "gunslinger".equals(classId) && k < remaining.length && remaining[k] <= 0
+						&& !(meterKind == kr.overbreak.skill.HudExtra.METER_RELOAD && meter >= 0) && mc.player != null) {
+					// 돌진 난사는 누른 즉시 연출부터 (서버 확인은 뒤따라옴 · 거부되면 0.4초 안에 되돌림)
+					kr.overbreak.client.anim.SkillAnims.predict(mc.player.getId(), kr.overbreak.net.SkillAnimPayload.GS_SCATTER);
+				}
 				if (k < 3 && k < remaining.length && remaining[k] > 0) {
 					deniedAt[k] = ticks;
 				} else if (k == 3 && ultState == 1) {

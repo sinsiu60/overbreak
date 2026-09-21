@@ -170,14 +170,6 @@ public final class FirstPersonAnim {
 			{3.0F, 0.62F, -0.62F, -0.55F, 26F, -6F, 0F, 1.0F},
 			{8.0F, 0.58F, -0.55F, -0.70F, 8F, -2F, 0F, 1.0F},
 			{12.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F}};
-	/** 곡예 난사 — 두 총을 밖으로 벌리고 한 바퀴 (세로축 -360도). */
-	private static final float[][] GS_ACRO = {
-			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
-			{2.0F, 0.40F, -0.46F, -0.80F, -10F, -40F, -14F, 1.05F},
-			{8.0F, 0.40F, -0.46F, -0.80F, -10F, -180F, -14F, 1.05F},
-			{14.0F, 0.42F, -0.46F, -0.78F, -10F, -320F, -14F, 1.05F},
-			{15.9F, 0.52F, -0.50F, -0.74F, -4F, -360F, -6F, 1.0F},
-			{16.0F, 0.52F, -0.50F, -0.74F, -4F, 0F, -6F, 1.0F}};
 	/** 사선 앵커 — 오른쪽 총을 바깥으로 치우고 왼손이 와이어를 쎏다. */
 	private static final float[][] GS_ANCHOR = {
 			{0.0F, 0.56F, -0.52F, -0.72F, 0F, 0F, 0F, 1.0F},
@@ -259,7 +251,7 @@ public final class FirstPersonAnim {
 						SkillAnimPayload.IF_PUNCH, SkillAnimPayload.IF_BLOCK, SkillAnimPayload.IF_SLAM_HIT,
 						SkillAnimPayload.BR_REGROUP,
 						// 건슬링어는 양손에 한 자루씩 — 왼손 총도 같은 키프레임을 그대로 따릅니다 (invert 가 좌우를 뒤집음)
-						SkillAnimPayload.GS_SHOT_L, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_ACRO,
+						SkillAnimPayload.GS_SHOT_L, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_SCATTER,
 						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_ULT, SkillAnimPayload.GS_GLIDE);
 	}
 
@@ -358,11 +350,15 @@ public final class FirstPersonAnim {
 		if (play == null) {
 			return false;
 		}
+		if (play.anim == SkillAnimPayload.GS_SCATTER) {
+			ScatterAnim.apply(pose, arm == HumanoidArm.RIGHT ? 1 : -1, arm == HumanoidArm.LEFT,
+					play.elapsed(partial), play.end(), SkillAnims.fade(play.anim));
+			return true;
+		}
 		float[][] keys = switch (play.anim) {
 			case SkillAnimPayload.GS_SHOT_L -> GS_SHOT;
 			case SkillAnimPayload.GS_RELOAD -> GS_RELOAD;
 			case SkillAnimPayload.GS_BOOST -> GS_BOOST;
-			case SkillAnimPayload.GS_ACRO -> GS_ACRO;
 			case SkillAnimPayload.GS_ANCHOR -> GS_ANCHOR;
 			case SkillAnimPayload.GS_ULT -> GS_ULT;
 			case SkillAnimPayload.GS_GLIDE -> GS_GLIDE;
@@ -429,7 +425,7 @@ public final class FirstPersonAnim {
 						SkillAnimPayload.TH_CAST, SkillAnimPayload.TH_DASH, SkillAnimPayload.TH_FIELD, SkillAnimPayload.TH_SMITE, SkillAnimPayload.TH_ULT,
 						SkillAnimPayload.BR_BASIC, SkillAnimPayload.BR_BASIC_BACK, SkillAnimPayload.BR_BLOW,
 						SkillAnimPayload.BR_WHIRL, SkillAnimPayload.BR_REGROUP, SkillAnimPayload.BR_ULT,
-						SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_ACRO,
+						SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_SCATTER,
 						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_ULT, SkillAnimPayload.GS_GLIDE);
 	}
 
@@ -465,6 +461,10 @@ public final class FirstPersonAnim {
 			}
 			return true;
 		}
+		if (play.anim == SkillAnimPayload.GS_SCATTER) {
+			ScatterAnim.apply(pose, invert, arm == HumanoidArm.LEFT, e, end, SkillAnims.fade(play.anim));
+			return true;
+		}
 		float[][] hk = switch (play.anim) {
 			case SkillAnimPayload.HK_SMASH -> HK_SMASH;
 			case SkillAnimPayload.HK_SLAM -> HK_SLAM;
@@ -479,7 +479,6 @@ public final class FirstPersonAnim {
 			case SkillAnimPayload.GS_SHOT -> GS_SHOT;
 			case SkillAnimPayload.GS_RELOAD -> GS_RELOAD;
 			case SkillAnimPayload.GS_BOOST -> GS_BOOST;
-			case SkillAnimPayload.GS_ACRO -> GS_ACRO;
 			case SkillAnimPayload.GS_ANCHOR -> GS_ANCHOR;
 			case SkillAnimPayload.GS_ULT -> GS_ULT;
 			case SkillAnimPayload.GS_GLIDE -> GS_GLIDE;

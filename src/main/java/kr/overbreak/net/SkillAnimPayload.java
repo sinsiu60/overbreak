@@ -18,11 +18,13 @@ import net.minecraft.world.entity.Entity;
  * anim     애니메이션 번호. 음수면 그 번호를 중단 (끊김 · 해제 · 사슬 종료)
  * hiddenId 모드 클라이언트에서 숨길 디스플레이 엔티티 (모델 애니메이션이 대신 보여 줌). 없으면 -1
  * duration 재생 길이 (틱). 0 이면 번호마다 정해진 길이. 넘어뜨림처럼 길이가 매번 다른 것에 씁니다
+ * elapsed  이미 지난 시간 (1/20초 단위). 받는 쪽은 그만큼 건너뛰고 재생합니다 —
+ *          늦게 보이기 시작한 관전자, 도중에 단계를 건너뛴 스킬(돌진 난사가 벽에 막혀 곧장 제동)에 씁니다
  *
  * 엔티티 본인(플레이어면)과 그 엔티티를 보고 있는 플레이어 모두에게 보냅니다.
  * 모드가 없는 클라이언트에는 보내지 않으므로 바닐라 클라이언트는 기존 연출을 그대로 봅니다.
  */
-public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duration) implements CustomPacketPayload {
+public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duration, int elapsed) implements CustomPacketPayload {
 	public static final int SLAY = 1;
 	public static final int FURY = 2;
 	public static final int CHAIN = 3;
@@ -121,8 +123,11 @@ public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duratio
 	public static final int GS_RELOAD = 50;
 	/** 건슬링어 반동 도약 (두 총을 아래로 내리꽂음). */
 	public static final int GS_BOOST = 51;
-	/** 건슬링어 곡예 난사 (몸을 한 바퀴 돌리며 사방으로 난사). */
-	public static final int GS_ACRO = 52;
+	/**
+	 * 건슬링어 돌진 난사 — 기 모으기 → 돌진 → 제동 → 사방 난사 → 마무리 (단계 길이는 서버 DashScatter).
+	 * 벽에 막혀 제동으로 건너뛰면 elapsed 를 제동 시작 시각으로 다시 보냅니다.
+	 */
+	public static final int GS_SCATTER = 52;
 	/** 건슬링어 사선 앵커 (왼손을 앞으로 내뻗어 와이어 발사). */
 	public static final int GS_ANCHOR = 53;
 	/** 건슬링어 차원 회전 포격 (떠서 아래를 겨눈 채 연속 사격). duration 을 씁니다. */
@@ -138,7 +143,12 @@ public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duratio
 			ByteBufCodecs.VAR_INT, SkillAnimPayload::anim,
 			ByteBufCodecs.VAR_INT, SkillAnimPayload::hiddenId,
 			ByteBufCodecs.VAR_INT, SkillAnimPayload::duration,
+			ByteBufCodecs.VAR_INT, SkillAnimPayload::elapsed,
 			SkillAnimPayload::new);
+
+	public SkillAnimPayload(int entityId, int anim, int hiddenId, int duration) {
+		this(entityId, anim, hiddenId, duration, 0);
+	}
 
 	public static void init() {
 		PayloadTypeRegistry.clientboundPlay().register(TYPE, CODEC);
@@ -154,7 +164,12 @@ public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duratio
 	}
 
 	public static void broadcast(Entity entity, int anim, int hiddenId, int duration) {
-		SkillAnimPayload msg = new SkillAnimPayload(entity.getId(), anim, hiddenId, duration);
+		broadcastAt(entity, anim, duration, 0);
+	}
+
+	/** 이미 elapsed(1/20초 단위) 만큼 지난 것으로 보냅니다 — 단계 건너뛰기용. */
+	public static void broadcastAt(Entity entity, int anim, int duration, int elapsed) {
+		SkillAnimPayload msg = new SkillAnimPayload(entity.getId(), anim, -1, duration, elapsed);
 		if (entity instanceof ServerPlayer self && canSend(self)) {
 			ServerPlayNetworking.send(self, msg);
 		}
@@ -162,6 +177,13 @@ public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duratio
 			if (viewer != entity && canSend(viewer)) {
 				ServerPlayNetworking.send(viewer, msg);
 			}
+		}
+	}
+
+	/** 한 사람에게만 — 도중에 시전자를 보기 시작한 관전자에게 지난 만큼 건너뛰어 보냅니다. */
+	public static void sendTo(ServerPlayer viewer, Entity entity, int anim, int duration, int elapsed) {
+		if (canSend(viewer)) {
+			ServerPlayNetworking.send(viewer, new SkillAnimPayload(entity.getId(), anim, -1, duration, elapsed));
 		}
 	}
 

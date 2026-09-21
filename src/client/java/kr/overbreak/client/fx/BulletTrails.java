@@ -63,6 +63,10 @@ public final class BulletTrails {
 			if (style == TracerPayload.LIGHTNING_BIG) {
 				return LIGHTNING_BIG_LIFE;
 			}
+			if (style == TracerPayload.GUNSLINGER_SCATTER) {
+				// 돌진 난사 방사 궤적 — 0.1초 (18발이 두 바퀴를 도는 동안 겹겹이 쌓이지 않게)
+				return 2;
+			}
 			return style == TracerPayload.VALKYRIE ? (int) Math.ceil(from.distanceTo(to) / VK_SPEED + VK_LINGER) + 1 : LIFE;
 		}
 	}
@@ -83,7 +87,8 @@ public final class BulletTrails {
 		Camera camera = mc.gameRenderer.mainCamera();
 		boolean lightning = msg.style() == TracerPayload.LIGHTNING || msg.style() == TracerPayload.LIGHTNING_BIG;
 		// 번개는 창끝에서 쏜 것(눈 가까이서 시작)만 화면 속 창끝으로 옮김 — 섬전 · 벼락 · 감전 줄은 월드 자리 그대로
-		boolean fromHand = !lightning || (mc.player != null && from.distanceTo(mc.player.getEyePosition()) < 1.5);
+		boolean fromHand = (!lightning || (mc.player != null && from.distanceTo(mc.player.getEyePosition()) < 1.5))
+				&& msg.style() != TracerPayload.GUNSLINGER_SCATTER;
 		if (fromHand && mc.player != null && msg.ownerId() == mc.player.getId() && mc.options.getCameraType().isFirstPerson() && camera.isInitialized()) {
 			// 쏜 순간의 화면 속 총구 자리를 월드 좌표로 고정
 			from = viewMuzzle(camera.position(), vec(camera.forwardVector()), vec(camera.upVector()), vec(camera.leftVector()), msg.style());
@@ -136,7 +141,8 @@ public final class BulletTrails {
 					continue;
 				}
 				if (gunStyle(t.style)) {
-					if (t.style == TracerPayload.GUNSLINGER || t.style == TracerPayload.GUNSLINGER_L) {
+					if (t.style == TracerPayload.GUNSLINGER || t.style == TracerPayload.GUNSLINGER_L
+							|| t.style == TracerPayload.GUNSLINGER_SCATTER) {
 						// 굴적의 깃털은 하늘색 권총입니다
 						drawValkyrie(p, buffer, t.from, t.to, cam, age, 0x7FD4FF, 0x4FB8FF, 0xEAF9FF);
 					} else {
@@ -449,7 +455,8 @@ public final class BulletTrails {
 	/** 탄두 궤적 · 총구 화염을 쓰는 총 (발키리 연사 포탑 · 보안관 리볼버). */
 	private static boolean gunStyle(int style) {
 		return style == TracerPayload.VALKYRIE || style == TracerPayload.SHERIFF
-				|| style == TracerPayload.GUNSLINGER || style == TracerPayload.GUNSLINGER_L;
+				|| style == TracerPayload.GUNSLINGER || style == TracerPayload.GUNSLINGER_L
+				|| style == TracerPayload.GUNSLINGER_SCATTER;
 	}
 
 	private static Vector3f toF(Vec3 v) {

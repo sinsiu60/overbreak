@@ -49,6 +49,8 @@ public abstract class GameRendererBobMixin {
 			kr.overbreak.client.camera.MeleePunch.apply(bobStack, partial);
 			// 공중 재장전이 맞물리는 순간의 펀치
 			kr.overbreak.client.camera.ReloadKick.apply(bobStack, partial);
+			// 돌진 난사 — 제동 · 한 발마다 작게 흔들림 (roll 없음)
+			kr.overbreak.client.camera.ScatterCam.apply(bobStack, partial);
 		}
 	}
 

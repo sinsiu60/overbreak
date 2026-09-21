@@ -1,5 +1,10 @@
 {
   "key.overbreak.skill_info": "Skill Info",
   "key.category.overbreak.overbreak": "OVERBREAK",
-  "key.overbreak.reload": "Reload"
+  "key.overbreak.reload": "Reload",
+  "subtitles.overbreak.dash_scatter.windup": "Gun hammer cocks",
+  "subtitles.overbreak.dash_scatter.dash": "Dash whooshes",
+  "subtitles.overbreak.dash_scatter.brake": "Boots skid",
+  "subtitles.overbreak.dash_scatter.shot": "Pistol fires",
+  "subtitles.overbreak.dash_scatter.spin": "Pistols spin"
 }

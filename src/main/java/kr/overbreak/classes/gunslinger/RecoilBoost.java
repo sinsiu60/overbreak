@@ -46,7 +46,7 @@ public final class RecoilBoost {
 	private RecoilBoost() {}
 
 	static void cast(ServerPlayer p, GunslingerState st) {
-		if (st.reloadT > 0 || st.acrobatics != null) {
+		if (st.reloadT > 0 || st.scatter != null) {
 			DualPistols.denied(p);
 			return;
 		}
@@ -62,6 +62,8 @@ public final class RecoilBoost {
 		}
 		if (!free) {
 			Attachments.profile(p).setCooldown(Gunslinger.BOOST, COOLDOWN);
+			// 체공 훈풍 활공 +1초 (포격 중 쿨타임 없는 도약은 제외 — 끝없이 쌓이지 않게)
+			AeroDrift.extend(st);
 		}
 		ServerLevel level = p.level();
 		Vec3 eye = p.getEyePosition();

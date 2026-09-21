@@ -35,7 +35,7 @@ public final class GunslingerClientTest implements FabricClientGameTest {
 			}
 			// 3인칭 동작 파일 (뼈대 이름 · 채널 오류는 여기서 걸립니다)
 			for (String name : new String[] {
-					"gunslinger.shot", "gunslinger.shot_left", "gunslinger.reload", "gunslinger.boost", "gunslinger.acro",
+					"gunslinger.shot", "gunslinger.shot_left", "gunslinger.reload", "gunslinger.boost", "gunslinger.scatter",
 					"gunslinger.anchor", "gunslinger.ult", "gunslinger.glide"}) {
 				if (kr.overbreak.client.anim.data.PlayerAnimations.get(name) == null) {
 					throw new AssertionError("애니메이션 파일에 없음: " + name);
@@ -65,9 +65,9 @@ public final class GunslingerClientTest implements FabricClientGameTest {
 				shots(ctx, "gs_" + tag + "_boost", 2, 6);
 				reset(sp);
 
-				// 곡예 난사는 웅크리기 단독 · 도는 동안 3인칭으로 잡힙니다
+				// 돌진 난사는 웅크리기 단독 · 쓰는 동안 3인칭으로 잡힙니다
 				onServer(sp, p -> gs().secondary(p));
-				shots(ctx, "gs_" + tag + "_acro", 4, 10, 15);
+				shots(ctx, "gs_" + tag + "_scatter", 1, 4, 8, 14, 22, 30);
 				reset(sp);
 
 				onServer(sp, p -> gs().tertiary(p));
@@ -115,20 +115,20 @@ public final class GunslingerClientTest implements FabricClientGameTest {
 					throw new AssertionError("재장전이 끝났는데 탄창이 아직 떠 있음");
 				}
 			});
-			// 곡예 난사 — 도는 동안 3인칭으로 잡혔다가 끝나면 1인칭으로 돌아와야 합니다
+			// 돌진 난사 — 쓰는 동안 3인칭으로 잡혔다가 끝나면 1인칭으로 돌아와야 합니다
 			ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
 			onServer(sp, p -> {
 				Attachments.profile(p).cooldowns.clear();
 				gs().secondary(p);
 			});
 			ctx.waitTicks(Ticks.of(6));
-			ctx.takeScreenshot("gs_acro_view");
+			ctx.takeScreenshot("gs_scatter_view");
 			ctx.runOnClient(mc -> {
 				if (mc.options.getCameraType() != CameraType.THIRD_PERSON_BACK) {
-					throw new AssertionError("곡예 난사 중인데 3인칭이 아님: " + mc.options.getCameraType());
+					throw new AssertionError("돌진 난사 중인데 3인칭이 아님: " + mc.options.getCameraType());
 				}
 			});
-			ctx.waitTicks(Ticks.of(20));
+			ctx.waitTicks(Ticks.of(kr.overbreak.classes.gunslinger.DashScatter.LENGTH));
 			ctx.runOnClient(mc -> {
 				if (mc.options.getCameraType() != CameraType.FIRST_PERSON) {
 					throw new AssertionError("끝났는데 1인칭으로 돌아오지 않음: " + mc.options.getCameraType());

@@ -1,5 +1,10 @@
 {
   "key.overbreak.skill_info": "스킬 설명 보기",
   "key.category.overbreak.overbreak": "OVERBREAK",
-  "key.overbreak.reload": "재장전"
+  "key.overbreak.reload": "재장전",
+  "subtitles.overbreak.dash_scatter.windup": "공이치기 소리",
+  "subtitles.overbreak.dash_scatter.dash": "바람을 가르는 돌진",
+  "subtitles.overbreak.dash_scatter.brake": "미끄러지는 발소리",
+  "subtitles.overbreak.dash_scatter.shot": "권총 발사",
+  "subtitles.overbreak.dash_scatter.spin": "권총 돌리는 소리"
 }

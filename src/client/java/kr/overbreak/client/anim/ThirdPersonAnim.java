@@ -219,10 +219,13 @@ public final class ThirdPersonAnim {
 			spin = turn;
 			headSpin = turn;
 		}
-		if (play.anim == SkillAnimPayload.GS_ACRO) {
-			// 곡예 난사: 0.8초(16) 동안 정확히 한 바퀴 — 난사 방향과 몸 방향이 같아야 합니다
-			float turn = -(360.0F / kr.overbreak.classes.gunslinger.AeroAcrobatics.DURATION) * Math.min(e, end);
+		if (play.anim == SkillAnimPayload.GS_SCATTER) {
+			// 돌진 난사: 난사 단계(0.9초) 동안 몸 전체가 두 바퀴 (바퀴당 0.45초 · 일정한 속도). 실제 시선은 그대로
+			float into = (Math.min(e, end) - kr.overbreak.classes.gunslinger.DashScatter.SCATTER_START)
+					/ kr.overbreak.classes.gunslinger.DashScatter.SCATTER;
+			float turn = -720.0F * Mth.clamp(into, 0.0F, 1.0F);
 			if (e > end) {
+				// 끊기면 가장 가까운 한 바퀴 지점까지 감속하며 마저 돌아 정면으로
 				float target = (float) Math.round(turn / 360.0F) * 360.0F;
 				float q = Mth.clamp((e - end) / fade, 0.0F, 1.0F);
 				turn = Mth.lerp(1.0F - (1.0F - q) * (1.0F - q), turn, target);

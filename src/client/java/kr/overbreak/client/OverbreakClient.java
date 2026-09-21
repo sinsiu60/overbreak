@@ -53,6 +53,7 @@ public final class OverbreakClient implements ClientModInitializer {
 		});
 		ClientTickEvents.END_CLIENT_TICK.register(SkillAnims::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.fx.Afterimages::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.fx.ScatterSounds::tick);
 		// Blockbench 애니메이션: 모드 기본값 + 게임 폴더 overbreak/animations (저장하면 1초 안에 다시 읽음)
 		PlayerAnimations.reload(false);
 		ClientTickEvents.END_CLIENT_TICK.register(PlayerAnimations::tick);

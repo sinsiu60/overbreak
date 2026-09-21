@@ -1,0 +1,22 @@
+{
+  "skill.dash_scatter.windup": {
+    "subtitle": "subtitles.overbreak.dash_scatter.windup",
+    "sounds": ["minecraft:item/crossbow/loading_end"]
+  },
+  "skill.dash_scatter.dash": {
+    "subtitle": "subtitles.overbreak.dash_scatter.dash",
+    "sounds": ["minecraft:item/trident/riptide1", "minecraft:item/trident/riptide2", "minecraft:item/trident/riptide3"]
+  },
+  "skill.dash_scatter.brake": {
+    "subtitle": "subtitles.overbreak.dash_scatter.brake",
+    "sounds": ["minecraft:dig/gravel1", "minecraft:dig/gravel2", "minecraft:dig/gravel3"]
+  },
+  "skill.dash_scatter.shot": {
+    "subtitle": "subtitles.overbreak.dash_scatter.shot",
+    "sounds": ["minecraft:random/explode1", "minecraft:random/explode2", "minecraft:random/explode3"]
+  },
+  "skill.dash_scatter.spin": {
+    "subtitle": "subtitles.overbreak.dash_scatter.spin",
+    "sounds": ["minecraft:item/armor/equip_iron1", "minecraft:item/armor/equip_iron2", "minecraft:item/armor/equip_iron3"]
+  }
+}

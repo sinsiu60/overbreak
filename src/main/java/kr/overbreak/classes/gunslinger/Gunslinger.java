@@ -36,13 +36,13 @@ import org.jspecify.annotations.Nullable;
  * 직업 9 · 궤적의 깃털 — 건슬링어 (공중 기동 원거리형).
  *
  *   체력 180 · 낙하 피해 없음 · 근접 불가 · 게이지 피해 1당 1%
- *   공중에서 싸우는 직업입니다: 쏘면 반대 방향으로 밀리고, 공중에서 맞힌 총알은 무조건 치명타이며,
+ *   공중에서 싸우는 직업입니다: 땅에서 2칸 이상 떠서 맞힌 총알은 무조건 치명타이며,
  *   그 치명타가 다시 반동 도약 · 사선 앵커의 쿨타임을 깎아 공중에 더 오래 머물게 합니다.
  *
  * 조작 (모드 공통 배치에 맞춤)
  *   LMB         쌍권총 연사
  *   RMB         반동 도약
- *   SHIFT       곡예 난사 (활공은 점프 키로 옮겨 웅크리기가 비었습니다)
+ *   SHIFT       돌진 난사 (활공은 점프 키로 옮겨 웅크리기가 비었습니다)
  *   E           사선 앵커
  *   Q           차원 회전 포격
  *   R           재장전
@@ -50,19 +50,26 @@ import org.jspecify.annotations.Nullable;
 public final class Gunslinger implements PvpClass {
 	public static final String ID = "gunslinger";
 	public static final String BOOST = "gs_boost";
-	public static final String ACRO = "gs_acro";
+	public static final String SCATTER = "gs_scatter";
 	public static final String ANCHOR = "gs_anchor";
 	private static final Map<String, Integer> TOTALS =
-			Map.of(BOOST, RecoilBoost.COOLDOWN, ACRO, AeroAcrobatics.COOLDOWN, ANCHOR, WireAnchor.COOLDOWN);
+			Map.of(BOOST, RecoilBoost.COOLDOWN, SCATTER, DashScatter.COOLDOWN, ANCHOR, WireAnchor.COOLDOWN);
 	private static final int SKY = 0x7FD4FF;
 
 	static {
-		// 낙하 피해 면역 (늘) · 곡예 난사 무적 프레임
+		// 낙하 피해 면역 (늘)
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !absorb(entity, source));
+		// 돌진 난사 도중에 시전자를 보기 시작한 사람에게는 지난 만큼 건너뛰어 동작을 보냅니다
+		net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents.START_TRACKING.register((entity, viewer) -> {
+			if (entity instanceof ServerPlayer caster && stateOrNull(caster) instanceof GunslingerState st && st.scatter != null) {
+				kr.overbreak.net.SkillAnimPayload.sendTo(viewer, caster, kr.overbreak.net.SkillAnimPayload.GS_SCATTER,
+						DashScatter.LENGTH, st.scatter.elapsedTime());
+			}
+		});
 	}
 
 	private static final ClassInfo INFO = new ClassInfo("궤적의 깃털", "공중 기동 원거리형", SKY,
-			"쏜 반동으로 날아다니는 곡예 사수. 땅에 발을 붙이는 순간 약해지고, 공중에 떠 있는 동안은 모든 총알이 치명타입니다.",
+			"쏜 반동으로 날아다니는 곡예 사수. 땅에 발을 붙이는 순간 약해지고, 땅에서 2칸 이상 떠 있는 동안은 모든 총알이 치명타입니다.",
 			List.of(
 					SkillInfo.stat("체력", "180"),
 					SkillInfo.stat("공격력", "발당 20 (공중 30)"),
@@ -71,11 +78,11 @@ public final class Gunslinger implements PvpClass {
 					SkillInfo.stat("낙하 피해", "받지 않음")),
 			List.of(
 					new SkillInfo("패시브", "체공 훈풍", null, "minecraft:feather",
-							"공중에서 점프 키를 누르면 활공하고, 공중에서 맞힌 총알은 무조건 치명타",
+							"떨어지기 시작하면 점프 키로 활공하고, 2칸 이상 떠서 맞힌 총알은 무조건 치명타",
 							List.of(
-									SkillInfo.stat("활공", "공중에서 점프 키를 누르고 있기 — 낙하 속도 -80%"),
-									SkillInfo.stat("활공 시간", "최대 2초 · 착지하면 다시 참"),
-									SkillInfo.stat("공중 치명타", "150% (평타 30 · 곡예 난사 22.5)"),
+									SkillInfo.stat("활공", "떨어지기 시작한 뒤 점프 키를 누르고 있기 — 낙하 속도 -80%"),
+									SkillInfo.stat("활공 시간", "2초 · 반동 도약 · 사선 앵커를 쓸 때마다 +1초 · 착지하면 2초로"),
+									SkillInfo.stat("공중 치명타", "땅에서 2칸 이상 · 150% (평타 30 · 돌진 난사 10.5)"),
 									SkillInfo.stat("쿨타임 환급", "공중 명중마다 반동 도약 · 사선 앵커 -0.5초"),
 									SkillInfo.stat("낙하 피해", "언제나 받지 않음")), false),
 					new SkillInfo("LMB", "쌍권총 연사", Overbreak.id("hud/skill/gunslinger_pistols"), null,
@@ -96,17 +103,18 @@ public final class Gunslinger implements PvpClass {
 									SkillInfo.stat("도약", "조준 반대 방향 — 바닥을 보면 약 7칸"),
 									SkillInfo.stat("균열 지대", "봉인됨"),
 									SkillInfo.stat("재사용 대기시간", "6초 (차원 회전 포격 중에는 없음)")), false),
-					new SkillInfo("SHIFT", "곡예 난사", Overbreak.id("hud/skill/gunslinger_acro"), null,
-							"한 바퀴 돌며 반경 8칸을 통째로 훑는 난사, 도는 동안 무적",
+					new SkillInfo("SHIFT", "돌진 난사", Overbreak.id("hud/skill/gunslinger_acro"), null,
+							"앞으로 6칸 치고 나가 멈춰 선 뒤 두 바퀴 돌며 사방을 쓸어 버림",
 							List.of(
-									SkillInfo.stat("분류", "광역 · 무적 · 조준 없음"),
-									SkillInfo.stat("난사", "8번 (0.1초마다 · 사방으로)"),
-									SkillInfo.stat("피해", "한 번당 15 (전부 120 · 공중 180)"),
-									SkillInfo.stat("범위", "반경 8칸 안 모든 적 (벽 뒤도)"),
-									SkillInfo.stat("시점", "도는 동안 3인칭 · 끝나면 원래대로"),
-									SkillInfo.stat("무적", "도는 0.8초 동안"),
-									SkillInfo.stat("탄창", "쓰지 않음"),
-									SkillInfo.stat("재사용 대기시간", "9초")), false),
+									SkillInfo.stat("분류", "이동기 · 광역"),
+									SkillInfo.stat("돌진", "시선의 수평 방향 6칸 (0.25초) · 적을 뚫고 지나감 · 높이 유지"),
+									SkillInfo.stat("난사", "0.15초마다 6번 · 반경 5칸 안 모든 적 (벽 너머 제외)"),
+									SkillInfo.stat("피해", "한 번당 7 (전부 42 · 공중 63)"),
+									SkillInfo.stat("난사 중", "이동 속도 ×0.5 · 넉백 없음"),
+									SkillInfo.stat("시점", "쓰는 동안 3인칭 · 끝나면 원래대로"),
+									SkillInfo.stat("끊김", "기절 · 에어본 — 난사 전이면 난사 없이 끝"),
+									SkillInfo.stat("균열 지대", "봉인됨 (쿨타임 안 씀)"),
+									SkillInfo.stat("재사용 대기시간", "8초 (쓰는 즉시)")), false),
 					new SkillInfo("E", "사선 앵커", Overbreak.id("hud/skill/gunslinger_anchor"), null,
 							"12칸 와이어를 쏘아 붙는 곳으로 끌려감",
 							List.of(
@@ -161,7 +169,7 @@ public final class Gunslinger implements PvpClass {
 		if (st != null) {
 			DualPistols.cancelReload(p, st);
 			AeroDrift.stop(p, st);
-			st.acrobatics = null;
+			st.scatter = null;
 			st.bombardment = null;
 		}
 		Attachments.combatant(p).ccImmune = false;
@@ -175,15 +183,16 @@ public final class Gunslinger implements PvpClass {
 						.line("직업 · 궤적의 깃털", ChatFormatting.DARK_GRAY).blank()
 						.bold("[LMB] 쌍권총 연사", ChatFormatting.AQUA)
 						.line(" 16칸 히트스캔 · 발당 20 · 0.2초에 1발. 탄창 18발 (R 재장전 1.25초)", ChatFormatting.GRAY)
-						.line(" 공중에서 맞히면 치명타 150% (30).", ChatFormatting.GRAY).blank()
+						.line(" 땅에서 2칸 이상 떠서 맞히면 치명타 150% (30).", ChatFormatting.GRAY).blank()
 						.bold("[RMB] 반동 도약", ChatFormatting.AQUA)
 						.line(" 조준한 곳에 반경 3칸 25 + 넉백, 그 반동으로 정반대로 약 7칸. 쿨타임 6초", ChatFormatting.GRAY).blank()
-						.bold("[웅크리기] 곡예 난사", ChatFormatting.AQUA)
-						.line(" 한 바퀴 돌며 반경 8칸 안 모든 적에게 8번 · 한 번당 15. 도는 0.8초 무적. 쿨타임 9초", ChatFormatting.GRAY).blank()
+						.bold("[웅크리기] 돌진 난사", ChatFormatting.AQUA)
+						.line(" 앞으로 6칸 돌진 → 제동 → 반경 5칸에 0.15초마다 6번 · 한 번당 7. 쿨타임 8초", ChatFormatting.GRAY).blank()
 						.bold("[E] 사선 앵커", ChatFormatting.AQUA)
 						.line(" 12칸 와이어 · 적중 20 + 0.5초 기절 + 머리 위로 · 벽이면 그 자리로. 쿨타임 7초", ChatFormatting.GRAY).blank()
 						.bold("[패시브] 체공 훈풍", ChatFormatting.AQUA)
-						.line(" 공중에서 점프 키를 누르고 있으면 2초 활공 · 공중 명중마다 이동기 쿨타임 -0.5초 · 낙하 피해 없음", ChatFormatting.GRAY).blank()
+						.line(" 떨어지기 시작한 뒤 점프 키를 누르고 있으면 2초 활공 (반동 도약 · 사선 앵커마다 +1초)", ChatFormatting.GRAY)
+						.line(" 2칸 이상 떠서 맞히면 치명타 · 이동기 쿨타임 -0.5초 · 낙하 피해 없음", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build()));
 		// 쌍권총 — 양손에 한 자루씩. 왼손 총은 모습만 있는 소품이라 버리기 · 칸 고정에 걸리지 않습니다
 		inv.setItem(Inventory.SLOT_OFFHAND, SkillItems.prop("overbreak:gunslinger_pistols",
@@ -229,10 +238,10 @@ public final class Gunslinger implements PvpClass {
 		}
 	}
 
-	/** 웅크리기 — 곡예 난사. 활공은 공중에서 점프 키를 누르고 있을 때라 서로 겹치지 않습니다. */
+	/** 웅크리기 — 돌진 난사. 활공은 점프 키라 서로 겹치지 않습니다. */
 	@Override
 	public void secondary(ServerPlayer p) {
-		AeroAcrobatics.cast(p, state(p));
+		DashScatter.cast(p, state(p));
 	}
 
 	@Override
@@ -282,7 +291,7 @@ public final class Gunslinger implements PvpClass {
 		GunslingerState st = state(p);
 		return List.of(
 				new SkillSlot(prof.cooldown(BOOST), RecoilBoost.COOLDOWN, st.inUlt()),
-				new SkillSlot(prof.cooldown(ACRO), AeroAcrobatics.COOLDOWN, st.acrobatics != null),
+				new SkillSlot(prof.cooldown(SCATTER), DashScatter.COOLDOWN, st.scatter != null),
 				new SkillSlot(prof.cooldown(ANCHOR), WireAnchor.COOLDOWN, false));
 	}
 
@@ -298,7 +307,7 @@ public final class Gunslinger implements PvpClass {
 			return new HudExtra(st.ammo, DualPistols.MAG, (reload - st.reloadT) * 100 / reload, HudExtra.METER_RELOAD);
 		}
 		if (st.gliding) {
-			return new HudExtra(st.ammo, DualPistols.MAG, st.glideT * 100 / Math.max(1, Ticks.of(AeroDrift.GLIDE)), HudExtra.METER_DURATION);
+			return new HudExtra(st.ammo, DualPistols.MAG, Math.min(100, st.glideT * 100 / Math.max(1, Ticks.of(AeroDrift.GLIDE))), HudExtra.METER_DURATION);
 		}
 		return new HudExtra(st.ammo, DualPistols.MAG, -1, 0);
 	}
@@ -316,14 +325,14 @@ public final class Gunslinger implements PvpClass {
 	// ── 공통 ────────────────────────────────────────────────
 
 	/**
-	 * 피해를 받지 않는 경우 — 낙하 피해는 늘, 곡예 난사로 도는 동안은 전부.
+	 * 피해를 받지 않는 경우 — 낙하 피해 (늘).
 	 * 시험에서 직접 부릅니다.
 	 */
 	public static boolean absorb(LivingEntity target, DamageSource source) {
 		if (!(target instanceof ServerPlayer sp) || !(Attachments.profile(sp).classState instanceof GunslingerState st)) {
 			return false;
 		}
-		return source.is(DamageTypeTags.IS_FALL) || st.iframes();
+		return source.is(DamageTypeTags.IS_FALL);
 	}
 
 	public static GunslingerState state(ServerPlayer p) {
