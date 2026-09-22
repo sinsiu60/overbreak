@@ -215,16 +215,25 @@ public final class IronAnim {
 		}
 	}
 
-	/** 3타 내려찍기 — 칼을 곧게 세운 채 칼날 축으로 반시계 50° 비틀어 들고 내려침 (들 때 0.25초에 걸쳐 · 돌아올 때 풀림). */
+	/** 3타 내려찍기 · 천참 — 칼을 곧게 세운 채 칼날 축으로 반시계 50° 비틀어 들고 내려침 (들 때 0.25초에 걸쳐 · 돌아올 때 풀림). */
 	private static final float OVERHEAD_TWIST = 50.0F;
 
 	private static float twist(SkillAnims.@Nullable Play play, float e) {
-		if (play == null || play.anim != SkillAnimPayload.IC_OVERHEAD) {
+		if (play == null) {
 			return 0.0F;
 		}
-		float in = Mth.clamp(e / 5.0F, 0.0F, 1.0F);
-		float out = 1.0F - Mth.clamp((e - 16.0F) / 6.0F, 0.0F, 1.0F);
-		return OVERHEAD_TWIST * Math.min(in, out);
+		if (play.anim == SkillAnimPayload.IC_OVERHEAD) {
+			float in = Mth.clamp(e / 5.0F, 0.0F, 1.0F);
+			float out = 1.0F - Mth.clamp((e - 16.0F) / 6.0F, 0.0F, 1.0F);
+			return OVERHEAD_TWIST * Math.min(in, out);
+		}
+		if (play.anim == SkillAnimPayload.IC_ULT) {
+			// 천참도 내려찍기와 같은 비틀기 — 들어 올리는 0.4초에 걸쳐 · 박힌 채 멈췄다가 돌아올 때 풀림
+			float in = Mth.clamp(e / 8.0F, 0.0F, 1.0F);
+			float out = 1.0F - Mth.clamp((e - 33.0F) / 7.0F, 0.0F, 1.0F);
+			return OVERHEAD_TWIST * Math.min(in, out);
+		}
+		return 0.0F;
 	}
 
 	private static void apply(PoseStack pose, int invert, float[] v) {
