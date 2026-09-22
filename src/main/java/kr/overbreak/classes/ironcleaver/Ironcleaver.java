@@ -74,7 +74,7 @@ public final class Ironcleaver implements PvpClass {
 			"무거운 대검 한 자루로 버티다 한 방에 끝내는 결투가. 짧게 누르면 빠른 3타, 길게 누르면 단계마다 강해지는 모아 베기 — 1.8초에 맞춰 떼면 진 참.",
 			List.of(
 					SkillInfo.stat("체력", "260"),
-					SkillInfo.stat("공격력", "35 · 35 · 55 (모아 베기 40~130)"),
+					SkillInfo.stat("공격력", "45 · 45 · 90 (모아 베기 50~140)"),
 					SkillInfo.stat("이동속도", "-5%"),
 					SkillInfo.stat("넉백", "동작 중 -50%")),
 			List.of(
@@ -87,11 +87,11 @@ public final class Ironcleaver implements PvpClass {
 					new SkillInfo("LMB", "참철검", Overbreak.id("hud/skill/ironcleaver_sword"), null,
 							"짧게 누르면 3타 콤보, 0.25초 이상 누르고 있으면 참 모으기",
 							List.of(
-									SkillInfo.stat("1타", "오른쪽 → 왼쪽 가로 베기 · 150° 4칸 · 35 (선딜 0.35초)"),
-									SkillInfo.stat("2타", "왼쪽 → 오른쪽 가로 베기 · 150° 4칸 · 35 (선딜 0.35초)"),
-									SkillInfo.stat("3타", "내려찍기 · 폭 1.5 × 4.5칸 · 55 (선딜 0.45초)"),
+									SkillInfo.stat("1타", "오른쪽 → 왼쪽 가로 베기 · 150° 4칸 · 45 (선딜 0.35초)"),
+									SkillInfo.stat("2타", "왼쪽 → 오른쪽 가로 베기 · 150° 4칸 · 45 (선딜 0.35초)"),
+									SkillInfo.stat("3타", "내려찍기 · 폭 1.5 × 4.5칸 · 90 · 맞히면 치명타 (선딜 0.45초)"),
 									SkillInfo.stat("콤보", "후딜 중 누르면 이어짐 · 1.2초 쉬면 1타로"),
-									SkillInfo.stat("모으기 단계", "0.6초 40 · 1.2초 70 · 1.8초 110 (앞 60° 5~5.5칸)"),
+									SkillInfo.stat("모으기 단계", "0.6초 50 · 1.2초 80 · 1.8초 140 (앞 60° 5~5.5칸)"),
 									SkillInfo.stat("진 참", "1.8~2.0초 사이에 떼면 130 · 6칸"),
 									SkillInfo.stat("모으는 중", "이동 ×0.7 · 점프 불가 · 2.8초에 저절로 발동"),
 									SkillInfo.stat("역경직", "맞히면 내 화면의 칼이 순간 멈췄다가 따라잡음")), false),
@@ -118,9 +118,9 @@ public final class Ironcleaver implements PvpClass {
 							"대검을 땅에 긁어 지면을 따라 달리는 칼날을 날림",
 							List.of(
 									SkillInfo.stat("분류", "투사체 · 관통"),
-									SkillInfo.stat("시전", "0.3초 들고 0.2초 긁기 · 이동 ×0.5"),
+									SkillInfo.stat("시전", "0.25초 (들어 올려 긁고 발사) · 이동 ×0.5"),
 									SkillInfo.stat("칼날", "초당 20칸 · 8칸 · 폭 2 × 높이 2.5 · 지면을 따라 1칸 턱까지 넘음"),
-									SkillInfo.stat("피해", "25 + 1.5초 둔화 40%"),
+									SkillInfo.stat("피해", "85 + 1.5초 둔화 40%"),
 									SkillInfo.stat("조건", "발밑 3칸 안에 땅이 있어야 함"),
 									SkillInfo.stat("재사용 대기시간", "10초")), false),
 					new SkillInfo("Q", "천참", Overbreak.id("hud/skill/ironcleaver_ult"), null,
@@ -178,22 +178,22 @@ public final class Ironcleaver implements PvpClass {
 				SkillItems.lore()
 						.line("직업 · 참철", ChatFormatting.DARK_GRAY).blank()
 						.bold("[LMB 짧게] 3타 콤보", ChatFormatting.WHITE)
-						.line(" 가로 · 가로 · 내려찍기 — 35 · 35 · 55", ChatFormatting.GRAY).blank()
+						.line(" 가로 · 가로 · 내려찍기 — 45 · 45 · 90 (3타는 치명타)", ChatFormatting.GRAY).blank()
 						.bold("[LMB 누르기] 참 모으기", ChatFormatting.WHITE)
-						.line(" 0.6초 40 · 1.2초 70 · 1.8초 110 · 1.8~2.0초에 떼면 진 참 130", ChatFormatting.GRAY).blank()
+						.line(" 0.6초 50 · 1.2초 80 · 1.8초 140 · 1.8~2.0초에 떼면 진 참 130", ChatFormatting.GRAY).blank()
 						.bold("[RMB] 어깨 박치기", ChatFormatting.WHITE)
 						.line(" 6칸 돌진 · 처음 부딪친 적 20 + 2칸 밀어냄 · 모으는 중에도. 쿨타임 7초", ChatFormatting.GRAY).blank()
 						.bold("[웅크리기] 검막", ChatFormatting.WHITE)
 						.line(" 1초 동안 앞 120° 피해 ×0.2 · 막으면 다음 모으기가 2단부터. 쿨타임 9초", ChatFormatting.GRAY).blank()
 						.bold("[E] 대지 가르기", ChatFormatting.WHITE)
-						.line(" 지면을 따라 8칸 달리는 칼날 · 25 + 둔화 40%. 쿨타임 10초", ChatFormatting.GRAY).blank()
+						.line(" 0.25초 만에 지면을 따라 8칸 달리는 칼날 · 85 + 둔화 40%. 쿨타임 10초", ChatFormatting.GRAY).blank()
 						.bold("[패시브] 중량", ChatFormatting.WHITE)
 						.line(" 동작 중 넉백 -50% · 2단 이상 모아 베기는 피해 감소를 절반만 받게 함", ChatFormatting.GRAY).blank()
 						.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build()));
 		inv.setItem(9, SkillItems.statSheet(Hud.bold("참철", ChatFormatting.WHITE), SkillItems.lore()
 				.line("대검 근접 결투형", ChatFormatting.DARK_GRAY).blank()
 				.line("체력      260  (기본 200)", ChatFormatting.GRAY)
-				.line("공격력    35 · 35 · 55  (모아 베기 40~130)", ChatFormatting.GRAY)
+				.line("공격력    45 · 45 · 90  (모아 베기 50~140)", ChatFormatting.GRAY)
 				.line("이동속도  -5%", ChatFormatting.GRAY)
 				.line("넉백      동작 중 -50%", ChatFormatting.GRAY).blank()
 				.line("F8 로 스킬 설명을 볼 수 있습니다.", ChatFormatting.DARK_GRAY).build()));
@@ -252,6 +252,8 @@ public final class Ironcleaver implements PvpClass {
 		}
 		return switch (st.phase) {
 			case IDLE -> false;
+			// 평타 후딜은 모든 스킬로 끊을 수 있음
+			case SWING -> !IronCombat.inRecovery(st);
 			case CHARGE -> slot != InputRouter.Slot.PRIMARY && slot != InputRouter.Slot.ULT;
 			default -> true;
 		};

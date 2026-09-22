@@ -174,6 +174,10 @@ public final class IronFx {
 				Vec3 g = ground(mc.level, start, REND_STEP + 0.5);
 				Wave w = new Wave(g != null ? g : start, dir, now);
 				WAVES.add(w);
+				if (self) {
+					// 칼끝을 튕겨 올리는 순간 (스펙 0.2)
+					shake(0.3F, 3.0F);
+				}
 				// 칼날이 달리는 동안 따라다니는 소리 (사라지면 끊김)
 				mc.getSoundManager().play(new Loop(OverbreakSounds.IRON_REND_WAVE.value(), 0.6F, 0.6F, () -> Double.isNaN(w.deadAt) ? w.pos : null));
 			}
@@ -317,14 +321,70 @@ public final class IronFx {
 		// 평타 궤적: 흰 회색 · 0.1초 · 밝기 낮게 (스펙 10-5)
 		play(e, OverbreakSounds.IRON_SWING_WHOOSH, 1.0F, 0.6F);
 		if (k == 2) {
-			ARCS.add(new Arc(entityId, e.position(), yaw, 100.0F, -35.0F, true, now, (float) s.active(), 2.0F, BASIC_TRAIL,
-					1.2F, (float) s.range(), 1.55F, 0.55F));
+			// 3타 — 벤데타 3타처럼 온 힘으로 내리꽂음: 굵고 밝은 세로 궤적 + 조금 뒤 땅에 박히는 충격
+			ARCS.add(new Arc(entityId, e.position(), yaw, 100.0F, -40.0F, true, now, 0.6F, 3.0F, 0xFFFFFF,
+					0.8F, (float) s.range() + 0.5F, 1.55F, 1.0F));
+			PENDING.add(new Pending(now + SLAM_DELAY, entityId, () -> slam(entityId)));
 		} else {
 			float half = (float) s.arc() / 2.0F;
 			ARCS.add(new Arc(entityId, e.position(), yaw, s.rightToLeft() ? half : -half, s.rightToLeft() ? -half : half, false,
 					now, (float) s.active(), 2.0F, BASIC_TRAIL, 1.0F, (float) s.range(), 1.05F, 0.55F));
 		}
 	}
+
+	/** 3타 칼끝이 땅에 닿는 시각 (선딜 끝 뒤, 1/20초 단위) — 1인칭 키프레임 착지와 같게. */
+	private static final double SLAM_DELAY = 0.4;
+	/** 3타 착지 충격 — 칼끝 자리 (몸 앞 칸). */
+	private static final double SLAM_REACH = 2.2;
+
+	/**
+	 * 3타 착지 — 칼끝이 박힌 자리에서 퍼지는 충격 고리 · 사방으로 갈라지는 땅 균열 · 흙 파편 · 먼지 · 폭음.
+	 * 본인이면 화면이 아래로 쿵 내려앉듯 흔들림.
+	 */
+	private static void slam(int entityId) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.level == null) {
+			return;
+		}
+		Entity e = mc.level.getEntity(entityId);
+		if (e == null) {
+			return;
+		}
+		kr.overbreak.client.anim.SkillAnims.Play latest = kr.overbreak.client.anim.SkillAnims.latestOf(entityId, IRON_ANIMS);
+		if (latest == null || latest.anim != SkillAnimPayload.IC_OVERHEAD) {
+			return;
+		}
+		Vec3 f = forward(e.getYRot());
+		Vec3 at = e.position().add(f.scale(SLAM_REACH));
+		Vec3 g = ground(mc.level, at, 2.0);
+		if (g != null) {
+			at = g;
+		}
+		CLEAVES.add(new Cleave(at, e.getYRot(), ClientClock.now(), SLAM));
+		playAt(at, OverbreakSounds.IRON_CHARGE_RELEASE_BOOM, 0.6F, 1.25F);
+		playAt(at, OverbreakSounds.IRON_BASH_HIT, 0.9F, 0.6F);
+		BlockState below = mc.level.getBlockState(BlockPos.containing(at.x, at.y - 0.01, at.z));
+		for (int i = 0; i < 18; i++) {
+			double a = RANDOM.nextDouble() * Math.PI * 2.0;
+			double sp = 0.15 + RANDOM.nextDouble() * 0.3;
+			if (!below.isAir()) {
+				mc.level.addParticle(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, below),
+						at.x, at.y + 0.1, at.z, Math.cos(a) * sp, 0.35 + RANDOM.nextDouble() * 0.35, Math.sin(a) * sp);
+			}
+			if (i % 2 == 0) {
+				mc.level.addParticle(ParticleTypes.CLOUD, at.x, at.y + 0.1, at.z, Math.cos(a) * 0.25, 0.02, Math.sin(a) * 0.25);
+			}
+			if (i % 3 == 0) {
+				mc.level.addParticle(ParticleTypes.CRIT, at.x, at.y + 0.3, at.z, Math.cos(a) * 0.6, 0.4, Math.sin(a) * 0.6);
+			}
+		}
+		if (e == mc.player) {
+			shake(0.55F, 4.0F);
+		}
+	}
+
+	/** Cleave 의 종류 — 3타 착지 충격. */
+	private static final int SLAM = 6;
 
 	/** 평타 궤적 색 (흰 회색). */
 	private static final int BASIC_TRAIL = 0xD8DCE4;
@@ -534,6 +594,7 @@ public final class IronFx {
 		}
 		LOOPS.values().removeIf(l -> l.isStopped());
 		double now = ClientClock.now();
+		scrapeSparks(mc, now);
 		List<Pending> due = new ArrayList<>();
 		PENDING.removeIf(p -> {
 			if (p.at <= now) {
@@ -544,13 +605,42 @@ public final class IronFx {
 		});
 		due.forEach(p -> p.run.run());
 		ARCS.removeIf(a -> now - a.born > a.sweep + a.life);
-		CLEAVES.removeIf(c -> now - c.born > (c.stage == 5 ? 14.0 : 8.0));
+		CLEAVES.removeIf(c -> now - c.born > (c.stage == 5 ? 14.0 : c.stage == SLAM ? 40.0 : 8.0));
 		ULTS.removeIf(u -> now - u.born > ULT_CHARGE + 4.0 || mc.level.getEntity(u.entityId) == null);
 		STAGES.keySet().removeIf(id -> mc.level.getEntity(id) == null);
 		for (Wave w : WAVES) {
 			stepWave(mc.level, w, now);
 		}
 		WAVES.removeIf(w -> !Double.isNaN(w.deadAt) && now - w.deadAt > 16.0);
+	}
+
+	/** 대지 가르기 긁는 동안 (선딜 끝 ~ 발사) — 시전자 오른쪽 앞 땅에서 불꽃 · 흙이 튐. */
+	private static void scrapeSparks(Minecraft mc, double now) {
+		for (net.minecraft.client.player.AbstractClientPlayer pl : mc.level.players()) {
+			kr.overbreak.client.anim.SkillAnims.Play play = kr.overbreak.client.anim.SkillAnims.find(pl.getId(), SkillAnimPayload.IC_REND);
+			if (play == null) {
+				continue;
+			}
+			double e = now - play.startTime();
+			if (e < REND_WINDUP - 1.0 || e > REND_WINDUP + REND_DRAG) {
+				continue;
+			}
+			Vec3 f = forward(pl.getYRot());
+			Vec3 right = new Vec3(-f.z, 0, f.x).scale(-0.5);
+			double u = Mth.clamp((e - REND_WINDUP + 1.0) / (REND_DRAG + 1.0), 0.0, 1.0);
+			Vec3 at = pl.position().add(right.scale(1.0 - u)).add(f.scale(0.4 + 1.4 * u));
+			BlockState below = mc.level.getBlockState(BlockPos.containing(at.x, at.y - 0.01, at.z));
+			for (int i = 0; i < 4; i++) {
+				mc.level.addParticle(ParticleTypes.ELECTRIC_SPARK, at.x, at.y + 0.05, at.z,
+						f.x * 0.25 + (RANDOM.nextDouble() - 0.5) * 0.3, 0.2 + RANDOM.nextDouble() * 0.25, f.z * 0.25 + (RANDOM.nextDouble() - 0.5) * 0.3);
+			}
+			if (!below.isAir()) {
+				for (int i = 0; i < 2; i++) {
+					mc.level.addParticle(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, below),
+							at.x, at.y + 0.1, at.z, f.x * 0.2, 0.3, f.z * 0.2);
+				}
+			}
+		}
 	}
 
 	/** 서버 GroundWave 와 같은 규칙 — 1칸 넘는 턱 · 벽 · 절벽이면 소멸. */
@@ -576,6 +666,11 @@ public final class IronFx {
 			w.path.add(g);
 			w.pathAt.add(now);
 			level.addParticle(ParticleTypes.CRIT, g.x, g.y + 0.3, g.z, w.dir.x * 0.2, 0.15, w.dir.z * 0.2);
+			// 불꽃 3 · 흙 2 (칸 반마다)
+			for (int i = 0; i < 3; i++) {
+				level.addParticle(ParticleTypes.SMALL_FLAME, g.x + (RANDOM.nextDouble() - 0.5) * 0.6, g.y + 0.2 + RANDOM.nextDouble() * 1.2,
+						g.z + (RANDOM.nextDouble() - 0.5) * 0.6, w.dir.x * 0.08, 0.05, w.dir.z * 0.08);
+			}
 			BlockState below = level.getBlockState(BlockPos.containing(g.x, g.y - 0.01, g.z));
 			if (!below.isAir()) {
 				level.addParticle(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, below),
@@ -689,7 +784,7 @@ public final class IronFx {
 		// 금 (지나간 자리 · 1초에 걸쳐 사라짐)
 		for (int i = 1; i < w.path.size(); i++) {
 			float age = (float) (t - w.pathAt.get(i));
-			float k = 1.0F - Mth.clamp(age / 20.0F, 0.0F, 1.0F);
+			float k = 1.0F - Mth.clamp(age / 40.0F, 0.0F, 1.0F);
 			if (k <= 0.0F) {
 				continue;
 			}
@@ -707,14 +802,17 @@ public final class IronFx {
 		Vec3 f = w.dir;
 		Vec3 side = new Vec3(-f.z, 0, f.x);
 		float flick = 0.9F + 0.1F * Mth.sin((float) t * 3.0F);
-		int core = ARGB.color(Math.round(235 * flick), 0xFFE2B0);
-		int glow = ARGB.color(Math.round(170 * flick), 0xFF8A3A);
-		double h = 1.7;
+		int core = ARGB.color(Math.round(250 * flick), 0xFFF0D0);
+		int glow = ARGB.color(Math.round(200 * flick), 0xFF7A2A);
+		double h = REND_HEIGHT;
 		// 세로 날 두 장 (진행 방향으로 선 면 · 가로로 선 면) — 어느 쪽에서 봐도 보이게
 		band(p, buffer, base.add(f.scale(0.5)), base.add(f.scale(-0.2)).add(0, h, 0), base.add(f.scale(-0.9)).add(0, h * 0.5, 0),
 				base.add(f.scale(-0.6)), cam, glow, core);
 		band(p, buffer, base.add(side.scale(REND_WIDTH / 2.0)), base.add(side.scale(REND_WIDTH / 4.0)).add(0, h * 0.8, 0),
 				base.subtract(side.scale(REND_WIDTH / 4.0)).add(0, h * 0.8, 0), base.subtract(side.scale(REND_WIDTH / 2.0)), cam, glow, core);
+		// 흰 가장자리 — 칼날 등을 따라 가는 빛줄기
+		BulletTrails.quad(p, buffer, base.add(f.scale(0.5)), base.add(f.scale(-0.2)).add(0, h, 0), cam, 0.06F, 0.0F,
+				ARGB.color(Math.round(230 * flick), 0xFFFFFF), 0.0F);
 	}
 
 	/** 천참 예고 — 바닥의 붉은 직사각형 (테두리 + 모으는 만큼 앞으로 차오르는 채움) · 머리 위로 자라는 기운의 칼날. */
@@ -755,6 +853,10 @@ public final class IronFx {
 	private static void drawCleave(PoseStack.Pose p, VertexConsumer buffer, Cleave c, Vec3 cam, double t) {
 		float e = (float) (t - c.born);
 		Vec3 f = forward(c.yaw);
+		if (c.stage == SLAM) {
+			drawSlam(p, buffer, c, cam, e);
+			return;
+		}
 		if (c.stage == 5) {
 			float k = 1.0F - Mth.clamp(e / 14.0F, 0.0F, 1.0F);
 			// 칼날은 순식간에 내려와(0.1초) 땅에 박힌 채 옅어짐
@@ -784,6 +886,54 @@ public final class IronFx {
 			int col = ARGB.color(Math.round(200 * k), color);
 			band(p, buffer, o.add(d0.scale(r1)), o.add(d1.scale(r1)), o.add(d1.scale(r0)), o.add(d0.scale(r0)), cam, col, col);
 		}
+	}
+
+	/** 3타 착지 — 빠르게 퍼지는 흰 충격 고리 두 겹 + 사방으로 갈라진 땅 균열 (2초에 걸쳐 사라짐). */
+	private static void drawSlam(PoseStack.Pose p, VertexConsumer buffer, Cleave c, Vec3 cam, float e) {
+		Vec3 o = c.at.add(0, 0.05, 0);
+		int n = 24;
+		for (int ring = 0; ring < 2; ring++) {
+			float life = ring == 0 ? 5.0F : 8.0F;
+			float k = 1.0F - Mth.clamp(e / life, 0.0F, 1.0F);
+			if (k <= 0.0F) {
+				continue;
+			}
+			float grow = 1.0F - (1.0F - Mth.clamp(e / life, 0.0F, 1.0F)) * (1.0F - Mth.clamp(e / life, 0.0F, 1.0F));
+			double r1 = 0.4 + (ring == 0 ? 2.4 : 3.4) * grow;
+			double r0 = r1 - (ring == 0 ? 0.45 : 0.25) * (0.4 + 0.6 * k);
+			int col = ARGB.color(Math.round((ring == 0 ? 240 : 150) * k), ring == 0 ? 0xFFFFFF : 0xFFE2B0);
+			for (int i = 0; i < n; i++) {
+				double a0 = Math.PI * 2.0 * i / n;
+				double a1 = Math.PI * 2.0 * (i + 1) / n;
+				Vec3 d0 = new Vec3(Math.cos(a0), 0, Math.sin(a0));
+				Vec3 d1 = new Vec3(Math.cos(a1), 0, Math.sin(a1));
+				band(p, buffer, o.add(d0.scale(r1)), o.add(d1.scale(r1)), o.add(d1.scale(r0)), o.add(d0.scale(r0)), cam, col, col);
+			}
+		}
+		// 균열 — 칼끝 자리에서 사방으로 (앞쪽이 가장 길게)
+		float crack = 1.0F - Mth.clamp((e - 20.0F) / 20.0F, 0.0F, 1.0F);
+		float reach = Mth.clamp(e / 2.0F, 0.0F, 1.0F);
+		RandomSource r = RandomSource.create((long) (c.born * 1000));
+		for (int i = 0; i < 7; i++) {
+			double ang = Math.toRadians(c.yaw) + (i - 3) * 0.55 + (r.nextDouble() - 0.5) * 0.3;
+			Vec3 dir = new Vec3(-Math.sin(ang), 0, Math.cos(ang));
+			double len = (i == 3 ? 2.6 : 1.2 + r.nextDouble() * 0.9) * reach;
+			Vec3 mid = o.add(dir.scale(len * 0.5)).add(new Vec3(-dir.z, 0, dir.x).scale((r.nextDouble() - 0.5) * 0.3));
+			Vec3 end = o.add(dir.scale(len));
+			int dark = ARGB.color(Math.round(210 * crack), 0x22160E);
+			int hot = ARGB.color(Math.round(200 * crack * Math.max(0.0F, 1.0F - e / 12.0F)), 0xFF8A3A);
+			crackLine(p, buffer, o, mid, cam, 0.07, dark);
+			crackLine(p, buffer, mid, end, cam, 0.05, dark);
+			if (hot != 0) {
+				crackLine(p, buffer, o.add(0, 0.01, 0), mid.add(0, 0.01, 0), cam, 0.03, hot);
+			}
+		}
+	}
+
+	private static void crackLine(PoseStack.Pose p, VertexConsumer buffer, Vec3 a, Vec3 b, Vec3 cam, double half, int color) {
+		Vec3 d = b.subtract(a);
+		Vec3 side = new Vec3(-d.z, 0, d.x).normalize().scale(half);
+		band(p, buffer, a.add(side), b.add(side), b.subtract(side), a.subtract(side), cam, color, color);
 	}
 
 	/**

@@ -204,7 +204,7 @@ public final class IronCombat {
 				continue;
 			}
 			st.hit.add(e);
-			IronStrikes.deal(p, e, s.damage100(), false, st.swing == 2 ? 1 : 0);
+			IronStrikes.deal(p, e, s.damage100(), false, st.swing == 2 ? 1 : 0, st.swing == CRIT_SWING);
 			Fx.particle(p.level(), ParticleTypes.SWEEP_ATTACK, e.getX(), e.getY() + e.getBbHeight() * 0.6, e.getZ(), 1, 0, 0, 0, 0);
 			if (!st.anyHit) {
 				st.anyHit = true;
@@ -218,6 +218,31 @@ public final class IronCombat {
 			Vec3 f = forward(yaw).scale(2.0);
 			Fx.particle(level, ParticleTypes.CLOUD, p.getX() + f.x, p.getY() + 0.1, p.getZ() + f.z, 10, 0.5, 0.05, 0.5, 0.03);
 		}
+	}
+
+	/** 평타 후딜 중인가 (판정이 끝난 뒤) — 스킬로 끊을 수 있음. */
+	static boolean inRecovery(IronState st) {
+		if (st.phase != IronState.Phase.SWING) {
+			return false;
+		}
+		Swing s = SWINGS[st.swing];
+		return st.t > Ticks.of(s.windup()) + Math.max(1, Ticks.of(s.active()));
+	}
+
+	/** 스킬을 쓸 수 있는 상태 — 대기 중이거나 평타 후딜 중. */
+	private static boolean ready(IronState st) {
+		return st.phase == IronState.Phase.IDLE || inRecovery(st);
+	}
+
+	/** 평타 후딜을 끊음 — 다음 타수는 그대로 이어지고, 휘두르던 동작은 멈춤. */
+	private static void cancelRecovery(ServerPlayer p, IronState st) {
+		if (!inRecovery(st)) {
+			return;
+		}
+		SkillAnimPayload.stop(p, SWINGS[st.swing].anim());
+		st.combo = (st.swing + 1) % SWINGS.length;
+		st.buffered = false;
+		toIdle(st);
 	}
 
 	// ── 참 모으기 ────────────────────────────────────────
@@ -341,7 +366,7 @@ public final class IronCombat {
 	// ── RMB 어깨 박치기 ──────────────────────────────────
 
 	static void bash(ServerPlayer p, IronState st) {
-		if (st.phase != IronState.Phase.IDLE && st.phase != IronState.Phase.CHARGE) {
+		if (!ready(st) && st.phase != IronState.Phase.CHARGE) {
 			return;
 		}
 		if (Attachments.combatant(p).sealT > 0) {
@@ -351,6 +376,7 @@ public final class IronCombat {
 		if (Cooldowns.blocked(p, Ironcleaver.BASH, "어깨 박치기", ChatFormatting.GRAY)) {
 			return;
 		}
+		cancelRecovery(p, st);
 		Attachments.profile(p).setCooldown(Ironcleaver.BASH, BASH_COOLDOWN);
 		st.bashFromCharge = st.phase == IronState.Phase.CHARGE;
 		st.bashPauseStart = GameClock.now();
@@ -401,12 +427,13 @@ public final class IronCombat {
 	// ── SHIFT 검막 ───────────────────────────────────────
 
 	static void guard(ServerPlayer p, IronState st) {
-		if (st.phase != IronState.Phase.IDLE) {
+		if (!ready(st)) {
 			return;
 		}
 		if (Cooldowns.blocked(p, Ironcleaver.GUARD, "검막", ChatFormatting.GRAY)) {
 			return;
 		}
+		cancelRecovery(p, st);
 		Attachments.profile(p).setCooldown(Ironcleaver.GUARD, GUARD_COOLDOWN);
 		st.phase = IronState.Phase.GUARD;
 		st.t = 0;
@@ -442,7 +469,7 @@ public final class IronCombat {
 	// ── E 대지 가르기 ────────────────────────────────────
 
 	static void rend(ServerPlayer p, IronState st) {
-		if (st.phase != IronState.Phase.IDLE) {
+		if (!ready(st)) {
 			return;
 		}
 		if (GroundWave.ground(p.level(), p.position(), REND_GROUND_REACH) == null) {
@@ -455,6 +482,7 @@ public final class IronCombat {
 		if (Cooldowns.blocked(p, Ironcleaver.REND, "대지 가르기", ChatFormatting.GRAY)) {
 			return;
 		}
+		cancelRecovery(p, st);
 		Attachments.profile(p).setCooldown(Ironcleaver.REND, REND_COOLDOWN);
 		st.phase = IronState.Phase.REND;
 		st.t = 0;
@@ -487,6 +515,7 @@ public final class IronCombat {
 			SkillAnimPayload.stop(p, SkillAnimPayload.IC_CHARGE);
 			stage(p, st, 0, false);
 		}
+		cancelRecovery(p, st);
 		UltGauge.consume(p);
 		st.phase = IronState.Phase.ULT;
 		st.t = 0;

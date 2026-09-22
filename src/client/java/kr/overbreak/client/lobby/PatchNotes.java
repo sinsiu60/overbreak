@@ -42,7 +42,14 @@ final class PatchNotes {
 		return new Line(text, Tag.TWEAK);
 	}
 
-	static final List<Version> VERSIONS = List.of(new Version("0.2h", "", "새 직업 · 참철", List.of(
+	static final List<Version> VERSIONS = List.of(new Version("0.2i", "", "참철 강화", List.of(
+			new Section("참철", 0xFFC8CDD6, List.of(
+					buff("평타 1 · 2타 피해 35 → 45"),
+					buff("3타 내려찍기 피해 55 → 90 · 맞히면 치명타 (피해는 그대로) — 온 힘으로 내리꽂는 동작과 땅이 갈라지는 충격 연출"),
+					buff("모아 베기 1단 40 → 50 · 2단 70 → 80 · 3단 110 → 140"),
+					buff("대지 가르기 선딜 0.5초 → 0.25초 · 피해 25 → 85 · 긁어 올리는 동작과 불꽃 연출 강화"),
+					tweak("1인칭 대검이 입체 모델로 바뀌고 두 손으로 쥡니다"))))),
+			new Version("0.2h", "", "새 직업 · 참철", List.of(
 			new Section("새 직업 — 참철 (대검 근접 결투형)", 0xFFC8CDD6, List.of(
 					tweak("무거운 대검 한 자루로 버티다 한 방에 끝내는 결투가 · 체력 260 · 이동속도 -5%"),
 					tweak("패시브 「중량」 — 동작 중 받는 넉백 -50% · 모으기 2단부터 넉백 면역"),

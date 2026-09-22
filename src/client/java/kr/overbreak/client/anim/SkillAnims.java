@@ -130,7 +130,7 @@ public final class SkillAnims {
 			case SkillAnimPayload.IC_RELEASE -> 18.0F;
 			case SkillAnimPayload.IC_BASH -> 8.0F;
 			case SkillAnimPayload.IC_GUARD -> 20.0F;
-			case SkillAnimPayload.IC_REND -> 16.0F;
+			case SkillAnimPayload.IC_REND -> 11.0F;
 			case SkillAnimPayload.IC_ULT -> 40.0F;
 			default -> 0.0F;
 		};

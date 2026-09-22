@@ -89,7 +89,7 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
-	/** 짧게 누를 때마다 35 → 35 → 55, 후딜 중 누른 입력은 이어짐 · 등 뒤는 안 맞음. */
+	/** 짧게 누를 때마다 45 → 45 → 90, 후딜 중 누른 입력은 이어짐 · 등 뒤는 안 맞음. */
 	@GameTest(maxTicks = 300)
 	public void threeHitCombo(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 3.5));
@@ -99,16 +99,16 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 		tap(p);
 		h.runAfterDelay(T.of(5), () -> near(h, front.getHealth(), 1000, "선딜(0.35초) 중에는 피해 없음"));
 		h.runAfterDelay(T.of(11), () -> {
-			near(h, 1000 - front.getHealth(), 35, "1타 35");
+			near(h, 1000 - front.getHealth(), 45, "1타 45");
 			// 후딜 중 누름 — 끝나는 즉시 2타
 			tap(p);
 		});
 		h.runAfterDelay(T.of(29), () -> {
-			near(h, 1000 - front.getHealth(), 70, "2타 35 (합 70)");
+			near(h, 1000 - front.getHealth(), 90, "2타 45 (합 90)");
 			tap(p);
 		});
 		h.runAfterDelay(T.of(50), () -> {
-			near(h, 1000 - front.getHealth(), 125, "3타 내려찍기 55 (합 125)");
+			near(h, 1000 - front.getHealth(), 180, "3타 내려찍기 90 (합 180)");
 			near(h, behind.getHealth(), 1000, "등 뒤는 안 맞음");
 		});
 		h.runAfterDelay(T.of(62), () -> {
@@ -132,7 +132,7 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 		});
 	}
 
-	/** 누르고 있으면 모으기 — 1.2초(2단)에 떼면 70. */
+	/** 누르고 있으면 모으기 — 1.2초(2단)에 떼면 80. */
 	@GameTest(maxTicks = 300)
 	public void chargeStageTwo(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5));
@@ -150,7 +150,7 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 			release(p);
 		});
 		h.runAfterDelay(T.of(30), () -> {
-			near(h, 1000 - v.getHealth(), 70, "2단 모아 베기 70");
+			near(h, 1000 - v.getHealth(), 80, "2단 모아 베기 80");
 			Classes.clear(p);
 			h.succeed();
 		});
@@ -174,7 +174,7 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 		});
 	}
 
-	/** 3단 뒤 1초(2.8초)까지 누르고 있으면 저절로 3단 110. */
+	/** 3단 뒤 1초(2.8초)까지 누르고 있으면 저절로 3단 140. */
 	@GameTest(maxTicks = 400)
 	public void autoRelease(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5));
@@ -183,7 +183,7 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 		press(p);
 		h.runAfterDelay(T.of(50), () -> near(h, v.getHealth(), 1000, "2.8초 전에는 아직"));
 		h.runAfterDelay(T.of(60), () -> {
-			near(h, 1000 - v.getHealth(), 110, "2.8초에 저절로 3단 110");
+			near(h, 1000 - v.getHealth(), 140, "2.8초에 저절로 3단 140");
 			Classes.clear(p);
 			h.succeed();
 		});
@@ -198,7 +198,7 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 		press(p);
 		h.runAfterDelay(T.of(9), () -> release(p));
 		h.runAfterDelay(T.of(12), () -> {
-			near(h, 1000 - v.getHealth(), 35, "곧바로 1타 35");
+			near(h, 1000 - v.getHealth(), 45, "곧바로 1타 45");
 			Classes.clear(p);
 			h.succeed();
 		});
@@ -294,6 +294,27 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 		});
 	}
 
+	/** 평타 후딜은 스킬로 끊을 수 있음 — 선딜 · 판정 중에는 안 됨. 끊어도 다음 타수는 이어짐. */
+	@GameTest(maxTicks = 200)
+	public void skillsCancelRecovery(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5));
+		h.onEachTick(() -> ic().tick(p));
+		tap(p);
+		h.runAfterDelay(T.of(3), () -> {
+			ic().secondary(p);
+			h.assertTrue(st(p).phase == IronState.Phase.SWING, "선딜 중에는 스킬이 나가지 않음 (실측 " + st(p).phase + ")");
+			h.assertTrue(ic().intercept(p, kr.overbreak.input.InputRouter.Slot.SECONDARY), "선딜 중 입력은 막힘");
+		});
+		h.runAfterDelay(T.of(12), () -> {
+			h.assertTrue(!ic().intercept(p, kr.overbreak.input.InputRouter.Slot.SECONDARY), "후딜 중 입력은 통과");
+			ic().secondary(p);
+			h.assertTrue(st(p).phase == IronState.Phase.GUARD, "후딜을 끊고 검막 (실측 " + st(p).phase + ")");
+			h.assertTrue(st(p).combo == 1, "다음 타수는 2타로 이어짐 (실측 " + st(p).combo + ")");
+			Classes.clear(p);
+			h.succeed();
+		});
+	}
+
 	/** 모으는 중 박치기 — 돌진하는 동안 모으기 시간은 멈추고, 끝나면 그대로 이어서 모음. */
 	@GameTest(maxTicks = 300)
 	public void bashPausesCharge(GameTestHelper h) {
@@ -315,7 +336,7 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 		});
 	}
 
-	/** 대지 가르기 — 땅을 따라 달려 6칸 앞 적에게 25. 공중에서는 쓸 수 없음 (쿨타임 안 씀). */
+	/** 대지 가르기 — 0.25초 만에 땅을 따라 달려 6칸 앞 적에게 85. 공중에서는 쓸 수 없음 (쿨타임 안 씀). */
 	@GameTest(maxTicks = 300)
 	public void earthRend(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5));
@@ -328,7 +349,7 @@ public final class IroncleaverTest implements CustomTestMethodInvoker {
 		ic().tertiary(air);
 		h.assertTrue(Attachments.profile(air).cooldown(Ironcleaver.REND) == 0, "공중이면 쓰지 않음 (쿨타임도 안 씀)");
 		h.runAfterDelay(T.of(24), () -> {
-			near(h, 1000 - v.getHealth(), 25, "대지 가르기 25");
+			near(h, 1000 - v.getHealth(), 85, "대지 가르기 85");
 			Classes.clear(p);
 			Classes.clear(air);
 			h.succeed();

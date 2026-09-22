@@ -94,8 +94,10 @@ public final class IroncleaverClientTest implements FabricClientGameTest {
 				tap(ctx);
 				ctx.waitTicks(Ticks.of(8));
 				ctx.takeScreenshot("ic_" + tag + "_swing3_8");
-				ctx.waitTicks(Ticks.of(3));
-				ctx.takeScreenshot("ic_" + tag + "_swing3_11");
+				ctx.waitTicks(Ticks.of(2));
+				ctx.takeScreenshot("ic_" + tag + "_swing3_10_impact");
+				ctx.waitTicks(Ticks.of(2));
+				ctx.takeScreenshot("ic_" + tag + "_swing3_12");
 				ctx.waitTicks(Ticks.of(30));
 
 				// 모으기 — 누른 채로 단계별
@@ -137,9 +139,11 @@ public final class IroncleaverClientTest implements FabricClientGameTest {
 
 				// 대지 가르기 — 땅을 달리는 칼날
 				onServer(sp, p -> Classes.byId(Ironcleaver.ID).tertiary(p));
-				ctx.waitTicks(Ticks.of(8));
-				ctx.takeScreenshot("ic_" + tag + "_rend_8");
-				ctx.waitTicks(Ticks.of(3));
+				ctx.waitTicks(Ticks.of(4));
+				ctx.takeScreenshot("ic_" + tag + "_rend_4");
+				ctx.waitTicks(Ticks.of(2));
+				ctx.takeScreenshot("ic_" + tag + "_rend_6");
+				ctx.waitTicks(Ticks.of(5));
 				ctx.takeScreenshot("ic_" + tag + "_rend_11");
 				ctx.waitTicks(Ticks.of(5));
 				ctx.takeScreenshot("ic_" + tag + "_rend_16");

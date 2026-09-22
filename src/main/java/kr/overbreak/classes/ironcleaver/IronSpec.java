@@ -34,9 +34,11 @@ public final class IronSpec {
 	}
 
 	public static final Swing[] SWINGS = {
-			new Swing(kr.overbreak.net.SkillAnimPayload.IC_SWING_R, 7.0, 2.0, 9.0, 3500, 150.0, 0.0, 4.0, true),
-			new Swing(kr.overbreak.net.SkillAnimPayload.IC_SWING_L, 7.0, 2.0, 9.0, 3500, 150.0, 0.0, 4.0, false),
-			new Swing(kr.overbreak.net.SkillAnimPayload.IC_OVERHEAD, 9.0, 2.0, 11.0, 5500, 0.0, 1.5, 4.5, false)};
+			new Swing(kr.overbreak.net.SkillAnimPayload.IC_SWING_R, 7.0, 2.0, 9.0, 4500, 150.0, 0.0, 4.0, true),
+			new Swing(kr.overbreak.net.SkillAnimPayload.IC_SWING_L, 7.0, 2.0, 9.0, 4500, 150.0, 0.0, 4.0, false),
+			new Swing(kr.overbreak.net.SkillAnimPayload.IC_OVERHEAD, 9.0, 2.0, 11.0, 9000, 0.0, 1.5, 4.5, false)};
+	/** 3타 내려찍기는 맞으면 치명타 판정 (치명타 표시 · 소리만 — 피해는 그대로). */
+	public static final int CRIT_SWING = 2;
 	/** 판정 높이 — 발밑 -0.5 ~ 머리 위 +1.0. */
 	public static final double SWING_LOW = -0.5;
 	public static final double SWING_HIGH = 1.0;
@@ -50,7 +52,7 @@ public final class IronSpec {
 	public static final double PERFECT = 4.0;
 	public static final double AUTO_AFTER = 20.0;
 	/** 단계별 피해 x100 · 사거리 (1단 · 2단 · 3단 · 진 참). 부채꼴 60°. */
-	public static final int[] RELEASE_DAMAGE = {4000, 7000, 11000, 13000};
+	public static final int[] RELEASE_DAMAGE = {5000, 8000, 14000, 13000};
 	public static final double[] RELEASE_RANGE = {5.0, 5.0, 5.5, 6.0};
 	public static final double RELEASE_ARC = 60.0;
 	/** 판정 (0.12초) · 후딜 (1·2단 0.6초 · 3단 · 진 참 0.8초). */
@@ -79,8 +81,9 @@ public final class IronSpec {
 
 	// ── E 대지 가르기 ─────────────────────────────────
 	public static final int REND_COOLDOWN = 200;
-	public static final double REND_WINDUP = 6.0;
-	public static final double REND_DRAG = 4.0;
+	/** 선딜 0.25초 — 들어 올림 0.15초 + 긁기 0.1초 뒤 발사. */
+	public static final double REND_WINDUP = 3.0;
+	public static final double REND_DRAG = 2.0;
 	public static final double REND_RECOVERY = 6.0;
 	public static final double REND_RANGE = 8.0;
 	/** 초당 20칸 = 시간 단위당 1칸. */
@@ -88,7 +91,7 @@ public final class IronSpec {
 	public static final double REND_WIDTH = 2.0;
 	public static final double REND_HEIGHT = 2.5;
 	public static final double REND_STEP = 1.0;
-	public static final int REND_DAMAGE = 2500;
+	public static final int REND_DAMAGE = 8500;
 	public static final double REND_SLOW = 0.4;
 	public static final int REND_SLOW_TIME = 30;
 	public static final double REND_CAST_SPEED = -0.5;

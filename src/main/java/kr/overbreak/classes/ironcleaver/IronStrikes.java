@@ -72,14 +72,21 @@ public final class IronStrikes {
 	 * @param strength 타격감 세기 (0 평타 · 1 3타 · 2~5 모아 베기 1단~진 참 · 6 박치기)
 	 */
 	static void deal(ServerPlayer p, LivingEntity e, int damage100, boolean guardBreak, int strength) {
+		deal(p, e, damage100, guardBreak, strength, false);
+	}
+
+	/** @param crit 치명타 판정 — 시전자 화면에 치명타 표시 · 소리 (피해는 그대로) */
+	static void deal(ServerPlayer p, LivingEntity e, int damage100, boolean guardBreak, int strength, boolean crit) {
 		float before = DamageModifiers.guardBreak;
 		if (guardBreak) {
 			DamageModifiers.guardBreak = IronSpec.GUARD_BREAK_FACTOR;
 		}
+		kr.overbreak.net.HitPayload.critNext = crit;
 		try {
 			SkillDamage.dealFine(e, p, damage100, SkillDamage.Kind.MULTI_NO_KB);
 		} finally {
 			DamageModifiers.guardBreak = before;
+			kr.overbreak.net.HitPayload.critNext = false;
 		}
 		if (e instanceof ServerPlayer victim) {
 			IronPayload.send(victim, IronPayload.of(IronPayload.HURT, p, strength, 0));
