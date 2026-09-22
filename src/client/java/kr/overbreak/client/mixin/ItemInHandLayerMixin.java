@@ -34,6 +34,18 @@ public abstract class ItemInHandLayerMixin {
 		}
 	}
 
+	/** 참철 칼날 오오라 — 대검을 그리는 손 자세 그대로 빛 테두리 모델을 한 번 더 (최대 밝기). */
+	@Inject(method = "submitArmWithItem",
+			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V",
+					shift = At.Shift.AFTER))
+	private void overbreak$ironAura(ArmedEntityRenderState state, ItemStackRenderState item, ItemStack itemStack, HumanoidArm arm,
+									PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+		if (state instanceof AnimRenderState a && arm == state.mainArm && !a.overbreak$auraItem().isEmpty()) {
+			a.overbreak$auraItem().submit(poseStack, submitNodeCollector, 15728880,
+					net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, 0);
+		}
+	}
+
 	@Inject(method = "submitArmWithItem", at = @At("HEAD"), cancellable = true)
 	private void overbreak$hideWhenInvisible(ArmedEntityRenderState state, ItemStackRenderState item, ItemStack itemStack, HumanoidArm arm,
 											 PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
@@ -51,6 +63,14 @@ public abstract class ItemInHandLayerMixin {
 			float roll = kr.overbreak.client.anim.scatter.ScatterView.gunRoll(sa, arm);
 			if (roll != 0.0F) {
 				poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(roll));
+			}
+		}
+		if (state instanceof AnimRenderState a && arm == state.mainArm && kr.overbreak.client.anim.IronAnim.handles(a.overbreak$anim())) {
+			// 참철 — 가로 베기 · 모아 베기 · 검막은 칼날을 수평으로
+			float roll = kr.overbreak.client.anim.IronAnim.itemRoll(a.overbreak$anim(), Math.min(a.overbreak$time(), a.overbreak$end()),
+					a.overbreak$weight());
+			if (roll != 0.0F) {
+				poseStack.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(arm == HumanoidArm.RIGHT ? roll : -roll));
 			}
 		}
 		if (state instanceof AnimRenderState a && arm == state.mainArm) {

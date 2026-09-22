@@ -22,6 +22,9 @@ public final class InputTiming {
 	private static final class Record {
 		final double[] pressAt = {Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN};
 		final double[] releaseAt = {Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN};
+		/** 클라이언트 시계로 본 누름 · 뗌 (1/20초 단위, 없으면 NaN). */
+		final double[] clientPress = {Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN};
+		final double[] clientRelease = {Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN};
 		long windowStart = Long.MIN_VALUE / 2;
 		int windowCount;
 		int dropped;
@@ -45,10 +48,19 @@ public final class InputTiming {
 		}
 		double sub = Math.max(0.0, Math.min(1.0, msg.subTick()));
 		double at = now - 1 + sub;
+		double client = Double.isNaN(msg.clientTime()) || Double.isInfinite(msg.clientTime()) ? Double.NaN : msg.clientTime();
+		// 도착 순서가 곧 입력 순서 — 누름 · 뗌이 같은 게임 틱에 오면 서브틱 값만으로는 뗀 시각이 누른 시각보다 앞설 수 있어
+		// (앞 클라이언트 틱 끝에 누르고 다음 틱 처음에 뗌) 직전 반대 기록보다 늦게 잡습니다
+		double other = msg.pressed() ? r.releaseAt[msg.slot()] : r.pressAt[msg.slot()];
+		if (!Double.isNaN(other) && at <= other) {
+			at = other + 1.0E-3;
+		}
 		if (msg.pressed()) {
 			r.pressAt[msg.slot()] = at;
+			r.clientPress[msg.slot()] = client;
 		} else {
 			r.releaseAt[msg.slot()] = at;
+			r.clientRelease[msg.slot()] = client;
 		}
 		return true;
 	}
@@ -73,6 +85,49 @@ public final class InputTiming {
 		double release = releasedAt(p, slot);
 		double end = !Double.isNaN(release) && release >= press ? release : GameClock.now();
 		return Math.max(0.0, end - press);
+	}
+
+	/**
+	 * 누른 채 있던 시간 (1/20초 단위) — 클라이언트가 잰 값(누름 → 뗌)을 쓰되, 서버가 본 구간과 ±toleranceUnits 넘게
+	 * 다르면 서버가 본 값 쪽으로 자릅니다. 핑이 흔들려도 뗀 순간이 밀리지 않게 (참철 진 참 0.2초 창).
+	 * 아직 떼지 않았으면 서버가 본 지금까지의 시간.
+	 */
+	public static double clientHeldUnits(ServerPlayer p, int slot, double toleranceUnits) {
+		Record r = RECORDS.get(p);
+		if (r == null || Double.isNaN(r.pressAt[slot])) {
+			return 0.0;
+		}
+		double server = heldTicks(p, slot);
+		boolean released = !Double.isNaN(r.releaseAt[slot]) && r.releaseAt[slot] >= r.pressAt[slot];
+		if (!released || Double.isNaN(r.clientPress[slot]) || Double.isNaN(r.clientRelease[slot])) {
+			return server;
+		}
+		double client = r.clientRelease[slot] - r.clientPress[slot];
+		if (client < 0.0) {
+			return server;
+		}
+		return Math.max(server - toleranceUnits, Math.min(server + toleranceUnits, client));
+	}
+
+	/** 누르고 있는가 (마지막 누름이 마지막 뗌보다 나중). */
+	public static boolean down(ServerPlayer p, int slot) {
+		Record r = RECORDS.get(p);
+		if (r == null || Double.isNaN(r.pressAt[slot])) {
+			return false;
+		}
+		return Double.isNaN(r.releaseAt[slot]) || r.pressAt[slot] > r.releaseAt[slot];
+	}
+
+	/** 시험용: 누름 · 뗌을 서버 시각 · 클라이언트 시각 그대로 넣습니다. */
+	public static void inject(ServerPlayer p, int slot, boolean pressed, double serverTick, double clientTime) {
+		Record r = RECORDS.computeIfAbsent(p, k -> new Record());
+		if (pressed) {
+			r.pressAt[slot] = serverTick;
+			r.clientPress[slot] = clientTime;
+		} else {
+			r.releaseAt[slot] = serverTick;
+			r.clientRelease[slot] = clientTime;
+		}
 	}
 
 	/** 시험용: 버린 패킷 수. */

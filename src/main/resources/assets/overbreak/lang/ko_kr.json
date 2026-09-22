@@ -8,5 +8,21 @@
   "subtitles.overbreak.skill.dash_scatter.tail": "총성 울림",
   "subtitles.overbreak.skill.dash_scatter.cock": "권총 장전",
   "subtitles.overbreak.skill.dash_scatter.whoosh": "돌진",
-  "subtitles.overbreak.skill.dash_scatter.casings": "탄피 떨어짐"
+  "subtitles.overbreak.skill.dash_scatter.casings": "탄피 떨어짐",
+  "subtitles.overbreak.ironcleaver.swing.windup": "대검 치켜듦",
+  "subtitles.overbreak.ironcleaver.swing.whoosh": "대검 휘두름",
+  "subtitles.overbreak.ironcleaver.swing.hit": "대검 적중",
+  "subtitles.overbreak.ironcleaver.charge.stage": "모으기 단계",
+  "subtitles.overbreak.ironcleaver.charge.loop": "기운 모임",
+  "subtitles.overbreak.ironcleaver.charge.perfect": "진 참",
+  "subtitles.overbreak.ironcleaver.charge.release": "모아 베기",
+  "subtitles.overbreak.ironcleaver.charge.release.boom": "모아 베기 충격",
+  "subtitles.overbreak.ironcleaver.bash.hit": "어깨 박치기",
+  "subtitles.overbreak.ironcleaver.guard.block": "검막 막음",
+  "subtitles.overbreak.ironcleaver.guard.block.clang": "검막 울림",
+  "subtitles.overbreak.ironcleaver.rend.scrape": "땅 긁음",
+  "subtitles.overbreak.ironcleaver.rend.wave": "대지 가르기",
+  "subtitles.overbreak.ironcleaver.ult.charge": "천참 모으기",
+  "subtitles.overbreak.ironcleaver.ult.cleave": "천참",
+  "subtitles.overbreak.ironcleaver.ult.cleave.thunder": "천참 울림"
 }

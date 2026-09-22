@@ -90,6 +90,8 @@ public final class SkillHud {
 		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(DamageFeedback::tick);
 		// 공격속도 증가 — 화면 가장자리 금색
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("haste_screen"), HasteScreen::render);
+		// 참철 — 모으기 단계 색 가장자리 · 검막 보상 초록 테두리
+		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("ironcleaver_screen"), kr.overbreak.client.fx.IronFx::hud);
 		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(HasteScreen::tick);
 		// 회복 — 화면 가장자리 초록 (흡혈 · 채널링 회복)
 		HudElementRegistry.attachElementBefore(VanillaHudElements.CROSSHAIR, Overbreak.id("heal_screen"), HealScreen::render);
@@ -138,11 +140,20 @@ public final class SkillHud {
 		// 무기 한 칸은 스킬 칸 위 오른쪽 끝 (좁은 화면에서 허기 막대와 겹치지 않게)
 		weaponSlot(g, mc.player, w - MARGIN - 22, y - 8 - 22);
 		ammo(g, mc.font, w - MARGIN - 22 - 7, y - 8 - 22, partial);
-		if (HudState.stacksMax > 0) {
+		boolean iron = kr.overbreak.classes.ironcleaver.Ironcleaver.ID.equals(HudState.classId);
+		if (iron) {
+			ironCombo(g, w / 2, h / 2);
+		} else if (HudState.stacksMax > 0) {
 			stacks(g, w / 2, h / 2 + 14, partial);
 		}
+		int meterTop = h / 2 + (HudState.stacksMax > 0 && !iron ? 22 : 14);
 		if (HudState.meter >= 0) {
-			meter(g, w / 2, h / 2 + (HudState.stacksMax > 0 ? 22 : 14), partial);
+			meter(g, w / 2, meterTop, partial);
+		}
+		if (iron && HudState.ironReward()) {
+			// 검막 성공 보상 — 모으기 게이지 자리와 무기(검) 칸에 노란 테두리
+			ironReward(g, w / 2, meterTop, partial);
+			ironRewardBox(g, w - MARGIN - 22 - 2, y - 8 - 22 - 2, 26, 26, partial);
 		}
 		for (int i = 0; i < n; i++) {
 			panel(g, mc.font, layout, i, firstX + i * (PANEL_W + GAP), y, partial);
@@ -216,6 +227,10 @@ public final class SkillHud {
 
 	/** 조준점 아래 게이지 — 로켓 펀치 충전(파랑, 가득 차면 흰빛으로 맥동) · 파워 블록 방어량(회색, 강화 문턱에서 금색). */
 	private static void meter(GuiGraphicsExtractor g, int cx, int top, float partial) {
+		if (HudState.meterKind == kr.overbreak.skill.HudExtra.METER_IRON) {
+			ironMeter(g, cx, top, partial);
+			return;
+		}
 		int width = 60;
 		int height = 4;
 		boolean full = HudState.meter >= 100;
@@ -228,6 +243,65 @@ public final class SkillHud {
 		int x0 = cx - width / 2;
 		g.fill(x0 - 1, top - 1, x0 + width + 1, top + height + 1, 0xA0000000);
 		g.fill(x0, top, x0 + Math.round(width * Math.min(100, HudState.meter) / 100.0F), top + height, color);
+	}
+
+	/**
+	 * 참철 모으기 게이지 (0~100 = 0~2.0초) — 단계 눈금 (0.6 · 1.2 · 1.8초), 3단 뒤 흰 창 (진 참 1.8~2.0초).
+	 * 채움 색은 도달한 단계 색 (회색 → 초록 → 노랑 → 빨강), 진 참 창 안이면 흰빛으로 번쩍.
+	 */
+	private static void ironMeter(GuiGraphicsExtractor g, int cx, int top, float partial) {
+		int width = 80;
+		int height = 5;
+		double[] at = kr.overbreak.classes.ironcleaver.IronSpec.STAGE_AT;
+		double full = at[2] + kr.overbreak.classes.ironcleaver.IronSpec.PERFECT;
+		int m = Math.min(100, HudState.meter);
+		double units = m * full / 100.0;
+		int stage = kr.overbreak.classes.ironcleaver.IronCombat.stageOf(units);
+		boolean perfect = kr.overbreak.classes.ironcleaver.IronCombat.perfectWindow(units);
+		float t = HudState.ticks + kr.overbreak.client.ClientClock.partial(partial);
+		int color = perfect ? pulse(0xFFFFFFFF, t * 4.0F) : 0xFF000000 | kr.overbreak.classes.ironcleaver.IronSpec.STAGE_COLOR[stage];
+		if (stage == 0) {
+			color = 0xFFB8BEC8;
+		}
+		int x0 = cx - width / 2;
+		g.fill(x0 - 1, top - 1, x0 + width + 1, top + height + 1, 0xA0000000);
+		g.fill(x0, top, x0 + Math.round(width * m / 100.0F), top + height, color);
+		// 진 참 창 (위아래 흰 줄)
+		int wx0 = x0 + (int) Math.round(width * at[2] / full);
+		g.fill(wx0, top - 2, x0 + width, top - 1, 0xFFFFFFFF);
+		g.fill(wx0, top + height + 1, x0 + width, top + height + 2, 0xFFFFFFFF);
+		// 단계 눈금
+		for (double a : at) {
+			int x = x0 + (int) Math.round(width * a / full);
+			g.fill(x, top - 2, x + 1, top + height + 2, 0xFF202020);
+		}
+	}
+
+	/** 참철 콤보 타수 — 조준점 오른쪽 작은 점 3개 (이번 사슬에서 휘두른 만큼 채움). */
+	private static void ironCombo(GuiGraphicsExtractor g, int cx, int cy) {
+		int done = Math.max(0, Math.min(3, HudState.ironCombo()));
+		for (int i = 0; i < 3; i++) {
+			int x = cx + 11 + i * 5;
+			g.fill(x - 1, cy - 2, x + 3, cy + 2, 0x90000000);
+			g.fill(x, cy - 1, x + 2, cy + 1, i < done ? 0xFFFFFFFF : 0x50FFFFFF);
+		}
+	}
+
+	/** 참철 검막 성공 보상 (1.5초) — 모으기 게이지 자리에 노란 테두리. */
+	private static void ironReward(GuiGraphicsExtractor g, int cx, int top, float partial) {
+		ironRewardBox(g, cx - 42, top - 3, 84, 11, partial);
+	}
+
+	private static void ironRewardBox(GuiGraphicsExtractor g, int x0, int y0, int w, int h, float partial) {
+		float t = HudState.ticks + kr.overbreak.client.ClientClock.partial(partial);
+		int a = Math.round(180 + 75 * Mth.sin(t * 0.9F));
+		int color = (Mth.clamp(a, 0, 255) << 24) | 0xFFD84A;
+		int x1 = x0 + w;
+		int y1 = y0 + h;
+		g.fill(x0, y0, x1, y0 + 1, color);
+		g.fill(x0, y1 - 1, x1, y1, color);
+		g.fill(x0, y0, x0 + 1, y1, color);
+		g.fill(x1 - 1, y0, x1, y1, color);
 	}
 
 	private static void panel(GuiGraphicsExtractor g, Font font, HudLayouts.Layout layout, int i, int x, int y, float partial) {

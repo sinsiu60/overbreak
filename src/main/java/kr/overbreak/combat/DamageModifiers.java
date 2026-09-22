@@ -25,9 +25,19 @@ public final class DamageModifiers {
 		LIST.add(m);
 	}
 
+	/**
+	 * 방어 파쇄 (참철 2단 이상 모아 베기) — 켜 둔 동안 들어가는 피해는 대상의 피해 감소 효과를 이 비율만큼만 받습니다
+	 * (0.5 = 파워 블록 70% 감소 → 35% 감소). 1.0 = 보통. 흡수 체력(보호막)은 여기가 아니라 뒤에서 깎이므로 영향이 없습니다.
+	 */
+	public static float guardBreak = 1.0F;
+
 	public static float apply(LivingEntity target, DamageSource source, float damage) {
 		for (Modifier m : LIST) {
+			float before = damage;
 			damage = m.modify(target, source, damage);
+			if (guardBreak < 1.0F && damage < before) {
+				damage = before - (before - damage) * guardBreak;
+			}
 		}
 		return damage;
 	}

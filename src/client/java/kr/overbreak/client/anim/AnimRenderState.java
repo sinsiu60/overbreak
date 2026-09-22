@@ -28,6 +28,14 @@ public interface AnimRenderState {
 
 	float overbreak$scatterWeight();
 
+	/** 참철 칼날 오오라 색 (ARGB, 0 = 없음). */
+	void overbreak$setAura(int argb);
+
+	int overbreak$aura();
+
+	/** 참철 칼날 오오라 모델 (비어 있으면 안 그림). */
+	net.minecraft.client.renderer.item.ItemStackRenderState overbreak$auraItem();
+
 	/** 재장전 중 받치는 손에 든 탄창 (비어 있으면 안 그림). */
 	net.minecraft.client.renderer.item.ItemStackRenderState overbreak$magazine();
 }

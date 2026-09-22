@@ -211,6 +211,23 @@ public abstract class ItemInHandRendererMixin {
 		}
 	}
 
+	/** 참철 대검 — 모으기 단계 색으로 칼날이 빛남 (칼날에 붙은 빛 두 겹). */
+	@Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = RENDER_ITEM, shift = At.Shift.AFTER))
+	private void overbreak$ironAura(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack,
+									ItemStack itemStack, float inverseArmHeight, PoseStack poseStack,
+									SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+		if (hand != InteractionHand.MAIN_HAND || player.isInvisible() || !kr.overbreak.client.anim.IronAnim.greatsword(itemStack)) {
+			return;
+		}
+		int color = kr.overbreak.client.fx.IronFx.auraColor(player.getId(), frameInterp);
+		if (color != 0) {
+			this.renderItem(player, kr.overbreak.client.anim.IronAnim.auraStack(color),
+					player.getMainArm() == HumanoidArm.RIGHT ? net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
+							: net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_LEFT_HAND,
+					poseStack, submitNodeCollector, 15728880);
+		}
+	}
+
 	@Inject(method = "submitHandsWithItems", at = @At("TAIL"))
 	private void overbreak$offhandArm(float frameInterp, PoseStack poseStack, SubmitNodeCollector submitNodeCollector,
 									  LocalPlayer player, int lightCoords, CallbackInfo ci) {

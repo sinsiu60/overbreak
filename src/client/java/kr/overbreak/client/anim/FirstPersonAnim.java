@@ -367,7 +367,7 @@ public final class FirstPersonAnim {
 	}
 
 	/** 키프레임 자세. 본편이 끝나면(end) fade 동안 기본 자세로 돌아옵니다. */
-	private static void keyed(PoseStack pose, int invert, float[][] keys, float e, float end, float fade) {
+	static void keyed(PoseStack pose, int invert, float[][] keys, float e, float end, float fade) {
 		float[] v = sampleKeys(keys, Math.min(e, end));
 		if (e > end) {
 			float q = Mth.clamp((e - end) / fade, 0.0F, 1.0F);
@@ -384,7 +384,7 @@ public final class FirstPersonAnim {
 		pose.scale(v[7], v[7], v[7]);
 	}
 
-	private static float[] sampleKeys(float[][] keys, float t) {
+	static float[] sampleKeys(float[][] keys, float t) {
 		if (t <= keys[0][0]) {
 			return keys[0].clone();
 		}
@@ -419,7 +419,10 @@ public final class FirstPersonAnim {
 						SkillAnimPayload.BR_BASIC, SkillAnimPayload.BR_BASIC_BACK, SkillAnimPayload.BR_BLOW,
 						SkillAnimPayload.BR_WHIRL, SkillAnimPayload.BR_REGROUP, SkillAnimPayload.BR_ULT,
 						SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_SCATTER,
-						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_GLIDE);
+						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_GLIDE,
+						SkillAnimPayload.IC_SWING_R, SkillAnimPayload.IC_SWING_L, SkillAnimPayload.IC_OVERHEAD, SkillAnimPayload.IC_CHARGE,
+						SkillAnimPayload.IC_RELEASE, SkillAnimPayload.IC_BASH, SkillAnimPayload.IC_GUARD, SkillAnimPayload.IC_REND,
+						SkillAnimPayload.IC_ULT);
 	}
 
 	/** 지금 1인칭 동작의 firstperson_item_spin (총 기준, 손끝 축) — 없으면 null. */
@@ -452,6 +455,11 @@ public final class FirstPersonAnim {
 			if (spin != null) {
 				pose.mulPose(spin);
 			}
+			return true;
+		}
+		if (IronAnim.handles(play.anim)) {
+			// 참철 — 절차 키프레임 + 역경직 (IronAnim)
+			IronAnim.firstPerson(pose, invert, play, partial);
 			return true;
 		}
 		if (play.anim == SkillAnimPayload.GS_SCATTER) {

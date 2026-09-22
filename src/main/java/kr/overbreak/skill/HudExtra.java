@@ -33,4 +33,8 @@ public record HudExtra(int ammo, int ammoMax, int meter, int meterKind, int stac
 	public static final int METER_GUARD = 2;
 	/** 남은 지속시간 (금색, 줄어듦) — 탄막 포격. */
 	public static final int METER_DURATION = 3;
+	/** 참철 모으기 (0~100 = 0~2.0초) — 단계 눈금 · 진 참 창 · 단계 색으로 그립니다. */
+	public static final int METER_IRON = 5;
+	/** 참철 검막 성공 보상이 남음 — 화면 가장자리가 초록으로 빛납니다. */
+	public static final int FLAG_IRON_REWARD = 8;
 }

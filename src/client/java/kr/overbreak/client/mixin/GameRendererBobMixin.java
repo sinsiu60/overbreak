@@ -51,6 +51,8 @@ public abstract class GameRendererBobMixin {
 			kr.overbreak.client.camera.ReloadKick.apply(bobStack, partial);
 			// 돌진 난사 — 제동 · 한 발마다 작게 흔들림 (roll 없음)
 			kr.overbreak.client.camera.ScatterCam.apply(bobStack, partial);
+			// 참철 — 내가 맞힌 순간 (역경직과 함께) · 참철에게 맞은 순간
+			kr.overbreak.client.fx.IronFx.applyCamera(bobStack, partial);
 		}
 	}
 

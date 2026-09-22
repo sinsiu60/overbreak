@@ -136,6 +136,22 @@ public record SkillAnimPayload(int entityId, int anim, int hiddenId, int duratio
 	public static final int GS_GLIDE = 55;
 	/** 건슬링어 쌀권총 — 왼손 차례. 오른손({@link #GS_SHOT}) 과 번갈아 나갑니다. */
 	public static final int GS_SHOT_L = 56;
+	/** 참철 평타 1타 (오른쪽→왼쪽 가로 베기) · 2타 (왼쪽→오른쪽) · 3타 (내려찍기). duration = 선딜 + 판정 + 후딜. */
+	public static final int IC_SWING_R = 58;
+	public static final int IC_SWING_L = 59;
+	public static final int IC_OVERHEAD = 60;
+	/** 참철 참 모으기 (칼을 뒤로 빼며 버팀) — 서버가 끝냄. elapsed = 누른 순간부터. */
+	public static final int IC_CHARGE = 61;
+	/** 참철 모아 베기 발동 (대각선 내려베기 · 후딜). 단계는 마지막 STAGE 신호. */
+	public static final int IC_RELEASE = 62;
+	/** 참철 어깨 박치기. */
+	public static final int IC_BASH = 63;
+	/** 참철 검막 (대검을 가로로 눕혀 들고 왼손으로 받침). */
+	public static final int IC_GUARD = 64;
+	/** 참철 대지 가르기 (칼끝으로 땅을 긁어 올림). */
+	public static final int IC_REND = 65;
+	/** 참철 천참 (머리 위로 치켜들었다가 내려벰). */
+	public static final int IC_ULT = 66;
 
 	public static final Type<SkillAnimPayload> TYPE = new Type<>(Overbreak.id("skill_anim"));
 	public static final StreamCodec<ByteBuf, SkillAnimPayload> CODEC = StreamCodec.composite(

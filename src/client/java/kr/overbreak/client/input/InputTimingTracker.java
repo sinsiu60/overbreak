@@ -27,8 +27,12 @@ public final class InputTimingTracker {
 			boolean down = keys[i].isDown();
 			if (down != DOWN[i]) {
 				DOWN[i] = down;
+				if (i == 0 && down) {
+					// 참철 — 누른 즉시 지금 타수의 휘두르기를 본인 화면에서 먼저 (서버가 같은 동작을 보내면 그대로 이어 감)
+					kr.overbreak.client.fx.IronFx.localPress(mc);
+				}
 				if (ClientPlayNetworking.canSend(SkillInputPayload.TYPE)) {
-					ClientPlayNetworking.send(new SkillInputPayload(i, down, sub));
+					ClientPlayNetworking.send(new SkillInputPayload(i, down, sub, kr.overbreak.client.ClientClock.now() + kr.overbreak.client.ClientClock.partial(sub)));
 				}
 			}
 		}

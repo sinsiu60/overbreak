@@ -62,7 +62,12 @@ public final class HudLayouts {
 					new SlotDef(icon("gunslinger_boost"), "RMB"),
 					new SlotDef(icon("gunslinger_acro"), "SHIFT"),
 					new SlotDef(icon("gunslinger_anchor"), "E")),
-					icon("gunslinger_ult"), 0xFF7FD4FF));
+					icon("gunslinger_ult"), 0xFF7FD4FF),
+			"ironcleaver", new Layout(List.of(
+					new SlotDef(icon("ironcleaver_bash"), "RMB"),
+					new SlotDef(icon("ironcleaver_guard"), "SHIFT"),
+					new SlotDef(icon("ironcleaver_rend"), "E")),
+					icon("ironcleaver_ult"), 0xFFC8CDD6));
 
 	private HudLayouts() {}
 

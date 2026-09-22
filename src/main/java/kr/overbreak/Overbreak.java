@@ -44,6 +44,7 @@ public final class Overbreak implements ModInitializer {
 		kr.overbreak.net.ScatterHitPayload.init();
 		kr.overbreak.net.AirLockPayload.init();
 		kr.overbreak.net.HomingPayload.init();
+		kr.overbreak.net.IronPayload.init();
 		kr.overbreak.net.ScatterPayload.init();
 		kr.overbreak.game.MatchMusic.init();
 		HudPayload.init();

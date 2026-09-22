@@ -163,11 +163,50 @@ public final class ThirdPersonAnim {
 	private static final Key[] IF_ULT_DROP = {
 			key(0, IF_DIVE), key(4, IF_DIVE), key(5, IF_LAND), key(20, IF_LAND)};
 
+	// ── 참철 (양손 대검) ────────────────────────────────
+	//                              오른팔 x/y/z               왼팔 x/y/z                 몸통 x/y     머리 x   오른다리 x/z   왼다리 x/z
+	/** 두 손으로 대검을 몸 앞에 비스듬히 든 자세. */
+	private static final float[] IC_READY  = {-0.65F, -0.15F, 0F,   -0.75F, 0.45F, 0F,     0.02F, 0F,    K,      0F, 0.05F,    0F, -0.05F};
+	/** 가로 베기 준비 — 오른쪽 뒤로 감아 듦. */
+	private static final float[] IC_WIND_R = {-1.30F, 0.55F, 0.10F, -1.20F, 0.90F, 0F,     0.05F, 0.55F, K,      0.10F, 0.12F, -0.15F, -0.10F};
+	/** 가로 베기 끝 — 왼쪽으로 휩쓸고 몸이 따라 돎. */
+	private static final float[] IC_CUT_L  = {-1.25F, -0.80F, 0F,   -1.15F, -0.45F, 0F,    0.12F, -0.65F, K,     -0.15F, 0.10F, 0.25F, -0.10F};
+	private static final float[] IC_WIND_L = {-1.25F, -0.70F, 0F,   -1.20F, -0.35F, 0F,    0.05F, -0.55F, K,     -0.10F, 0.10F, 0.15F, -0.10F};
+	private static final float[] IC_CUT_R  = {-1.30F, 0.70F, 0.15F, -1.20F, 1.00F, 0F,     0.12F, 0.65F, K,      0.25F, 0.12F, -0.15F, -0.10F};
+	/** 내려찍기 — 머리 위로 치켜듦 → 앞으로 내리꽂음. */
+	private static final float[] IC_RAISE  = {-2.95F, 0.05F, 0.10F, -2.85F, 0.30F, -0.10F, -0.15F, 0F,   K,      0.05F, 0.10F, -0.05F, -0.10F};
+	private static final float[] IC_SLAM   = {-0.70F, 0F, 0F,       -0.65F, 0.35F, 0F,     0.40F, 0F,    K,     -0.35F, 0.05F, 0.45F, -0.05F};
+	/** 참 모으기 — 오른 어깨 뒤로 젖혀 들고 몸을 비틂. */
+	private static final float[] IC_DRAW   = {-2.35F, 0.85F, 0.35F, -1.95F, 0.95F, 0F,     -0.05F, 0.75F, K,     0.12F, 0.15F, -0.25F, -0.15F};
+	/** 모아 베기 끝 — 크게 휩쓸고 앞으로 쏠림. */
+	private static final float[] IC_CLEAVE = {-1.10F, -0.95F, 0F,   -1.00F, -0.60F, 0F,    0.28F, -0.85F, K,     -0.25F, 0.10F, 0.40F, -0.10F};
+	/** 어깨 박치기 — 왼 어깨를 앞으로 숙이고 칼은 뒤로 내림. */
+	private static final float[] IC_SHOULDER = {-0.15F, 0.35F, 0.25F, -0.35F, 0.50F, -0.15F, 0.38F, 0.75F, K,    -0.45F, 0F, 0.55F, 0F};
+	/** 검막 — 칼날을 가로로 눕혀 가슴 앞. */
+	private static final float[] IC_BLOCK  = {-1.45F, -0.35F, 0F,   -1.55F, 0.75F, 0F,     0F, -0.20F,   K,      0F, 0.12F,    0F, -0.12F};
+	/** 대지 가르기 — 들었다가 칼끝을 땅에 긁음. */
+	private static final float[] IC_LIFT   = {-2.55F, 0.25F, 0.20F, -2.35F, 0.45F, 0F,     -0.10F, 0.25F, K,     0.05F, 0.10F, -0.05F, -0.10F};
+	private static final float[] IC_DRAG   = {-0.45F, 0F, 0F,       -0.40F, 0.35F, 0F,     0.55F, 0F,    K,     -0.40F, 0.05F, 0.50F, -0.05F};
+	/** 천참 — 두 팔을 곧게 치켜든 채 기를 모음 → 온몸으로 내려침. */
+	private static final float[] IC_HEAVEN = {-3.05F, 0.05F, 0.05F, -3.00F, 0.20F, -0.05F, -0.20F, 0F,   -0.35F, 0.10F, 0.15F, -0.10F, -0.15F};
+	private static final float[] IC_FALL   = {-0.55F, 0F, 0F,       -0.50F, 0.30F, 0F,     0.55F, 0F,    K,     -0.45F, 0.10F, 0.60F, -0.10F};
+
+	private static final Key[] IC_SWING_R = {key(0, IC_READY), key(4.5F, IC_WIND_R), key(7, IC_WIND_R), key(9, IC_CUT_L), key(13, IC_CUT_L), key(18, IC_READY)};
+	private static final Key[] IC_SWING_L = {key(0, IC_READY), key(4.5F, IC_WIND_L), key(7, IC_WIND_L), key(9, IC_CUT_R), key(13, IC_CUT_R), key(18, IC_READY)};
+	private static final Key[] IC_OVERHEAD = {key(0, IC_READY), key(6.5F, IC_RAISE), key(9, IC_RAISE), key(11, IC_SLAM), key(16, IC_SLAM), key(22, IC_READY)};
+	private static final Key[] IC_CHARGE = {key(0, IC_READY), key(5, IC_DRAW), key(200, IC_DRAW)};
+	private static final Key[] IC_RELEASE = {key(0, IC_DRAW), key(2.4F, IC_CLEAVE), key(8, IC_CLEAVE), key(16, IC_READY)};
+	private static final Key[] IC_BASH = {key(0, IC_SHOULDER), key(8, IC_SHOULDER)};
+	private static final Key[] IC_GUARD = {key(0, IC_READY), key(2.5F, IC_BLOCK), key(20, IC_BLOCK)};
+	private static final Key[] IC_REND = {key(0, IC_READY), key(5, IC_LIFT), key(6, IC_LIFT), key(7.5F, IC_DRAG), key(10, IC_DRAG), key(16, IC_READY)};
+	private static final Key[] IC_ULT = {key(0, IC_READY), key(8, IC_HEAVEN), key(23.5F, IC_HEAVEN), key(25, IC_FALL), key(33, IC_FALL), key(40, IC_READY)};
+
 	private ThirdPersonAnim() {}
 
 	/** 렌더 상태 추출 단계 — 시간 · 가중치 · 상체 회전 · 손 아이템 크기. */
 	public static void extract(int entityId, AvatarRenderState state, float partial) {
 		AnimRenderState a = (AnimRenderState) state;
+		a.overbreak$setAura(kr.overbreak.client.fx.IronFx.auraColor(entityId, partial));
 		SkillAnims.Play play = SkillAnims.latest(entityId);
 		if (play == null) {
 			a.overbreak$set(0, 0, 0, 0);
@@ -175,7 +214,8 @@ public final class ThirdPersonAnim {
 			a.overbreak$setSpin(0.0F);
 			return;
 		}
-		float e = play.elapsed(partial);
+		// 참철 — 내 동작은 역경직만큼 늦게 (1인칭과 같은 시간)
+		float e = IronAnim.handles(play.anim) ? IronAnim.time(play, entityId, partial) : play.elapsed(partial);
 		float end = play.end();
 		float fade = SkillAnims.fade(play.anim);
 		boolean basic = play.anim == SkillAnimPayload.BASIC || play.anim == SkillAnimPayload.BASIC_BACK;
@@ -251,7 +291,8 @@ public final class ThirdPersonAnim {
 		return anim == SkillAnimPayload.IF_PUNCH || anim == SkillAnimPayload.IF_SLAM_HIT || anim == SkillAnimPayload.IF_ULT_DROP
 				|| anim == SkillAnimPayload.VK_SHOT || anim == SkillAnimPayload.VK_ROCKET
 				|| anim == SkillAnimPayload.SH_SHOT || anim == SkillAnimPayload.SH_FAN || anim == SkillAnimPayload.SH_DEADEYE_FIRE
-				|| anim == SkillAnimPayload.SD_STRIKE || anim == SkillAnimPayload.TH_CAST;
+				|| anim == SkillAnimPayload.SD_STRIKE || anim == SkillAnimPayload.TH_CAST
+				|| anim == SkillAnimPayload.IC_RELEASE || anim == SkillAnimPayload.IC_BASH;
 	}
 
 	/** 지금(바닐라) 자세 그대로 — 일부 부위만 바꾸는 동작용. */
@@ -367,6 +408,29 @@ public final class ThirdPersonAnim {
 			case SkillAnimPayload.IF_SLAM_HIT -> v = sample(IF_SLAM_HIT, t);
 			case SkillAnimPayload.IF_ULT_RISE -> v = sample(IF_ULT_RISE, t);
 			case SkillAnimPayload.IF_ULT_DROP -> v = sample(IF_ULT_DROP, t);
+			case SkillAnimPayload.IC_SWING_R -> v = sample(IC_SWING_R, t);
+			case SkillAnimPayload.IC_SWING_L -> v = sample(IC_SWING_L, t);
+			case SkillAnimPayload.IC_OVERHEAD -> v = sample(IC_OVERHEAD, t);
+			case SkillAnimPayload.IC_CHARGE -> {
+				v = sample(IC_CHARGE, t);
+				// 오래 모을수록 (단계가 오를수록) 떨림
+				float shake = Mth.sin(e * 4.4F) * 0.02F * (1.0F + Math.min(3.0F, t / 12.0F));
+				v[RAX] += shake;
+				v[LAX] += shake;
+				v[BY] += shake * 0.4F;
+			}
+			case SkillAnimPayload.IC_RELEASE -> v = sample(IC_RELEASE, t);
+			case SkillAnimPayload.IC_BASH -> v = sample(IC_BASH, t);
+			case SkillAnimPayload.IC_GUARD -> v = sample(IC_GUARD, t);
+			case SkillAnimPayload.IC_REND -> v = sample(IC_REND, t);
+			case SkillAnimPayload.IC_ULT -> {
+				v = sample(IC_ULT, t);
+				if (t < 24.0F) {
+					float shake = Mth.sin(e * 5.0F) * 0.05F * Mth.clamp(t / 24.0F, 0.0F, 1.0F);
+					v[RAZ] += shake;
+					v[LAZ] -= shake;
+				}
+			}
 			case SkillAnimPayload.BASIC -> v = sample(BASIC, t);
 			case SkillAnimPayload.BASIC_BACK -> v = sample(BASIC_BACK, t);
 			default -> {

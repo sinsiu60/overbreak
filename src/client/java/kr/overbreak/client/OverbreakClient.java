@@ -36,7 +36,12 @@ public final class OverbreakClient implements ClientModInitializer {
 			SkillAnims.receive(payload);
 			Recoil.onAnim(payload);
 			kr.overbreak.client.camera.MeleePunch.onAnim(payload);
+			kr.overbreak.client.fx.IronFx.onAnim(payload);
 		});
+		// 참철 연출 (역경직 · 흔들림 · 궤적 · 대지 가르기 · 천참 · 오오라)
+		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.IronPayload.TYPE, (payload, context) -> kr.overbreak.client.fx.IronFx.receive(payload));
+		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.fx.IronFx::tick);
+		LevelRenderEvents.COLLECT_SUBMITS.register(context -> kr.overbreak.client.fx.IronFx.submit(context.poseStack(), context.submitNodeCollector()));
 		ClientTickEvents.END_CLIENT_TICK.register(Recoil::tick);
 		ClientTickEvents.END_CLIENT_TICK.register(mc -> kr.overbreak.client.camera.MeleePunch.tick());
 		// 총알 궤적: 서버가 알려 준 줄을 화면을 향한 2D 빛줄기로 짧게 그림

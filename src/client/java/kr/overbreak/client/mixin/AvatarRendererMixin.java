@@ -30,5 +30,16 @@ public abstract class AvatarRendererMixin {
 		} else {
 			magazine.clear();
 		}
+		// 참철 칼날 오오라 — 주 손 대검 위에 겹칠 빛 테두리 모델
+		kr.overbreak.client.anim.AnimRenderState a = (kr.overbreak.client.anim.AnimRenderState) state;
+		net.minecraft.client.renderer.item.ItemStackRenderState aura = a.overbreak$auraItem();
+		if (a.overbreak$aura() != 0 && kr.overbreak.client.anim.IronAnim.greatsword(entity.getMainHandItem())) {
+			net.minecraft.client.Minecraft.getInstance().getItemModelResolver().updateForLiving(aura,
+					kr.overbreak.client.anim.IronAnim.auraStack(a.overbreak$aura()),
+					state.mainArm == net.minecraft.world.entity.HumanoidArm.RIGHT ? net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND
+							: net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_LEFT_HAND, entity);
+		} else {
+			aura.clear();
+		}
 	}
 }

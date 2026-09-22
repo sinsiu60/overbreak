@@ -35,6 +35,16 @@ public final class SkillAnims {
 			this.duration = duration;
 		}
 
+		/** 재생이 시작된 시각 (1/20초 단위 연속 시계 · 늦게 받았으면 건너뛴 만큼 앞당겨진 값). */
+		public double startTime() {
+			return start;
+		}
+
+		/** 서버 확인 전에 본인 화면에서 먼저 튼 재생인가. */
+		public boolean predicted() {
+			return predicted;
+		}
+
 		/** 계획된 길이 (서버 중단과 무관). */
 		public float planned() {
 			return duration > 0 ? duration : length(anim);
@@ -114,6 +124,14 @@ public final class SkillAnims {
 			case SkillAnimPayload.GS_PURSUIT -> (float) kr.overbreak.classes.gunslinger.TrailPursuit.DURATION;
 			case SkillAnimPayload.GS_GLIDE -> 200.0F;
 			case SkillAnimPayload.KNOCKDOWN -> 40.0F;
+			case SkillAnimPayload.IC_SWING_R, SkillAnimPayload.IC_SWING_L -> 18.0F;
+			case SkillAnimPayload.IC_OVERHEAD -> 22.0F;
+			case SkillAnimPayload.IC_CHARGE -> 200.0F;
+			case SkillAnimPayload.IC_RELEASE -> 18.0F;
+			case SkillAnimPayload.IC_BASH -> 8.0F;
+			case SkillAnimPayload.IC_GUARD -> 20.0F;
+			case SkillAnimPayload.IC_REND -> 16.0F;
+			case SkillAnimPayload.IC_ULT -> 40.0F;
 			default -> 0.0F;
 		};
 	}

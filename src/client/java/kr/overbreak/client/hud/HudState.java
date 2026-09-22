@@ -45,6 +45,16 @@ public final class HudState {
 	private HudState() {}
 
 	/** 공격속도가 올라간 상태인가 (화면 가장자리 연출). */
+	/** 참철 다음 평타 타수 (0 · 1 · 2) — 콤보 점 · 본인 예측 재생. */
+	public static int ironCombo() {
+		return stacks;
+	}
+
+	/** 참철 검막 성공 보상이 남음. */
+	public static boolean ironReward() {
+		return (flags & kr.overbreak.skill.HudExtra.FLAG_IRON_REWARD) != 0;
+	}
+
 	public static boolean haste() {
 		return (flags & kr.overbreak.skill.HudExtra.FLAG_HASTE) != 0;
 	}

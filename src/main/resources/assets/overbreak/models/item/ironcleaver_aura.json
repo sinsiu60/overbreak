@@ -1,0 +1,6 @@
+{
+  "parent": "overbreak:item/ironcleaver_greatsword",
+  "textures": {
+    "layer0": "overbreak:item/ironcleaver_aura"
+  }
+}

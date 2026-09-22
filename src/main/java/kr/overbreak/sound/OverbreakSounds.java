@@ -25,6 +25,34 @@ public final class OverbreakSounds {
 	public static final Holder<SoundEvent> SCATTER_WHOOSH = register("skill.dash_scatter.whoosh");
 	/** 탄피 떨어짐. */
 	public static final Holder<SoundEvent> SCATTER_CASINGS = register("skill.dash_scatter.casings");
+	// 참철 (스펙 PART 19) — 전부 클라이언트가 동작 시각에 맞춰 틉니다 (client/fx/IronFx). 지금은 바닐라 소리에 이어 둠 (sounds.json)
+	/** 평타 선딜 시작. */
+	public static final Holder<SoundEvent> IRON_SWING_WINDUP = register("ironcleaver.swing.windup");
+	/** 평타 판정 — 바람 가름. */
+	public static final Holder<SoundEvent> IRON_SWING_WHOOSH = register("ironcleaver.swing.whoosh");
+	/** 평타 · 모아 베기 적중 — 시전자에게 (역경직과 같은 순간). */
+	public static final Holder<SoundEvent> IRON_SWING_HIT = register("ironcleaver.swing.hit");
+	/** 모으기 단계 도달 (1단 0.8 · 2단 1.0 · 3단 1.3). */
+	public static final Holder<SoundEvent> IRON_CHARGE_STAGE = register("ironcleaver.charge.stage");
+	/** 모으는 중 (반복 · 단계마다 피치 +0.15 · 끝나면 0.1초 페이드아웃). */
+	public static final Holder<SoundEvent> IRON_CHARGE_LOOP = register("ironcleaver.charge.loop");
+	/** 진 참 창 시작. */
+	public static final Holder<SoundEvent> IRON_CHARGE_PERFECT = register("ironcleaver.charge.perfect");
+	/** 모아 베기 발동 — 휘두름 + 폭음 두 겹. */
+	public static final Holder<SoundEvent> IRON_CHARGE_RELEASE = register("ironcleaver.charge.release");
+	public static final Holder<SoundEvent> IRON_CHARGE_RELEASE_BOOM = register("ironcleaver.charge.release.boom");
+	/** 어깨 박치기 적중. */
+	public static final Holder<SoundEvent> IRON_BASH_HIT = register("ironcleaver.bash.hit");
+	/** 검막 막기 성공 — 방패 + 쇠 울림 두 겹. */
+	public static final Holder<SoundEvent> IRON_GUARD_BLOCK = register("ironcleaver.guard.block");
+	public static final Holder<SoundEvent> IRON_GUARD_BLOCK_CLANG = register("ironcleaver.guard.block.clang");
+	/** 대지 가르기 — 땅 긁기 · 칼날 질주 (반복). */
+	public static final Holder<SoundEvent> IRON_REND_SCRAPE = register("ironcleaver.rend.scrape");
+	public static final Holder<SoundEvent> IRON_REND_WAVE = register("ironcleaver.rend.wave");
+	/** 천참 모으기 · 베기 (폭음 + 천둥 두 겹). */
+	public static final Holder<SoundEvent> IRON_ULT_CHARGE = register("ironcleaver.ult.charge");
+	public static final Holder<SoundEvent> IRON_ULT_CLEAVE = register("ironcleaver.ult.cleave");
+	public static final Holder<SoundEvent> IRON_ULT_CLEAVE_THUNDER = register("ironcleaver.ult.cleave.thunder");
 	/** 경기 막판 배경 음악 (매치 포인트 · 대난투 막판) — Before the Impact, 23초부터. */
 	public static final Holder<SoundEvent> MATCH_POINT = register("music.match_point");
 

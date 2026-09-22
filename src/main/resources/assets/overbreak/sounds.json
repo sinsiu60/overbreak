@@ -61,5 +61,149 @@
         "stream": true
       }
     ]
+  },
+  "ironcleaver.swing.windup": {
+    "subtitle": "subtitles.overbreak.ironcleaver.swing.windup",
+    "sounds": [
+      {
+        "name": "minecraft:item.armor.equip_iron",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.swing.whoosh": {
+    "subtitle": "subtitles.overbreak.ironcleaver.swing.whoosh",
+    "sounds": [
+      {
+        "name": "minecraft:entity.player.attack.sweep",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.swing.hit": {
+    "subtitle": "subtitles.overbreak.ironcleaver.swing.hit",
+    "sounds": [
+      {
+        "name": "minecraft:entity.player.attack.strong",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.charge.stage": {
+    "subtitle": "subtitles.overbreak.ironcleaver.charge.stage",
+    "sounds": [
+      {
+        "name": "minecraft:block.note_block.chime",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.charge.loop": {
+    "subtitle": "subtitles.overbreak.ironcleaver.charge.loop",
+    "sounds": [
+      {
+        "name": "minecraft:block.beacon.ambient",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.charge.perfect": {
+    "subtitle": "subtitles.overbreak.ironcleaver.charge.perfect",
+    "sounds": [
+      {
+        "name": "minecraft:block.amethyst_block.chime",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.charge.release": {
+    "subtitle": "subtitles.overbreak.ironcleaver.charge.release",
+    "sounds": [
+      {
+        "name": "minecraft:entity.player.attack.sweep",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.charge.release.boom": {
+    "subtitle": "subtitles.overbreak.ironcleaver.charge.release.boom",
+    "sounds": [
+      {
+        "name": "minecraft:entity.generic.explode",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.bash.hit": {
+    "subtitle": "subtitles.overbreak.ironcleaver.bash.hit",
+    "sounds": [
+      {
+        "name": "minecraft:entity.iron_golem.attack",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.guard.block": {
+    "subtitle": "subtitles.overbreak.ironcleaver.guard.block",
+    "sounds": [
+      {
+        "name": "minecraft:item.shield.block",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.guard.block.clang": {
+    "subtitle": "subtitles.overbreak.ironcleaver.guard.block.clang",
+    "sounds": [
+      {
+        "name": "minecraft:block.anvil.land",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.rend.scrape": {
+    "subtitle": "subtitles.overbreak.ironcleaver.rend.scrape",
+    "sounds": [
+      {
+        "name": "minecraft:block.grindstone.use",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.rend.wave": {
+    "subtitle": "subtitles.overbreak.ironcleaver.rend.wave",
+    "sounds": [
+      {
+        "name": "minecraft:entity.blaze.shoot",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.ult.charge": {
+    "subtitle": "subtitles.overbreak.ironcleaver.ult.charge",
+    "sounds": [
+      {
+        "name": "minecraft:block.beacon.power_select",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.ult.cleave": {
+    "subtitle": "subtitles.overbreak.ironcleaver.ult.cleave",
+    "sounds": [
+      {
+        "name": "minecraft:entity.generic.explode",
+        "type": "event"
+      }
+    ]
+  },
+  "ironcleaver.ult.cleave.thunder": {
+    "subtitle": "subtitles.overbreak.ironcleaver.ult.cleave.thunder",
+    "sounds": [
+      {
+        "name": "minecraft:entity.lightning_bolt.thunder",
+        "type": "event"
+      }
+    ]
   }
 }

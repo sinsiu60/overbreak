@@ -8,5 +8,21 @@
   "subtitles.overbreak.skill.dash_scatter.tail": "Gunfire echoes",
   "subtitles.overbreak.skill.dash_scatter.cock": "Pistol cocks",
   "subtitles.overbreak.skill.dash_scatter.whoosh": "Dash",
-  "subtitles.overbreak.skill.dash_scatter.casings": "Shell casings fall"
+  "subtitles.overbreak.skill.dash_scatter.casings": "Shell casings fall",
+  "subtitles.overbreak.ironcleaver.swing.windup": "Greatsword raised",
+  "subtitles.overbreak.ironcleaver.swing.whoosh": "Greatsword swings",
+  "subtitles.overbreak.ironcleaver.swing.hit": "Greatsword bites",
+  "subtitles.overbreak.ironcleaver.charge.stage": "Charge rings",
+  "subtitles.overbreak.ironcleaver.charge.loop": "Power gathers",
+  "subtitles.overbreak.ironcleaver.charge.perfect": "True cleave ready",
+  "subtitles.overbreak.ironcleaver.charge.release": "Charged cleave",
+  "subtitles.overbreak.ironcleaver.charge.release.boom": "Cleave impact",
+  "subtitles.overbreak.ironcleaver.bash.hit": "Shoulder bash",
+  "subtitles.overbreak.ironcleaver.guard.block": "Blade guard blocks",
+  "subtitles.overbreak.ironcleaver.guard.block.clang": "Blade guard rings",
+  "subtitles.overbreak.ironcleaver.rend.scrape": "Blade scrapes",
+  "subtitles.overbreak.ironcleaver.rend.wave": "Earth splits",
+  "subtitles.overbreak.ironcleaver.ult.charge": "Heaven-cleave gathers",
+  "subtitles.overbreak.ironcleaver.ult.cleave": "Heaven-cleave falls",
+  "subtitles.overbreak.ironcleaver.ult.cleave.thunder": "Heaven-cleave thunders"
 }
