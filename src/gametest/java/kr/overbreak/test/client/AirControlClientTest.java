@@ -114,6 +114,26 @@ public final class AirControlClientTest implements FabricClientGameTest {
 				throw new AssertionError("벽 끝에 걸면 턱 위로 넘어가야 함: 높이 " + (d1.y - d0.y) + ", z " + d1.z + " / 벽 " + wallZ);
 			}
 			ctx.takeScreenshot("air_anchor_ledge");
+			onServer(sp, p -> p.teleportTo(d0.x, d0.y, d0.z));
+			ctx.waitTicks(Ticks.of(20));
+			reset(sp);
+			ctx.getInput().lookAt(0.0F, pitch);
+			ctx.waitTicks(Ticks.of(2));
+			onServer(sp, p -> Classes.byId(Gunslinger.ID).tertiary(p));
+			ctx.waitTicks(Ticks.of(3));
+			ctx.getInput().holdKey(o -> o.keyJump);
+			ctx.getInput().holdKey(o -> o.keyUp);
+			ctx.waitTicks(Ticks.of(20));
+			ctx.getInput().releaseKey(o -> o.keyJump);
+			ctx.getInput().releaseKey(o -> o.keyUp);
+			Vec3 d2 = pos(ctx);
+			System.out.println("[AirControlClientTest] 벽 끝 앵커를 점프로 끊은 뒤 높이 " + (d2.y - d0.y) + "칸, z " + (d2.z - d0.z) + "칸");
+			// 턱 위에 올라서 있거나, 벽(두께 2칸)을 아예 넘어 뒤로 내려섰으면 넘어간 것
+			boolean onTop = d2.y - d0.y >= 2.9 && d2.z >= wallZ;
+			boolean over = d2.z > wallZ + 2.0;
+			if (!onTop && !over) {
+				throw new AssertionError("벽 끝에서 점프로 끊어도 벽을 넘어가야 함: 높이 " + (d2.y - d0.y) + ", z " + d2.z + " / 벽 " + wallZ);
+			}
 			onServer(sp, p -> p.teleportTo(p.getX(), p.getY() - 3.0, p.getZ() - 12.0));
 			ctx.waitTicks(Ticks.of(20));
 			reset(sp);
@@ -134,9 +154,14 @@ public final class AirControlClientTest implements FabricClientGameTest {
 				peak = Math.max(peak, pos(ctx).y);
 			}
 			ctx.getInput().releaseKey(o -> o.keyJump);
-			System.out.println("[AirControlClientTest] 수직 앵커를 끊은 뒤 더 솟은 높이 " + (peak - snapAt.y) + "칸 (끊은 자리 " + (snapAt.y - e0.y) + "칸)");
-			if (peak - snapAt.y > 3.2) {
-				throw new AssertionError("수직으로 걸고 끊었을 때 너무 높이 솟음: " + (peak - snapAt.y));
+			// 갈고리는 발에서 14칸 위 천장 아랫면 — 꼭대기는 갈고리 + 1.5칸을 넘지 않아야 (예전에는 한참 넘어 솟았음)
+			double hook = e0.y + 14.0;
+			System.out.println("[AirControlClientTest] 수직 앵커를 끊은 뒤 꼭대기 " + (peak - e0.y) + "칸 (갈고리 14칸, 끊은 자리 " + (snapAt.y - e0.y) + "칸)");
+			if (peak > hook + 1.5) {
+				throw new AssertionError("수직으로 걸고 끊었을 때 갈고리보다 너무 높이 솟음: 꼭대기 " + (peak - e0.y));
+			}
+			if (peak - snapAt.y < 3.0) {
+				throw new AssertionError("끊은 뒤 관성이 끊겨 거의 안 올라감: " + (peak - snapAt.y));
 			}
 			ctx.waitTicks(Ticks.of(40));
 			reset(sp);

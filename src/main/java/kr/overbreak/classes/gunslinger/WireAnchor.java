@@ -48,8 +48,10 @@ public final class WireAnchor implements Effects.Active {
 	static final double OVERHEAD = 1.6;
 	/** 걸린 자리보다 이만큼(칸) 위까지의 턱은 넘어가도록 당깁니다. */
 	static final double LEDGE_REACH = 2.5;
-	/** 와이어를 끊었을 때 남는 위쪽 속도 상한 (초당 칸). */
-	static final double SNAP_UP = 6.0;
+	/** 와이어를 끊었을 때 솟구칠 수 있는 높이 — 갈고리 자리보다 이만큼(칸) 위까지. */
+	static final double SNAP_OVER = 1.5;
+	/** 1초 기준 중력 (초당 칸²) — 바닐라 틱 중력을 1초로 맞춘 값 (MovementScale). */
+	static final double GRAVITY = 32.0;
 	private static final int SKY = Fx.rgb(0.70, 0.92, 1.00);
 
 	private final ServerPlayer caster;
@@ -174,17 +176,17 @@ public final class WireAnchor implements Effects.Active {
 			return false;
 		}
 		t++;
-		// 끌려가는 중 점프 키를 새로 누르면 와이어를 끊고 지금 속도 그대로 날아갑니다 (0.2e)
-		boolean jump = Attachments.profile(caster).jumpDown;
-		if (jump && !jumpHeld && t > 1) {
-			snap();
-			return false;
-		}
-		jumpHeld = jump;
 		// 적을 걸었으면 그 적이 움직여도 머리 위를 따라갑니다
 		Vec3 goal = target != null && target.isAlive()
 				? target.position().add(0, target.getBbHeight() + OVERHEAD, 0)
 				: anchor;
+		// 끌려가는 중 점프 키를 새로 누르면 와이어를 끊고 지금 속도 그대로 날아갑니다 (0.2e)
+		boolean jump = Attachments.profile(caster).jumpDown;
+		if (jump && !jumpHeld && t > 1) {
+			snap(goal);
+			return false;
+		}
+		jumpHeld = jump;
 		Vec3 delta = goal.subtract(caster.position());
 		double dist = delta.length();
 		if (dist < 0.6 || t >= Ticks.of(PULL)) {
@@ -204,12 +206,16 @@ public final class WireAnchor implements Effects.Active {
 	}
 
 	/**
-	 * 와이어 끊기 — 제동하지 않으므로 마지막으로 실은 속도로 계속 날아갑니다.
-	 * 위로 향하는 속도만 초당 6칸까지로 자릅니다 — 수직으로 걸고 끊으면 너무 높이 솟았습니다 (0.2f).
+	 * 와이어 끊기 — 제동하지 않으므로 마지막으로 실은 속도 그대로 날아갑니다 (벽 끝을 넘을 때 쓰는 관성).
+	 * 다만 솟구치는 꼭대기가 갈고리 자리보다 1.5칸을 넘지 않도록 위쪽 속도만 줄입니다 — 수직으로 걸고 끊으면 갈고리보다
+	 * 훨씬 높이 솟았습니다. 갈고리 쪽으로 가던 관성(옆 · 위)은 그대로라 벽 끝을 넘는 데 지장이 없습니다 (0.2f).
 	 */
-	private void snap() {
+	private void snap(Vec3 goal) {
 		Vec3 v = caster.getDeltaMovement();
-		double cap = kr.overbreak.core.tick.Ticks.speed(SNAP_UP / 20.0);
+		// 꼭대기까지 남은 높이 → 허용되는 위쪽 속도 (v² = 2 g h, g 는 1초 기준 중력)
+		double room = goal.y + SNAP_OVER - caster.getY();
+		double allowed = room <= 0.0 ? 0.0 : Math.sqrt(2.0 * GRAVITY * room);
+		double cap = kr.overbreak.core.tick.Ticks.speed(allowed / 20.0);
 		if (v.y > cap) {
 			caster.setDeltaMovement(v.x, cap, v.z);
 			caster.hurtMarked = true;
