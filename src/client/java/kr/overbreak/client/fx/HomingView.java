@@ -45,6 +45,7 @@ import org.jspecify.annotations.Nullable;
  *                 탄을 날리며 지나간 길을 굵고 밝은 하늘색 곡선으로 그림 — 각 점은 0.25초 뒤 사라짐. 명중 자리에 작은 섬광.
  *                 명중 판정은 서버가 합니다 (여기는 보이기만). 모든 사람에게 보임
  *   비행 바람    : 궁극기로 나는 사람마다 낮은 바람 소리 (볼륨 0.3) — 끝나면 멈춤
+ *   궁극기 표시  : 나는 사람 등 뒤 하늘색 빛 날개 · 발밑 빛 고리 · 머리 위 빛기둥 — 모두에게 보임
  *   HUD (본인)   : 조준점 둘레 유도 범위 원 (12°), 원 안에 잡히는 적에게 작은 표식 (월드), 화면 가장자리 하늘빛
  */
 public final class HomingView {
@@ -215,11 +216,20 @@ public final class HomingView {
 			return;
 		}
 		LivingEntity mark = ownTarget(mc);
-		if (SHOTS.isEmpty() && mark == null) {
+		float partial = mc.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+		// 궁극기로 나는 사람 (1인칭 본인은 제외 — 제 몸 날개가 화면을 가림)
+		List<AbstractClientPlayer> fliers = new ArrayList<>();
+		for (AbstractClientPlayer pl : mc.level.players()) {
+			if (SkillAnims.find(pl.getId(), SkillAnimPayload.GS_PURSUIT) != null && !pl.isInvisible()
+					&& !(pl == mc.player && mc.options.getCameraType().isFirstPerson())) {
+				fliers.add(pl);
+			}
+		}
+		if (SHOTS.isEmpty() && mark == null && fliers.isEmpty()) {
 			return;
 		}
 		Vec3 cam = camera.position();
-		float t = now + ClientClock.partial(mc.getDeltaTracker().getGameTimeDeltaPartialTick(false));
+		float t = now + ClientClock.partial(partial);
 		List<Shot> snapshot = List.copyOf(SHOTS);
 		collector.submitCustomGeometry(pose, RenderTypes.beaconBeam(BulletTrails.TEXTURE, true), (p, buffer) -> {
 			for (Shot s : snapshot) {
@@ -228,7 +238,50 @@ public final class HomingView {
 			if (mark != null) {
 				marker(p, buffer, mark, cam, t);
 			}
+			for (AbstractClientPlayer pl : fliers) {
+				aura(p, buffer, pl, cam, t, partial);
+			}
 		});
+	}
+
+	/**
+	 * 궁극기 상태 표시 (모두에게) — 등 뒤로 퍼덕이는 하늘색 빛 날개 (깃털 한쪽 5가닥), 발밑에서 도는 빛 고리,
+	 * 머리 위로 옅게 솟는 빛기둥. 멀리서도 "지금 궤적 추격 중" 이 한눈에 보이게.
+	 */
+	private static void aura(PoseStack.Pose pose, VertexConsumer buffer, AbstractClientPlayer pl, Vec3 cam, float t, float partial) {
+		Vec3 feet = pl.getPosition(partial);
+		float bodyYaw = Mth.rotLerp(partial, pl.yBodyRotO, pl.yBodyRot) * Mth.DEG_TO_RAD;
+		Vec3 fwd = new Vec3(-Mth.sin(bodyYaw), 0, Mth.cos(bodyYaw));
+		Vec3 right = new Vec3(-Mth.cos(bodyYaw), 0, -Mth.sin(bodyYaw));
+		Vec3 up = new Vec3(0, 1, 0);
+		Vec3 back = feet.add(0, 1.3, 0).subtract(fwd.scale(0.22));
+		float flap = Mth.sin(t * 0.55F) * 0.35F;
+		int glow = ARGB.color(150, 0x5CCBFF);
+		int core = ARGB.color(235, 0xE6F8FF);
+		for (int side = -1; side <= 1; side += 2) {
+			for (int i = 0; i < 5; i++) {
+				// 깃털: 위쪽 가닥일수록 길고 높이, 아래쪽은 짧게 뒤로
+				double spread = 0.15 + i * 0.28 + flap;
+				double len = 1.55 - i * 0.18;
+				Vec3 dir = right.scale(side * Math.cos(spread)).add(up.scale(Math.sin(spread) * 0.9 - 0.25)).subtract(fwd.scale(0.35)).normalize();
+				Vec3 tip = back.add(dir.scale(len));
+				BulletTrails.quad(pose, buffer, back, tip, cam, 0.075F, 0.0F, glow, 0.2F);
+				BulletTrails.quad(pose, buffer, back, tip, cam, 0.028F, 0.0F, core, 0.2F);
+			}
+		}
+		// 발밑 빛 고리 (돌아감)
+		int n = 16;
+		double r = 0.75;
+		for (int i = 0; i < n; i++) {
+			double a0 = t * 0.12 + i * Math.PI * 2.0 / n;
+			double a1 = t * 0.12 + (i + 0.6) * Math.PI * 2.0 / n;
+			Vec3 p0 = feet.add(Math.cos(a0) * r, 0.08, Math.sin(a0) * r);
+			Vec3 p1 = feet.add(Math.cos(a1) * r, 0.08, Math.sin(a1) * r);
+			BulletTrails.quad(pose, buffer, p0, p1, cam, 0.05F, 0.0F, glow, 0.0F);
+		}
+		// 머리 위 옅은 빛기둥
+		BulletTrails.quad(pose, buffer, feet.add(0, 2.1, 0), feet.add(0, 4.2, 0), cam, 0.12F, 0.0F,
+				ARGB.color(Math.round(70 + 30 * Mth.sin(t * 0.3F)), 0x7FD4FF), 0.0F);
 	}
 
 	private static void draw(PoseStack.Pose pose, VertexConsumer buffer, Shot s, Vec3 cam, float t) {
