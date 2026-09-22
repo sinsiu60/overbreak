@@ -47,8 +47,8 @@ public final class LobbyScreen extends LobbyBase {
 		g.fill(x, titleY + 30, x + 40, titleY + 32, ACCENT);
 		g.text(font, "PVP 아레나", x + 46, titleY + 27, MUTED);
 
-		java.util.List<String> labelList = new java.util.ArrayList<>(java.util.List.of("플레이", "훈련장", "패치노트", "설정"));
-		java.util.List<Runnable> actionList = new java.util.ArrayList<>(java.util.List.of(this::play, this::training, this::patchNotes, this::options));
+		java.util.List<String> labelList = new java.util.ArrayList<>(java.util.List.of("플레이", "훈련장", "패치노트", "조준점", "설정"));
+		java.util.List<Runnable> actionList = new java.util.ArrayList<>(java.util.List.of(this::play, this::training, this::patchNotes, this::crosshair, this::options));
 		if (LobbyClient.admin()) {
 			labelList.add("관리자 모드");
 			actionList.add(this::free);
@@ -102,6 +102,10 @@ public final class LobbyScreen extends LobbyBase {
 
 	private void patchNotes() {
 		minecraft.gui.setScreen(new PatchNotesScreen());
+	}
+
+	private void crosshair() {
+		minecraft.gui.setScreen(new kr.overbreak.client.hud.crosshair.CrosshairScreen(this));
 	}
 
 	private void options() {

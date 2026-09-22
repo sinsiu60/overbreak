@@ -96,6 +96,7 @@ public final class OverbreakClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(HitMarker::tick);
 		SkillHud.register();
 		SkillInfoScreen.register();
+		kr.overbreak.client.hud.crosshair.CrosshairScreen.register();
 		// 메인 화면 (서버가 MenuPayload 로 상태를 보냄)
 		kr.overbreak.client.lobby.LobbyClient.register();
 		// 튜토리얼 연출 (대사창 · 부팅 화면 · HUD 화살표)
