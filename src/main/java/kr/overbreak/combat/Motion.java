@@ -50,6 +50,10 @@ public final class Motion {
 		}
 		double k = power / len;
 		push(e, new Vec3(dx * k, KNOCK_LIFT, dz * k));
+		// 밀려난 플레이어 — 0.3초 동안 공중 제어를 끔 (클라이언트)
+		if (e instanceof net.minecraft.server.level.ServerPlayer sp) {
+			kr.overbreak.net.AirLockPayload.send(sp);
+		}
 	}
 
 	/**

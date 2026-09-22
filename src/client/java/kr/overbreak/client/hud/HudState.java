@@ -49,6 +49,11 @@ public final class HudState {
 		return (flags & kr.overbreak.skill.HudExtra.FLAG_HASTE) != 0;
 	}
 
+	/** 공중 제어를 꺼야 하는가 — 기절 · 에어본 · 넘어짐 · 밀려남 · 스킬 추진 중 (client/input/AirControl). */
+	public static boolean noAirControl() {
+		return (flags & kr.overbreak.skill.HudExtra.FLAG_NO_AIR) != 0;
+	}
+
 	/** 기절 중인가 — 그동안은 마우스로 화면을 돌릴 수 없습니다 ({@link kr.overbreak.client.mixin.StunLookMixin}). */
 	public static boolean stunned() {
 		return (flags & kr.overbreak.skill.HudExtra.FLAG_STUN) != 0;

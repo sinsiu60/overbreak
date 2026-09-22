@@ -43,8 +43,8 @@ public final class OverbreakClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(TracerPayload.TYPE, (payload, context) -> BulletTrails.receive(payload));
 		ClientTickEvents.END_CLIENT_TICK.register(BulletTrails::tick);
 		LevelRenderEvents.COLLECT_SUBMITS.register(context -> BulletTrails.submit(context.poseStack(), context.submitNodeCollector()));
-		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.fx.TrailView::tick);
-		LevelRenderEvents.COLLECT_SUBMITS.register(context -> kr.overbreak.client.fx.TrailView.submit(context.poseStack(), context.submitNodeCollector()));
+		ClientTickEvents.END_CLIENT_TICK.register(kr.overbreak.client.fx.HomingView::tick);
+		LevelRenderEvents.COLLECT_SUBMITS.register(context -> kr.overbreak.client.fx.HomingView.submit(context.poseStack(), context.submitNodeCollector()));
 		// 스킬 키 서브틱: 프레임마다 키 눌림을 보고 바뀐 순간의 틱 안 위치를 서버로
 		LevelRenderEvents.COLLECT_SUBMITS.register(context -> kr.overbreak.client.input.InputTimingTracker.frame(net.minecraft.client.Minecraft.getInstance()));
 		// 틱레이트: 서버가 바닐라 패킷으로 알려 준 값을 공용 TickRateConfig 에 반영 (틱 → 초 변환이 클라이언트에서도 맞게)
@@ -67,10 +67,10 @@ public final class OverbreakClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(InputModePayload.TYPE, (payload, context) -> InputMode.receive(payload));
 		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.ScatterPayload.TYPE,
 				(payload, context) -> kr.overbreak.client.anim.scatter.ScatterView.receive(payload));
-		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.TrailPayload.TYPE,
-				(payload, context) -> kr.overbreak.client.fx.TrailView.receive(payload));
-		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.TrailPhasePayload.TYPE,
-				(payload, context) -> kr.overbreak.client.fx.TrailView.phase(payload));
+		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.HomingPayload.TYPE,
+				(payload, context) -> kr.overbreak.client.fx.HomingView.receive(payload));
+		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.AirLockPayload.TYPE,
+				(payload, context) -> kr.overbreak.client.input.AirControl.knocked());
 		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.ScatterHitPayload.TYPE,
 				(payload, context) -> kr.overbreak.client.fx.ScatterSounds.hit(payload));
 		ClientPlayNetworking.registerGlobalReceiver(kr.overbreak.net.MusicPayload.TYPE,

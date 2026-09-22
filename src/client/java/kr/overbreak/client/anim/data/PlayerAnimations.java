@@ -105,8 +105,6 @@ public final class PlayerAnimations {
 			case SkillAnimPayload.GS_RELOAD -> "gunslinger.reload";
 			case SkillAnimPayload.GS_BOOST -> "gunslinger.boost";
 			case SkillAnimPayload.GS_ANCHOR -> "gunslinger.anchor";
-			case SkillAnimPayload.GS_RELEASE_TWIRL -> "gunslinger.release_twirl";
-			case SkillAnimPayload.GS_RELEASE_SNAP -> "gunslinger.release_snap";
 			case SkillAnimPayload.GS_GLIDE -> "gunslinger.glide";
 			default -> null;
 		};

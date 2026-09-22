@@ -11,7 +11,7 @@ import kr.overbreak.classes.PvpClass;
 import kr.overbreak.classes.gunslinger.AeroDrift;
 import kr.overbreak.classes.gunslinger.DashScatter;
 import kr.overbreak.classes.gunslinger.DualPistols;
-import kr.overbreak.classes.gunslinger.TrailRelease;
+import kr.overbreak.classes.gunslinger.TrailPursuit;
 import kr.overbreak.classes.gunslinger.Gunslinger;
 import kr.overbreak.classes.gunslinger.GunslingerState;
 import kr.overbreak.classes.gunslinger.RecoilBoost;
@@ -193,19 +193,37 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		h.succeed();
 	}
 
-	/** 반동 도약 — 폭발 피해 + 조준 반대 방향으로 날아감. */
-	@GameTest
+	/** 반동 도약 — 출발 지점 폭발 25 · 조준 방향으로 추진 (바닥을 보면 곧장 위로). */
+	@GameTest(maxTicks = 100)
 	public void recoilBoostBlastAndLaunch(GameTestHelper h) {
 		// 바닥을 보고 쏘면 위로 솟구칩니다 (피치 90 = 정면 아래)
 		FakePlayer p = caster(h, new Vec3(2.5, 1, 2.5), 90.0F);
 		p.setOnGround(true);
 		p.setDeltaMovement(Vec3.ZERO);
-		Villager v = dummy(h, new Vec3(2.5, 0, 2.5));
+		Villager v = dummy(h, new Vec3(3.5, 0, 2.5));
 		gs().primary(p);
-		near(h, dealtBy(v, p), 25, 0.01, "발밑 폭발 25");
-		h.assertTrue(p.getDeltaMovement().y > 0.1, "위로 솟구침 (" + p.getDeltaMovement().y + ")");
+		near(h, dealtBy(v, p), 25, 0.01, "출발 지점 폭발 25");
 		h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.BOOST) == T.of(RecoilBoost.COOLDOWN), "쿨타임 6초");
-		Classes.clear(p);
+		h.runAfterDelay(2, () -> {
+			Vec3 v2 = p.getDeltaMovement();
+			h.assertTrue(v2.y > 0.1 && Math.abs(v2.x) < 1.0E-6 && Math.abs(v2.z) < 1.0E-6, "바닥 조준 = 곧장 위로 (" + v2 + ")");
+			Classes.clear(p);
+			h.succeed();
+		});
+	}
+
+	/** 반동 도약 방향 — 수평을 봐도 위로 0.19 이상 · 50° 넘게 아래면 곧장 위 · 위를 보면 그대로. */
+	@GameTest
+	public void recoilBoostDirectionRules(GameTestHelper h) {
+		Vec3 flat = RecoilBoost.direction(new Vec3(0, 0, 1));
+		near(h, flat.y, RecoilBoost.MIN_UPWARD, 1.0E-9, "수평 조준 → 위로 0.19");
+		near(h, flat.length(), 1.0, 1.0E-9, "단위 벡터");
+		Vec3 down40 = RecoilBoost.direction(new Vec3(0, -Math.sin(Math.toRadians(40)), Math.cos(Math.toRadians(40))));
+		near(h, down40.y, RecoilBoost.MIN_UPWARD, 1.0E-9, "40° 아래도 앞으로 (위로 0.19)");
+		Vec3 down60 = RecoilBoost.direction(new Vec3(0, -Math.sin(Math.toRadians(60)), Math.cos(Math.toRadians(60))));
+		near(h, down60.y, 1.0, 1.0E-9, "60° 아래 → 곧장 위");
+		Vec3 up = RecoilBoost.direction(new Vec3(0, 0.6, 0.8));
+		near(h, up.y, 0.6, 1.0E-9, "위를 보면 그대로");
 		h.succeed();
 	}
 
@@ -257,9 +275,9 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		});
 	}
 
-	/** 벽 너머 적은 맞지 않고, 벽에 막힌 돌진은 곧장 제동으로 건너뜁니다. */
+	/** 벽 너머 적은 맞지 않고, 벽에 막혀도 돌진은 끊기지 않고 난사까지 그대로 갑니다 (0.2f). */
 	@GameTest(maxTicks = 300)
-	public void scatterWallBlocksAndSkipsToBrake(GameTestHelper h) {
+	public void scatterWallKeepsDashing(GameTestHelper h) {
 		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 0.0F);
 		p.setOnGround(true);
 		// 가짜 플레이어는 벽 쪽으로 움직이지 않으므로, 바로 앞(반 칸)에 벽을 세웁니다
@@ -271,9 +289,9 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 		Villager behind = dummy(h, new Vec3(1.5, 0, 3.5));
 		gs().secondary(p);
 		GunslingerState st = Gunslinger.state(p);
-		// 건너뛰지 않았다면 1.6초(32) — 건너뛰면 돌진 대부분이 빠져 30 전에 끝납니다
+		// 건너뛰지 않으므로 30 에는 아직 마무리 중 (1.6초 = 32)
 		h.runAfterDelay(T.of(30), () -> {
-			h.assertTrue(st.scatter == null, "벽에 막혀 제동으로 건너뛰어 일찍 끝남");
+			h.assertTrue(st.scatter != null, "벽에 막혀도 일찍 끝나지 않음");
 			near(h, dealtBy(behind, p), 0, 0.01, "벽 너머는 안 맞음");
 			Classes.clear(p);
 			h.succeed();
@@ -387,106 +405,72 @@ public final class GunslingerTest implements CustomTestMethodInvoker {
 	}
 
 	/**
-	 * 궤적 해방 — 수집 중 평타는 탄이 줄지 않고 발마다 궤적 한 줄, 예고 0.5초 뒤 모든 궤적이 폭발.
-	 * 궤적 1칸 안의 적에게 줄당 12 (평타 피해는 평소대로 따로), 궁극기 중에는 게이지가 차지 않음.
+	 * 궤적 추격 — 발동 즉시 중력 없음 · 늘 공중 판정, 평타는 조준 12° 안 적에게 휘어 가는 유도 탄 (치명타 30).
+	 * 탄은 줄지 않고, 궁극기 중 피해로 게이지가 차지 않습니다.
 	 */
-	@GameTest(maxTicks = 400)
-	public void releaseCollectsAndDetonates(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5), CHEST_PITCH);
-		Villager v = dummy(h, new Vec3(1.5, 0, 6.5));
+	@GameTest(maxTicks = 300)
+	public void pursuitFlightAndHoming(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(3.5, 0, 0.5), 0.0F);
 		p.setOnGround(true);
+		// 정면에서 옆으로 약 10° 비껴 선 적 (6칸 앞, 1칸 옆)
+		Villager v = dummy(h, new Vec3(4.5, 0, 6.5));
 		GunslingerState st = Gunslinger.state(p);
-		st.ammo = 5;
+		st.ammo = 7;
 		Attachments.profile(p).ultHas = true;
 		gs().ult(p);
-		h.assertTrue(st.release != null && st.release.collecting(), "즉시 발동 · 수집 시작");
-		for (int i = 0; i < 4; i++) {
-			gs().basic(p);
-			classTicks(p, 4);
-		}
-		h.assertTrue(st.ammo == 5, "궁극기 중에는 탄이 줄지 않음 (" + st.ammo + ")");
-		h.assertTrue(st.release.trailCount() == 4 && st.release.critCount() == 0, "4발 = 궤적 4줄 (땅이라 치명 없음)");
-		near(h, dealtBy(v, p), 80, 0.01, "평타 피해는 평소대로 (4 x 20)");
-		int gauge = Attachments.profile(p).ultRaw;
-		h.assertTrue(gauge == 0, "궁극기 중 평타로 게이지가 차지 않음 (" + gauge + ")");
-		st.release.forceTelegraph();
+		h.assertTrue(st.pursuit != null && p.isNoGravity(), "발동 즉시 비행 (중력 없음)");
+		h.assertTrue(AeroDrift.airborne(p), "비행 중에는 늘 공중 판정");
+		// 약 9° 비껴 봐도 잡힘 (시험 구역이 여럿 붙어 있어 더 가까운 각도의 다른 대상이 잡힐 수 있으니 각도로 확인)
+		LivingEntity got = TrailPursuit.pick(h.getLevel(), p, p.getEyePosition(), p.getLookAngle());
+		h.assertTrue(got != null, "12° 안의 적을 유도 대상으로 잡음");
+		// 명중 확인은 적을 똑바로 겨눠서 (각도 0 — 이 적이 반드시 대상)
+		p.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, v.position().add(0, v.getBbHeight() * 0.6, 0));
+		h.assertTrue(TrailPursuit.pick(h.getLevel(), p, p.getEyePosition(), p.getLookAngle()) == v, "겨눈 적이 대상");
 		gs().basic(p);
-		h.assertTrue(st.release.trailCount() == 4, "예고 중에는 사격 불가");
-		h.runAfterDelay(T.of(TrailRelease.TELEGRAPH) + 3, () -> {
-			h.assertTrue(st.release == null, "폭발 뒤 끝남");
-			near(h, dealtBy(v, p), 80 + 4 * 12, 0.01, "폭발 = 궤적 4줄 x 12 (한 번에)");
-			h.assertTrue(Attachments.profile(p).ultRaw == 0, "폭발 피해로도 게이지가 차지 않음");
+		h.assertTrue(st.pursuit.bulletCount() == 1, "유도 탄 한 발");
+		h.runAfterDelay(T.of(TrailPursuit.LIFE) + 2, () -> {
+			near(h, dealtBy(v, p), 30, 0.01, "휘어 날아가 명중 · 치명타 30");
+			h.assertTrue(st.ammo == 7, "탄창이 줄지 않음");
+			h.assertTrue(Attachments.profile(p).ultRaw == 0, "궁극기 중 피해로 게이지가 차지 않음");
+			st.pursuit.cancel();
+			h.assertTrue(st.pursuit == null && !p.isNoGravity(), "끝나면 중력이 돌아옴");
 			Classes.clear(p);
 			h.succeed();
 		});
 	}
 
-	/** 폭발 피해 — 여러 줄은 누적 · 치명 궤적 18 · 적 1명당 상한 120 · 1칸 밖은 0. */
-	@GameTest
-	public void releaseDamageMathAndCap(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5), 0.0F);
-		Villager v = dummy(h, new Vec3(4.5, 0, 4.5));
-		Vec3 c = v.position().add(0, 1.0, 0);
-		java.util.List<TrailRelease.Trail> trails = new java.util.ArrayList<>();
-		// 몸을 지나는 줄 12개 (치명 2) + 1.2칸 옆으로 비껴가는 줄 하나
-		for (int i = 0; i < 12; i++) {
-			trails.add(new TrailRelease.Trail(c.add(-3, 0, i * 0.01), c.add(3, 0, i * 0.01), i < 2, 0));
-		}
-		Vec3 off = c.add(0, 0, 1.2 + v.getBbWidth() / 2.0);
-		trails.add(new TrailRelease.Trail(off.add(-3, 0, 0), off.add(3, 0, 0), false, 0));
-		java.util.Map<net.minecraft.world.entity.LivingEntity, int[]> sum = TrailRelease.damage(h.getLevel(), p, trails);
-		int[] got = sum.get(v);
-		h.assertTrue(got != null, "몸을 지나는 궤적에 맞음");
-		near(h, got[0], 10 * TrailRelease.DAMAGE_100 + 2 * TrailRelease.DAMAGE_100 * TrailRelease.CRIT_PERCENT / 100, 0,
-				"누적 (일반 10 x 12 + 치명 2 x 18 = 156, 비껴간 줄 제외)");
-		h.assertTrue(got[1] == 2, "치명 궤적 2줄");
-		h.assertTrue(Math.min(TrailRelease.CAP_100, got[0]) == 12000, "적 1명당 120 상한");
-		near(h, TrailRelease.segmentBoxDistance(new Vec3(0, 5, 0), new Vec3(10, 5, 0), new net.minecraft.world.phys.AABB(4, 0, -1, 6, 3, 1)), 2.0, 1.0E-6,
-				"선분-상자 거리");
-		Classes.clear(p);
-		h.succeed();
-	}
-
-	/** 1초 전 Q 재입력은 무시, 1초 뒤에는 곧장 예고. 궁극기 중 반동 도약 쿨타임 1.5초. */
+	/** 12° 밖의 적은 유도되지 않고, 벽 뒤의 적은 잡히지 않음 (탄은 벽에서 소멸). */
 	@GameTest(maxTicks = 300)
-	public void releaseEarlyAndBoostCooldown(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(1.5, 0, 1.5), 90.0F);
+	public void pursuitConeAndWall(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(3.5, 0, 0.5), 0.0F);
 		p.setOnGround(true);
-		GunslingerState st = Gunslinger.state(p);
+		Villager wide = dummy(h, new Vec3(7.5, 0, 6.5));
 		Attachments.profile(p).ultHas = true;
 		gs().ult(p);
-		h.assertTrue(gs().intercept(p, kr.overbreak.input.InputRouter.Slot.ULT), "궁극기 중 Q 는 해방 요청");
-		h.assertTrue(st.release.collecting(), "1초 전에는 무시");
-		gs().primary(p);
-		h.assertTrue(Attachments.profile(p).cooldown(Gunslinger.BOOST) == T.of(TrailRelease.BOOST_COOLDOWN), "반동 도약 쿨타임 1.5초");
-		h.assertTrue(gs().intercept(p, kr.overbreak.input.InputRouter.Slot.SECONDARY), "궁극기 중 돌진 난사 잠김");
-		h.runAfterDelay(T.of(TrailRelease.EARLY) + 2, () -> {
-			gs().intercept(p, kr.overbreak.input.InputRouter.Slot.ULT);
-			h.assertTrue(st.release != null && !st.release.collecting(), "1초 뒤 Q = 곧장 예고");
-			h.runAfterDelay(T.of(TrailRelease.TELEGRAPH) + 3, () -> {
-				h.assertTrue(st.release == null, "예고 뒤 폭발 · 끝");
-				Classes.clear(p);
-				h.succeed();
-			});
+		GunslingerState st = Gunslinger.state(p);
+		h.assertTrue(TrailPursuit.pick(h.getLevel(), p, p.getEyePosition(), p.getLookAngle()) == null, "33° 비낀 적은 유도 대상이 아님");
+		gs().basic(p);
+		h.runAfterDelay(T.of(TrailPursuit.LIFE) + 2, () -> {
+			near(h, dealtBy(wide, p), 0, 0.01, "12° 밖의 적은 맞지 않음");
+			near(h, TrailPursuit.turn(new Vec3(0, 0, 1), new Vec3(1, 0, 0), Math.toRadians(12)).x, Math.sin(Math.toRadians(12)), 1.0E-9,
+					"한 번에 최대 회전각까지만 틀어짐");
+			st.pursuit.cancel();
+			Classes.clear(p);
+			h.succeed();
 		});
 	}
 
-	/** 시전자가 죽으면 폭발 없이 사라짐 (대응 수단). */
-	@GameTest(maxTicks = 300)
-	public void releaseVanishesOnDeath(GameTestHelper h) {
-		FakePlayer p = caster(h, new Vec3(1.5, 0, 0.5), CHEST_PITCH);
-		Villager v = dummy(h, new Vec3(1.5, 0, 6.5));
-		p.setOnGround(true);
-		GunslingerState st = Gunslinger.state(p);
+	/** 기절 · 에어본을 맞으면 즉시 끝나고 떨어짐 (군중제어 면역 없음). */
+	@GameTest(maxTicks = 200)
+	public void pursuitEndsOnStun(GameTestHelper h) {
+		FakePlayer p = caster(h, new Vec3(1.5, 1, 1.5), 0.0F);
 		Attachments.profile(p).ultHas = true;
 		gs().ult(p);
-		gs().basic(p);
-		float before = dealtBy(v, p);
-		st.release.forceTelegraph();
-		p.setHealth(0.0F);
-		h.runAfterDelay(T.of(TrailRelease.TELEGRAPH) + 5, () -> {
-			h.assertTrue(st.release == null, "사망으로 사라짐");
-			near(h, dealtBy(v, p), before, 0.01, "폭발 피해 없음");
+		GunslingerState st = Gunslinger.state(p);
+		h.assertTrue(!Attachments.combatant(p).ccImmune, "군중제어 면역 없음");
+		kr.overbreak.cc.CrowdControl.stun(p, 10);
+		h.runAfterDelay(3, () -> {
+			h.assertTrue(st.pursuit == null && !p.isNoGravity(), "기절로 즉시 끝 · 중력 돌아옴");
 			Classes.clear(p);
 			h.succeed();
 		});

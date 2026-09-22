@@ -27,10 +27,10 @@ public final class GunslingerState {
 	public boolean descending;
 
 	public @Nullable DashScatter scatter;
-	/** 궤적 해방 (궁극기) — 수집 · 예고 동안. */
-	public @Nullable TrailRelease release;
+	/** 궤적 추격 (궁극기) — 비행 동안. */
+	public @Nullable TrailPursuit pursuit;
 
 	public boolean inUlt() {
-		return release != null;
+		return pursuit != null;
 	}
 }

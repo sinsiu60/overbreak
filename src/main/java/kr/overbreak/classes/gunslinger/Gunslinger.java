@@ -44,7 +44,7 @@ import org.jspecify.annotations.Nullable;
  *   RMB         반동 도약
  *   SHIFT       돌진 난사 (활공은 점프 키로 옮겨 웅크리기가 비었습니다)
  *   E           사선 앵커
- *   Q           궤적 해방
+ *   Q           궤적 추격
  *   R           재장전
  */
 public final class Gunslinger implements PvpClass {
@@ -61,9 +61,6 @@ public final class Gunslinger implements PvpClass {
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !absorb(entity, source));
 		// 돌진 난사 도중에 시전자를 보기 시작한 사람에게는 지난 만큼 건너뛰어 동작을 보냅니다
 		net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents.START_TRACKING.register((entity, viewer) -> {
-			if (entity instanceof ServerPlayer caster && stateOrNull(caster) instanceof GunslingerState rs && rs.release != null) {
-				rs.release.sendTo(viewer);
-			}
 			if (entity instanceof ServerPlayer caster && stateOrNull(caster) instanceof GunslingerState st && st.scatter != null) {
 				kr.overbreak.net.ScatterPayload.sendTo(viewer, caster, st.scatter.seed(), st.scatter.dashYaw());
 				kr.overbreak.net.SkillAnimPayload.sendTo(viewer, caster, kr.overbreak.net.SkillAnimPayload.GS_SCATTER,
@@ -99,14 +96,14 @@ public final class Gunslinger implements PvpClass {
 									SkillInfo.stat("탄창", "18발 · R 또는 다 쓰면 1.25초 재장전"),
 									SkillInfo.stat("넉백", "없음")), false),
 					new SkillInfo("RMB", "반동 도약", Overbreak.id("hud/skill/gunslinger_boost"), null,
-							"조준한 곳에 충격탄을 쏘고 그 반동으로 정반대로 날아감",
+							"출발 지점에 충격탄을 터뜨리고 그 반동으로 조준한 방향으로 날아감",
 							List.of(
 									SkillInfo.stat("분류", "광역 · 이동기"),
-									SkillInfo.stat("폭발", "조준선 5칸 앞 (벽이면 벽)"),
-									SkillInfo.stat("피해", "반경 3칸 25 + 넉백"),
-									SkillInfo.stat("도약", "조준 반대 방향 — 바닥을 보면 약 7칸"),
+									SkillInfo.stat("폭발", "출발 지점 (발밑)"),
+									SkillInfo.stat("피해", "반경 3칸 25 + 바깥으로 넉백 · 벽 너머 제외"),
+									SkillInfo.stat("도약", "조준 방향으로 8칸 (0.25초) · 수평을 봐도 약 1.5칸 뜸 · 바닥(50° 아래)을 보면 곧장 위로 약 7칸"),
 									SkillInfo.stat("균열 지대", "봉인됨"),
-									SkillInfo.stat("재사용 대기시간", "6초 (궤적 해방 중에는 1.5초)")), false),
+									SkillInfo.stat("재사용 대기시간", "6초")), false),
 					new SkillInfo("SHIFT", "돌진 난사", Overbreak.id("hud/skill/gunslinger_acro"), null,
 							"바라보는 방향으로 6칸 치고 나가 멈춘 뒤, 분신이 8칸 안을 휘저으며 반경 5칸을 쓸어 버림",
 							List.of(
@@ -130,17 +127,16 @@ public final class Gunslinger implements PvpClass {
 									SkillInfo.stat("점프로 끊기", "끌려가는 중 점프 키 — 와이어를 끊고 그 속도 그대로 날아감"),
 									SkillInfo.stat("균열 지대", "봉인됨"),
 									SkillInfo.stat("재사용 대기시간", "7초")), false),
-					new SkillInfo("Q", "궤적 해방", Overbreak.id("hud/skill/gunslinger_ult"), null,
-							"5초 동안 쏜 총알의 궤적을 공중에 남겼다가 한꺼번에 터뜨림",
+					new SkillInfo("Q", "궤적 추격", Overbreak.id("hud/skill/gunslinger_ult"), null,
+							"6초 동안 날아다니며 쏘는 총알이 전부 적을 향해 휘어짐",
 							List.of(
-									SkillInfo.stat("분류", "광역 · 지연 폭발"),
-									SkillInfo.stat("발동", "즉시 · 5초 동안 탄창 무한 · 재장전 없음"),
-									SkillInfo.stat("궤적", "평타 1발당 1줄 · 최대 25줄 · 총구 → 적중 지점 / 벽 / 16칸"),
-									SkillInfo.stat("치명 궤적", "공중(1.5칸 이상)에서 쏜 궤적"),
-									SkillInfo.stat("해방", "5초 뒤 또는 1초 뒤부터 Q · 0.5초 예고 (사격 불가)"),
-									SkillInfo.stat("폭발", "궤적 1칸 안 적에게 줄당 12 (치명 18) · 적 1명당 최대 120"),
-									SkillInfo.stat("반동 도약", "궁극기 동안 쿨타임 1.5초"),
-									SkillInfo.stat("대응", "시전자가 죽으면 폭발 없이 사라짐"),
+									SkillInfo.stat("분류", "이동 · 강화"),
+									SkillInfo.stat("비행", "6초 · 중력 없음 · 이동키 초당 10칸 · 점프 키 상승 초당 5칸 · 떼면 초당 1칸 하강"),
+									SkillInfo.stat("유도 탄", "조준 12° · 24칸 안 적 중 가장 가까운 각도 · 초당 60칸 · 벽에 소멸"),
+									SkillInfo.stat("피해", "평타와 같음 — 비행 중이라 늘 치명타 30"),
+									SkillInfo.stat("탄창", "무한 · 재장전 없음"),
+									SkillInfo.stat("스킬", "반동 도약 · 사선 앵커 · 돌진 난사 모두 사용 가능"),
+									SkillInfo.stat("대응", "기절 · 에어본을 맞으면 즉시 끝 (군중제어 면역 없음)"),
 									SkillInfo.stat("충전", "피해 1당 1% · 궁극기 중에는 차지 않음")), true)));
 
 	@Override
@@ -177,7 +173,7 @@ public final class Gunslinger implements PvpClass {
 			DualPistols.cancelReload(p, st);
 			AeroDrift.stop(p, st);
 			st.scatter = null;
-			st.release = null;
+			st.pursuit = null;
 		}
 		Attachments.combatant(p).ccImmune = false;
 	}
@@ -192,7 +188,7 @@ public final class Gunslinger implements PvpClass {
 						.line(" 16칸 히트스캔 · 발당 20 · 0.2초에 1발. 탄창 18발 (R 재장전 1.25초)", ChatFormatting.GRAY)
 						.line(" 땅에서 1.5칸 이상 떠서 맞히면 치명타 150% (30).", ChatFormatting.GRAY).blank()
 						.bold("[RMB] 반동 도약", ChatFormatting.AQUA)
-						.line(" 조준한 곳에 반경 3칸 25 + 넉백, 그 반동으로 정반대로 약 7칸. 쿨타임 6초", ChatFormatting.GRAY).blank()
+						.line(" 출발 지점 반경 3칸 25 + 넉백, 그 반동으로 조준한 방향으로 8칸. 쿨타임 6초", ChatFormatting.GRAY).blank()
 						.bold("[웅크리기] 돌진 난사", ChatFormatting.AQUA)
 						.line(" 바라보는 방향으로 6칸 돌진 → 제동 → 반경 5칸에 0.15초마다 6번 · 한 번당 12. 쿨타임 8초", ChatFormatting.GRAY).blank()
 						.bold("[E] 사선 앵커", ChatFormatting.AQUA)
@@ -219,14 +215,13 @@ public final class Gunslinger implements PvpClass {
 
 	@Override
 	public ItemStack ultItem() {
-		return SkillItems.ult("feather", Hud.bold("궤적 해방", ChatFormatting.AQUA), SkillItems.lore()
+		return SkillItems.ult("feather", Hud.bold("궤적 추격", ChatFormatting.AQUA), SkillItems.lore()
 				.line("궁극기 · 궤적의 깃털", ChatFormatting.DARK_GRAY).blank()
-				.bold("[아이템 버리기 Q] 궤적 해방", ChatFormatting.AQUA)
-				.line(" 5초 동안 탄창 무한 · 쏜 총알의 궤적이 하늘색 선으로 공중에 남습니다 (최대 25줄).", ChatFormatting.GRAY)
-				.line(" 시간이 다 되거나 1초 뒤 Q 를 다시 누르면 0.5초 예고 후 모든 궤적이 동시에 폭발.", ChatFormatting.GRAY)
-				.line(" 궤적 1칸 안의 적에게 줄당 12 (공중에서 쏜 궤적 18), 적 1명당 최대 120.", ChatFormatting.GRAY)
-				.line(" 궁극기 동안 반동 도약 쿨타임 1.5초.", ChatFormatting.GRAY)
-				.line(" 쓰는 사람이 죽으면 궤적은 폭발 없이 사라집니다.", ChatFormatting.RED).build());
+				.bold("[아이템 버리기 Q] 궤적 추격", ChatFormatting.AQUA)
+				.line(" 6초 동안 자유 비행 — 이동키로 초당 10칸, 점프 키로 상승 · 떼면 천천히 가라앉음.", ChatFormatting.GRAY)
+				.line(" 그동안 평타가 조준 12° 안의 적에게 휘어 날아가는 유도 탄이 됩니다 (벽은 못 돌아감).", ChatFormatting.GRAY)
+				.line(" 비행 중에는 모든 평타가 치명타 30 · 탄창 무한 · 다른 스킬도 그대로 씀.", ChatFormatting.GRAY)
+				.line(" 기절 · 에어본을 맞으면 곧바로 끝나고 떨어집니다.", ChatFormatting.RED).build());
 	}
 
 	// ── 스킬 ────────────────────────────────────────────────
@@ -255,7 +250,7 @@ public final class Gunslinger implements PvpClass {
 
 	@Override
 	public void ult(ServerPlayer p) {
-		TrailRelease.cast(p, state(p));
+		TrailPursuit.cast(p, state(p));
 	}
 
 	@Override
@@ -269,28 +264,18 @@ public final class Gunslinger implements PvpClass {
 		return st != null && st.reloadT > 0;
 	}
 
-	/**
-	 * 궤적 해방 중 Q 는 조기 해방 (발동 1초 뒤부터 — 그 전에는 무시).
-	 * 돌진 난사는 궁극기 동안 쓰지 않습니다 (평타 · 반동 도약 · 사선 앵커는 그대로).
-	 */
+	/** 궤적 추격 비행 중에는 모든 스킬을 쓸 수 있습니다 — 궁극기를 다시 누르는 것만 무시. */
 	@Override
 	public boolean intercept(ServerPlayer p, InputRouter.Slot slot) {
 		GunslingerState st = state(p);
-		if (st.release == null) {
-			return false;
-		}
-		if (slot == InputRouter.Slot.ULT) {
-			st.release.requestRelease();
-			return true;
-		}
-		return slot == InputRouter.Slot.SECONDARY;
+		return st.pursuit != null && slot == InputRouter.Slot.ULT;
 	}
 
-	/** 궤적 해방 중에는 게이지가 차지 않습니다 (평타 · 폭발 모두). */
+	/** 궤적 추격 중에는 게이지가 차지 않습니다. */
 	@Override
 	public boolean ultCharging(ServerPlayer p) {
 		GunslingerState st = stateOrNull(p);
-		return st == null || st.release == null;
+		return st == null || st.pursuit == null;
 	}
 
 	@Override
@@ -314,7 +299,7 @@ public final class Gunslinger implements PvpClass {
 		PlayerProfile prof = Attachments.profile(p);
 		GunslingerState st = state(p);
 		return List.of(
-				new SkillSlot(prof.cooldown(BOOST), st.release != null && st.release.collecting() ? TrailRelease.BOOST_COOLDOWN : RecoilBoost.COOLDOWN, false),
+				new SkillSlot(prof.cooldown(BOOST), RecoilBoost.COOLDOWN, false),
 				new SkillSlot(prof.cooldown(SCATTER), DashScatter.COOLDOWN, st.scatter != null),
 				new SkillSlot(prof.cooldown(ANCHOR), WireAnchor.COOLDOWN, false));
 	}
@@ -323,9 +308,8 @@ public final class Gunslinger implements PvpClass {
 	@Override
 	public HudExtra hudExtra(ServerPlayer p) {
 		GunslingerState st = state(p);
-		if (st.release != null) {
-			// 궤적 수 · 치명 궤적 수 · 해방 안내는 클라이언트가 받은 궤적으로 직접 그립니다 (client/fx/TrailView)
-			return new HudExtra(st.ammo, DualPistols.MAG, st.release.remainingPercent(), HudExtra.METER_DURATION);
+		if (st.pursuit != null) {
+			return new HudExtra(st.ammo, DualPistols.MAG, st.pursuit.remainingPercent(), HudExtra.METER_DURATION);
 		}
 		if (st.reloadT > 0) {
 			int reload = Ticks.of(DualPistols.RELOAD);

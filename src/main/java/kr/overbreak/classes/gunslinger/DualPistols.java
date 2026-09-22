@@ -41,12 +41,10 @@ public final class DualPistols {
 		if (st.shotCd > 0) {
 			return;
 		}
-		// 궤적 해방: 예고 0.5초 동안은 사격 불가, 수집 중에는 탄창 무한 · 재장전 없음
-		if (st.release != null) {
-			if (st.release.collecting()) {
-				shoot(p, st, Aim.direction(p), DAMAGE_100);
-				st.shotCd = Ticks.of(GAP);
-			}
+		// 궤적 추격: 탄창 무한 · 재장전 없음 · 평타는 유도 탄
+		if (st.pursuit != null) {
+			shoot(p, st, Aim.direction(p), DAMAGE_100);
+			st.shotCd = Ticks.of(GAP);
 			return;
 		}
 		if (st.reloadT > 0) {
@@ -76,24 +74,27 @@ public final class DualPistols {
 	static LivingEntity shoot(ServerPlayer p, GunslingerState st, Vec3 dir, int damage100) {
 		ServerLevel level = p.level();
 		Vec3 eye = p.getEyePosition();
-		Hitscan.Hit hit = Hitscan.cast(p, eye, dir, RANGE);
 		float[] yp = Local.yawPitch(dir);
 		// 총구는 번갈아 — 오른쪽 총, 왼쪽 총
 		boolean left = st.leftMuzzle;
 		double side = left ? 0.30 : -0.30;
 		st.leftMuzzle = !st.leftMuzzle;
 		Vec3 muzzle = Local.offset(eye, yp[0], yp[1], side, -0.20, 0.42);
-		Tracer.spawn(level, p, muzzle, hit.end(), left ? Tracer.GUNSLINGER_L : Tracer.GUNSLINGER);
-		boolean air = AeroDrift.airborne(p);
-		// 궤적 해방: 이 한 발의 궤적을 월드에 남김 (서버 히트스캔 결과 그대로)
-		if (st.release != null) {
-			st.release.onShot(muzzle, hit.end(), air);
-		}
 		// 쓴 쪽 손만 반동이 나가도록 번호를 나눕니다 (1인칭 · 3인칭 공통)
 		SkillAnimPayload.broadcast(p, left ? SkillAnimPayload.GS_SHOT_L : SkillAnimPayload.GS_SHOT, -1);
-		Fx.sound(p, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.34F, 2.0F);
-		Fx.sound(p, SoundEvents.PISTON_EXTEND, SoundSource.PLAYERS, 0.45F, 1.4F);
+		// 궤적 추격: 발사음은 그대로 피치만 1.1배
+		float pitch = st.pursuit != null ? 1.1F : 1.0F;
+		Fx.sound(p, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.34F, 2.0F * pitch);
+		Fx.sound(p, SoundEvents.PISTON_EXTEND, SoundSource.PLAYERS, 0.45F, 1.4F * pitch);
 		Fx.particleExcept(level, p, ParticleTypes.SMOKE, muzzle.x, muzzle.y, muzzle.z, 3, 0.04, 0.04, 0.04, 0.01);
+		// 궤적 추격: 히트스캔 대신 유도 탄 (명중은 탄이 날아가며 서버가 판정)
+		if (st.pursuit != null) {
+			st.pursuit.fire(muzzle, dir);
+			return null;
+		}
+		Hitscan.Hit hit = Hitscan.cast(p, eye, dir, RANGE);
+		Tracer.spawn(level, p, muzzle, hit.end(), left ? Tracer.GUNSLINGER_L : Tracer.GUNSLINGER);
+		boolean air = AeroDrift.airborne(p);
 
 		LivingEntity victim = hit.target();
 		if (victim != null) {

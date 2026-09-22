@@ -18,6 +18,8 @@ public record HudExtra(int ammo, int ammoMax, int meter, int meterKind, int stac
 	public static final int FLAG_HASTE = 1;
 	/** 기절 중 — 화면이 돌아가지 않습니다 (직업이 아니라 {@link kr.overbreak.skill.HudSync} 가 붙입니다). */
 	public static final int FLAG_STUN = 2;
+	/** 공중 제어 끔 — 기절 · 에어본 · 넘어짐 · 밀려남 · 스킬 추진 중 (직업이 아니라 {@link kr.overbreak.skill.HudSync} 가 붙입니다). */
+	public static final int FLAG_NO_AIR = 4;
 
 	public HudExtra(int ammo, int ammoMax, int meter, int meterKind) {
 		this(ammo, ammoMax, meter, meterKind, 0, 0, 0);

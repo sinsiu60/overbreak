@@ -49,6 +49,10 @@ public final class AeroDrift {
 	 * 그 사이에 단단한 블록이 없으면 떠 있는 것으로 봅니다 (물 위는 받침이 없으니 떠 있는 것).
 	 */
 	public static boolean airborne(ServerPlayer p) {
+		// 궤적 추격 비행 중에는 늘 공중 (발밑 조건과 무관)
+		if (Gunslinger.stateOrNull(p) instanceof GunslingerState st && st.pursuit != null) {
+			return true;
+		}
 		if (p.onGround()) {
 			return false;
 		}
@@ -108,7 +112,7 @@ public final class AeroDrift {
 		// 궁극기로 공중에 붙잡혀 있는 동안에는 활공이 끼어들지 않습니다
 		// 웅크리기는 돌진 난사라, 활공은 점프 키로 — 다만 떨어지기 시작한 뒤부터만
 		// (누르자마자 켜지면 그냥 점프만 해도 패시브가 켜졌습니다)
-		boolean want = Attachments.profile(p).jumpDown && st.descending && st.glideT > 0;
+		boolean want = Attachments.profile(p).jumpDown && st.descending && st.glideT > 0 && st.pursuit == null;
 		if (!want) {
 			stop(p, st);
 			return;

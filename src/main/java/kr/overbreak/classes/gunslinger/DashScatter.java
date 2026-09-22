@@ -198,13 +198,9 @@ public final class DashScatter implements Effects.Active {
 			}
 			case DASH -> {
 				dashFx();
+				// 벽에 부딪혀도 끊지 않습니다 — 난사가 시작될 때까지 돌진은 그대로 (0.2f)
 				if (t >= Ticks.of(BRAKE_START) + 1) {
 					startBrake();
-				} else if (blocked()) {
-					// 벽에 막힘 — 곧장 제동으로 건너뛰고, 보는 사람들의 동작도 제동 시각으로 옮깁니다
-					t = Ticks.of(BRAKE_START) + 1;
-					startBrake();
-					SkillAnimPayload.broadcastAt(caster, SkillAnimPayload.GS_SCATTER, LENGTH, BRAKE_START);
 				}
 			}
 			case BRAKE -> {
@@ -278,33 +274,6 @@ public final class DashScatter implements Effects.Active {
 		Vec3 back = caster.position().add(0, 1.0, 0).subtract(dir.scale(0.6));
 		Fx.particle(level, ParticleTypes.END_ROD, back, 2, 0.15, 0.4, 0.15, 0.0);
 		Fx.particle(level, Fx.dust(SKY, 0.9F), back, 4, 0.25, 0.5, 0.25, 0);
-	}
-
-	/**
-	 * 벽에 막혔는가. 서버의 충돌 표시와, 발목 위 · 머리 높이로 바로 앞을 재 보는 것을 함께 봅니다
-	 * (발목 높이는 빼서 반블록 · 계단은 그대로 넘어갑니다 — 올라서기 0.6칸).
-	 */
-	private boolean blocked() {
-		if (t <= dashTick + 1) {
-			return false;
-		}
-		if (caster.horizontalCollision) {
-			return true;
-		}
-		// 위로 가다 천장에, 아래로 가다 바닥에 닿음
-		if (caster.verticalCollision && Math.abs(dir.y) > 0.1) {
-			return true;
-		}
-		ServerLevel level = caster.level();
-		double step = Ticks.speed(DISTANCE / DASH) + caster.getBbWidth() * 0.5 + 0.05;
-		for (double up : new double[] {0.7, 1.5}) {
-			Vec3 from = caster.position().add(0, up, 0);
-			Vec3 to = from.add(dir.scale(step));
-			if (level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, caster)).getType() != HitResult.Type.MISS) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/** 제동 — 속도 0 (세로까지). 서버가 받아 주는 거리(7.5칸)를 넘었으면 거기로 되돌립니다. */
@@ -408,7 +377,8 @@ public final class DashScatter implements Effects.Active {
 			return;
 		}
 		hovering = on;
-		caster.setNoGravity(on);
+		// 궤적 추격 비행 중이면 끝나도 중력 없음 그대로
+		caster.setNoGravity(on || state.pursuit != null);
 		if (on) {
 			caster.setDeltaMovement(caster.getDeltaMovement().multiply(1, 0, 1));
 			caster.hurtMarked = true;

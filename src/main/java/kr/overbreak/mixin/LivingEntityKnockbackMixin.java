@@ -47,6 +47,10 @@ public abstract class LivingEntityKnockbackMixin {
 	private void overbreak$knockbackReturn(double strength, double x, double z, DamageSource source, float f, boolean b, CallbackInfo ci) {
 		Vec3 old = overbreak$before;
 		overbreak$before = null;
+		// 넉백을 받은 플레이어 — 0.3초 동안 공중 제어를 끔 (클라이언트)
+		if ((Object) this instanceof net.minecraft.server.level.ServerPlayer sp) {
+			kr.overbreak.net.AirLockPayload.send(sp);
+		}
 		double k = TickRateConfig.scale();
 		if (old == null || Math.abs(k - 1.0) < 1.0E-6) {
 			return;

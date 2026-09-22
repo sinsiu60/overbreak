@@ -13,6 +13,7 @@ import kr.overbreak.skill.Effects;
 import kr.overbreak.util.Fx;
 import kr.overbreak.util.Hud;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,6 +21,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -44,6 +46,10 @@ public final class WireAnchor implements Effects.Active {
 	static final int PULL = 6;
 	/** 적 머리 위로 올라서는 높이 (칸). */
 	static final double OVERHEAD = 1.6;
+	/** 걸린 자리보다 이만큼(칸) 위까지의 턱은 넘어가도록 당깁니다. */
+	static final double LEDGE_REACH = 2.5;
+	/** 와이어를 끊었을 때 남는 위쪽 속도 상한 (초당 칸). */
+	static final double SNAP_UP = 6.0;
 	private static final int SKY = Fx.rgb(0.70, 0.92, 1.00);
 
 	private final ServerPlayer caster;
@@ -82,8 +88,9 @@ public final class WireAnchor implements Effects.Active {
 		LivingEntity victim = hit.target();
 		Vec3 end = hit.end();
 		boolean wall = false;
+		BlockHitResult clip = null;
 		if (victim == null) {
-			HitResult clip = level.clip(new ClipContext(eye, eye.add(dir.scale(RANGE)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, p));
+			clip = level.clip(new ClipContext(eye, eye.add(dir.scale(RANGE)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, p));
 			wall = clip.getType() != HitResult.Type.MISS;
 			if (wall) {
 				end = clip.getLocation();
@@ -108,12 +115,47 @@ public final class WireAnchor implements Effects.Active {
 			anchor = victim.position().add(0, victim.getBbHeight() + OVERHEAD, 0);
 			Fx.sound(victim, SoundEvents.CHAIN_PLACE, SoundSource.PLAYERS, 1.0F, 1.4F);
 		} else {
-			// 벽: 표면에서 조금 떨어진 자리로
-			anchor = end.subtract(dir.scale(0.8));
+			// 벽: 가까이에 벽 끝(턱)이 있으면 그 위로 넘어가도록, 없으면 표면에서 조금 떨어진 자리로
+			Vec3 ledge = ledge(level, clip);
+			anchor = ledge != null ? ledge : end.subtract(dir.scale(0.8));
 			Fx.sound(level, end.x, end.y, end.z, SoundEvents.CHAIN_PLACE, SoundSource.PLAYERS, 1.0F, 1.2F);
 		}
 		p.resetFallDistance();
 		Effects.add(new WireAnchor(p, anchor, victim));
+	}
+
+	/**
+	 * 벽 끝 넘기 (0.2f) — 옆면에 걸었고 걸린 자리 위 2.5칸 안에 올라설 수 있는 턱(발 · 머리 자리가 빈 칸)이 있으면,
+	 * 발이 그 턱 위(벽 안쪽으로 조금)에 닿도록 당깁니다. 위도우메이커의 갈고리처럼 몸이 갈고리 위로 지나가 벽을 넘습니다.
+	 * 당기는 도중 벽 옆면에 막히면 위로 미끄러져 올라간 뒤 턱 위로 넘어갑니다. 턱이 없으면 null.
+	 */
+	static Vec3 ledge(ServerLevel level, BlockHitResult hit) {
+		if (hit == null || !hit.getDirection().getAxis().isHorizontal()) {
+			return null;
+		}
+		BlockPos wall = hit.getBlockPos();
+		Vec3 at = hit.getLocation();
+		for (int k = 1; k <= 3; k++) {
+			BlockPos feet = wall.above(k);
+			if (!free(level, feet) || !free(level, feet.above())) {
+				continue;
+			}
+			// 그 아래 칸은 막혀 있어야 턱 (딛고 설 자리)
+			if (free(level, feet.below())) {
+				return null;
+			}
+			double top = feet.getY();
+			if (top - at.y > LEDGE_REACH) {
+				return null;
+			}
+			Vec3 n = new Vec3(hit.getDirection().getStepX(), 0, hit.getDirection().getStepZ());
+			return new Vec3(at.x, top + 0.05, at.z).subtract(n.scale(0.45));
+		}
+		return null;
+	}
+
+	private static boolean free(ServerLevel level, BlockPos pos) {
+		return level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
 	}
 
 	/** 와이어 한 줄 (출발 → 도착). */
@@ -161,8 +203,17 @@ public final class WireAnchor implements Effects.Active {
 		return true;
 	}
 
-	/** 와이어 끊기 — 제동하지 않으므로 마지막으로 실은 속도로 계속 날아갑니다. */
+	/**
+	 * 와이어 끊기 — 제동하지 않으므로 마지막으로 실은 속도로 계속 날아갑니다.
+	 * 위로 향하는 속도만 초당 6칸까지로 자릅니다 — 수직으로 걸고 끊으면 너무 높이 솟았습니다 (0.2f).
+	 */
 	private void snap() {
+		Vec3 v = caster.getDeltaMovement();
+		double cap = kr.overbreak.core.tick.Ticks.speed(SNAP_UP / 20.0);
+		if (v.y > cap) {
+			caster.setDeltaMovement(v.x, cap, v.z);
+			caster.hurtMarked = true;
+		}
 		caster.resetFallDistance();
 		Fx.particle(caster.level(), Fx.dust(SKY, 0.9F), caster.position().add(0, 1, 0), 10, 0.25, 0.3, 0.25, 0);
 		Fx.particle(caster.level(), ParticleTypes.END_ROD, caster.position().add(0, 1, 0), 4, 0.15, 0.2, 0.15, 0.05);

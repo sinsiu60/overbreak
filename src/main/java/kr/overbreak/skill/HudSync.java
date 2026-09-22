@@ -43,8 +43,13 @@ public final class HudSync {
 		HudExtra x = c.hudExtra(p);
 		// 기절은 직업과 무관하므로 여기서 한 번에 붙입니다 (클라이언트가 시야를 굳힙니다)
 		int flags = x.flags();
-		if (kr.overbreak.core.Attachments.combatant(p).stunT > 0) {
+		kr.overbreak.core.Combatant cb = kr.overbreak.core.Attachments.combatant(p);
+		if (cb.stunT > 0) {
 			flags |= HudExtra.FLAG_STUN;
+		}
+		// 공중 제어 (클라이언트) — 군중 제어 · 스킬 추진 동안은 끔
+		if (cb.hardCc() || cb.dashT > 0) {
+			flags |= HudExtra.FLAG_NO_AIR;
 		}
 		return new HudPayload(c.id(), remaining, total, active, prof.ultCharge, ultState, x.ammo(), x.ammoMax(), x.meter(), x.meterKind(),
 				x.stacks(), x.stacksMax(), flags);

@@ -111,8 +111,7 @@ public final class SkillAnims {
 			case SkillAnimPayload.GS_BOOST -> 12.0F;
 			case SkillAnimPayload.GS_SCATTER -> kr.overbreak.classes.gunslinger.DashScatter.LENGTH;
 			case SkillAnimPayload.GS_ANCHOR -> 12.0F;
-			case SkillAnimPayload.GS_RELEASE_TWIRL -> 10.0F;
-			case SkillAnimPayload.GS_RELEASE_SNAP -> 12.0F;
+			case SkillAnimPayload.GS_PURSUIT -> (float) kr.overbreak.classes.gunslinger.TrailPursuit.DURATION;
 			case SkillAnimPayload.GS_GLIDE -> 200.0F;
 			case SkillAnimPayload.KNOCKDOWN -> 40.0F;
 			default -> 0.0F;
