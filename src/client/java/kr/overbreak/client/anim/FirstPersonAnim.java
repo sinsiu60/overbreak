@@ -419,10 +419,7 @@ public final class FirstPersonAnim {
 						SkillAnimPayload.BR_BASIC, SkillAnimPayload.BR_BASIC_BACK, SkillAnimPayload.BR_BLOW,
 						SkillAnimPayload.BR_WHIRL, SkillAnimPayload.BR_REGROUP, SkillAnimPayload.BR_ULT,
 						SkillAnimPayload.GS_SHOT, SkillAnimPayload.GS_RELOAD, SkillAnimPayload.GS_BOOST, SkillAnimPayload.GS_SCATTER,
-						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_GLIDE,
-						SkillAnimPayload.IC_SWING_R, SkillAnimPayload.IC_SWING_L, SkillAnimPayload.IC_OVERHEAD, SkillAnimPayload.IC_CHARGE,
-						SkillAnimPayload.IC_RELEASE, SkillAnimPayload.IC_BASH, SkillAnimPayload.IC_GUARD, SkillAnimPayload.IC_REND,
-						SkillAnimPayload.IC_ULT);
+						SkillAnimPayload.GS_ANCHOR, SkillAnimPayload.GS_GLIDE);
 	}
 
 	/** 지금 1인칭 동작의 firstperson_item_spin (총 기준, 손끝 축) — 없으면 null. */
@@ -455,11 +452,6 @@ public final class FirstPersonAnim {
 			if (spin != null) {
 				pose.mulPose(spin);
 			}
-			return true;
-		}
-		if (IronAnim.handles(play.anim)) {
-			// 참철 — 절차 키프레임 + 역경직 (IronAnim)
-			IronAnim.firstPerson(pose, invert, play, partial);
 			return true;
 		}
 		if (play.anim == SkillAnimPayload.GS_SCATTER) {

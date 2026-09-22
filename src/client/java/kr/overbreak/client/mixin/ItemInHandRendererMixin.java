@@ -37,7 +37,12 @@ public abstract class ItemInHandRendererMixin {
 	private void overbreak$skillPose(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack,
 									 ItemStack itemStack, float inverseArmHeight, PoseStack poseStack,
 									 SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
-		if (hand == InteractionHand.MAIN_HAND && FirstPersonAnim.active()) {
+		if (hand == InteractionHand.MAIN_HAND && kr.overbreak.client.anim.IronAnim.greatsword(itemStack)) {
+			// 참철 대검 — 동작이 없을 때도 늘 IronAnim 자세 (대기 자세 · 두 손으로 쥠)
+			poseStack.popPose();
+			poseStack.pushPose();
+			kr.overbreak.client.anim.IronAnim.firstPerson(poseStack, player.getMainArm() == HumanoidArm.RIGHT ? 1 : -1, frameInterp);
+		} else if (hand == InteractionHand.MAIN_HAND && FirstPersonAnim.active()) {
 			poseStack.popPose();
 			poseStack.pushPose();
 			FirstPersonAnim.apply(poseStack, player.getMainArm(), frameInterp);
@@ -211,21 +216,51 @@ public abstract class ItemInHandRendererMixin {
 		}
 	}
 
-	/** 참철 대검 — 모으기 단계 색으로 칼날이 빛남 (칼날에 붙은 빛 두 겹). */
+	/**
+	 * 참철 대검 — 그린 바로 뒤 같은 자세로 단계 색 오오라 껍질, 그리고 두 손 (오른손 위 · 왼손 아래로 손잡이를 쥠).
+	 * 팔은 대검 포즈를 기억한 뒤 손 기준점이 없는 기본 포즈로 돌아가 계산합니다 (끝에서 바닐라가 pop 합니다).
+	 */
 	@Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = RENDER_ITEM, shift = At.Shift.AFTER))
-	private void overbreak$ironAura(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack,
-									ItemStack itemStack, float inverseArmHeight, PoseStack poseStack,
-									SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
+	private void overbreak$ironHands(AbstractClientPlayer player, float frameInterp, float xRot, InteractionHand hand, float attack,
+									 ItemStack itemStack, float inverseArmHeight, PoseStack poseStack,
+									 SubmitNodeCollector submitNodeCollector, int lightCoords, CallbackInfo ci) {
 		if (hand != InteractionHand.MAIN_HAND || player.isInvisible() || !kr.overbreak.client.anim.IronAnim.greatsword(itemStack)) {
 			return;
 		}
+		HumanoidArm main = player.getMainArm();
+		int invert = main == HumanoidArm.RIGHT ? 1 : -1;
 		int color = kr.overbreak.client.fx.IronFx.auraColor(player.getId(), frameInterp);
 		if (color != 0) {
 			this.renderItem(player, kr.overbreak.client.anim.IronAnim.auraStack(color),
-					player.getMainArm() == HumanoidArm.RIGHT ? net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
+					main == HumanoidArm.RIGHT ? net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND
 							: net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_LEFT_HAND,
 					poseStack, submitNodeCollector, 15728880);
 		}
+		org.joml.Matrix4f sword = new org.joml.Matrix4f(poseStack.last().pose());
+		poseStack.popPose();
+		poseStack.pushPose();
+		org.joml.Matrix4f rel = new org.joml.Matrix4f(poseStack.last().pose()).invert().mul(sword);
+		kr.overbreak.client.anim.IronAnim.Hands hands = kr.overbreak.client.anim.IronAnim.hands(rel, invert, frameInterp);
+		net.minecraft.client.renderer.entity.player.AvatarRenderer<AbstractClientPlayer> renderer = this.entityRenderDispatcher.getPlayerRenderer(player);
+		net.minecraft.resources.Identifier skin = player.getSkin().body().texturePath();
+		boolean leftSleeve = player.isModelPartShown(net.minecraft.world.entity.player.PlayerModelPart.LEFT_SLEEVE);
+		boolean rightSleeve = player.isModelPartShown(net.minecraft.world.entity.player.PlayerModelPart.RIGHT_SLEEVE);
+		poseStack.pushPose();
+		poseStack.mulPose(hands.right());
+		if (main == HumanoidArm.RIGHT) {
+			renderer.renderRightHand(poseStack, submitNodeCollector, lightCoords, skin, rightSleeve);
+		} else {
+			renderer.renderLeftHand(poseStack, submitNodeCollector, lightCoords, skin, leftSleeve);
+		}
+		poseStack.popPose();
+		poseStack.pushPose();
+		poseStack.mulPose(hands.left());
+		if (main == HumanoidArm.RIGHT) {
+			renderer.renderLeftHand(poseStack, submitNodeCollector, lightCoords, skin, leftSleeve);
+		} else {
+			renderer.renderRightHand(poseStack, submitNodeCollector, lightCoords, skin, rightSleeve);
+		}
+		poseStack.popPose();
 	}
 
 	@Inject(method = "submitHandsWithItems", at = @At("TAIL"))
