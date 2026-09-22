@@ -122,15 +122,38 @@ public final class IroncleaverClientTest implements FabricClientGameTest {
 				ctx.takeScreenshot("ic_" + tag + "_release_6");
 				ctx.waitTicks(Ticks.of(30));
 
-				// 검막
+				// 검막 — 1인칭(나): 적 알림이 내 화면에는 없어야 함 · 3인칭: 시험 스위치로 적 시점 알림을 내 몸에 그려 확인
+				boolean enemyView = view != CameraType.FIRST_PERSON;
+				ctx.runOnClient(mc -> IronFx.guardTellOnSelf = enemyView);
 				onServer(sp, p -> Classes.byId(Ironcleaver.ID).secondary(p));
-				ctx.waitTicks(Ticks.of(6));
-				ctx.takeScreenshot("ic_" + tag + "_guard");
-				ctx.waitTicks(Ticks.of(20));
+				ctx.waitTicks(Ticks.of(1));
+				ctx.takeScreenshot("ic_" + tag + "_guard_1");
+				ctx.waitTicks(Ticks.of(2));
+				ctx.takeScreenshot("ic_" + tag + "_guard_3");
+				ctx.runOnClient(mc -> {
+					if (enemyView != (IronFx.guardTells() > 0)) {
+						throw new AssertionError("검막 알림: 적 시점 " + enemyView + " 인데 " + IronFx.guardTells());
+					}
+				});
+				ctx.waitTicks(Ticks.of(8));
+				ctx.takeScreenshot("ic_" + tag + "_guard_11");
+				ctx.waitTicks(Ticks.of(15));
+				ctx.runOnClient(mc -> IronFx.guardTellOnSelf = false);
 
 				// 어깨 박치기
+				// 표적을 조금 멀리 (부딪치기 전 돌진 구간을 찍음)
+				sp.getServer().runCommand("execute as @p at @s run tp @e[type=minecraft:husk] ~ ~ ~7");
+				ctx.waitTicks(Ticks.of(2));
 				onServer(sp, p -> Classes.byId(Ironcleaver.ID).primary(p));
-				ctx.waitTicks(Ticks.of(3));
+				ctx.waitTicks(Ticks.of(2));
+				ctx.runOnClient(mc -> {
+					float fov = IronFx.fovScale(1.0F);
+					if (fov < 1.1F) {
+						throw new AssertionError("돌진 중인데 시야각이 넓어지지 않음 (" + fov + ")");
+					}
+				});
+				ctx.takeScreenshot("ic_" + tag + "_bash_2");
+				ctx.waitTicks(Ticks.of(2));
 				ctx.takeScreenshot("ic_" + tag + "_bash");
 				ctx.waitTicks(Ticks.of(20));
 				// 박치기로 밀려난 표적 대신 새로

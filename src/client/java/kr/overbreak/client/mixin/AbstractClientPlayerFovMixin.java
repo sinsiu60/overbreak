@@ -21,7 +21,8 @@ public abstract class AbstractClientPlayerFovMixin {
 		float scale = kr.overbreak.client.hud.ShadeScreen.fovScale(partial) * kr.overbreak.client.hud.ThunderScreen.fovScale(partial)
 				* kr.overbreak.client.tutorial.BootSequence.fovScale()
 				* kr.overbreak.client.camera.ReloadKick.fovScale(partial)
-				* kr.overbreak.client.camera.ScatterCam.fovScale(partial);
+				* kr.overbreak.client.camera.ScatterCam.fovScale(partial)
+				* kr.overbreak.client.fx.IronFx.fovScale(partial);
 		if (kr.overbreak.client.hud.DeadeyeHud.active()) {
 			scale *= 0.9F;
 		}

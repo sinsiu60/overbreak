@@ -90,6 +90,9 @@ public final class IronFx {
 	/** 늦게 틀 소리 · 궤적 (선딜이 끝나는 순간). */
 	private record Pending(double at, int entityId, Runnable run) {}
 
+	/** 상대가 검막을 쓴 순간부터 (적 화면에만 그림). */
+	private record GuardTell(int entityId, double born) {}
+
 	/** 참철 동작 번호 전부. */
 	public static final int[] IRON_ANIMS = {SkillAnimPayload.IC_SWING_R, SkillAnimPayload.IC_SWING_L, SkillAnimPayload.IC_OVERHEAD,
 			SkillAnimPayload.IC_CHARGE, SkillAnimPayload.IC_RELEASE, SkillAnimPayload.IC_BASH, SkillAnimPayload.IC_GUARD,
@@ -101,6 +104,9 @@ public final class IronFx {
 	private static final List<Ult> ULTS = new ArrayList<>();
 	private static final List<Cleave> CLEAVES = new ArrayList<>();
 	private static final List<Pending> PENDING = new ArrayList<>();
+	private static final List<GuardTell> GUARDS = new ArrayList<>();
+	/** 시험용: 내 검막도 상대 화면처럼 그림 (3인칭 스크린샷 확인). */
+	public static boolean guardTellOnSelf;
 	/** 모으는 중 반복음 (엔티티별). */
 	private static final Map<Integer, Loop> LOOPS = new HashMap<>();
 	private static final RandomSource RANDOM = RandomSource.create();
@@ -265,6 +271,23 @@ public final class IronFx {
 				if (e != null && !late) {
 					play(e, OverbreakSounds.IRON_SWING_WINDUP, 0.8F, 0.9F);
 				}
+				if (e != null && enemy(mc, e)) {
+					// 적 화면에만 — 쓰는 순간 금빛 번쩍임 + 막는 동안 앞 120° 방벽
+					GUARDS.removeIf(g -> g.entityId == id);
+					GUARDS.add(new GuardTell(id, start));
+					if (!late) {
+						Vec3 at = e.position().add(forward(e.getYRot()).scale(0.6)).add(0, 1.3, 0);
+						for (int i = 0; i < 14; i++) {
+							mc.level.addParticle(i % 2 == 0 ? ParticleTypes.ELECTRIC_SPARK : ParticleTypes.END_ROD, at.x, at.y, at.z,
+									(RANDOM.nextDouble() - 0.5) * 0.5, (RANDOM.nextDouble() - 0.3) * 0.4, (RANDOM.nextDouble() - 0.5) * 0.5);
+						}
+					}
+				}
+			}
+			case SkillAnimPayload.IC_BASH -> {
+				if (e != null && !late) {
+					play(e, OverbreakSounds.IRON_BASH_DASH, 0.9F, 1.1F);
+				}
 			}
 			case SkillAnimPayload.IC_REND -> PENDING.add(new Pending(start + REND_WINDUP, id, () -> {
 				Entity now = Minecraft.getInstance().level == null ? null : Minecraft.getInstance().level.getEntity(id);
@@ -299,6 +322,14 @@ public final class IronFx {
 		if (play != null) {
 			schedule(mc, id, anim, play, false);
 		}
+	}
+
+	/** 이 개체가 나의 상대인가 — 나도 아니고 우리 편도 아님 (개인전이면 나 말고 모두). */
+	private static boolean enemy(Minecraft mc, Entity e) {
+		if (e == mc.player) {
+			return guardTellOnSelf;
+		}
+		return !kr.overbreak.client.hud.MatchTeams.ally(e);
 	}
 
 	private static void swing(int entityId, int k) {
@@ -590,11 +621,14 @@ public final class IronFx {
 			CLEAVES.clear();
 			PENDING.clear();
 			LOOPS.clear();
+			GUARDS.clear();
 			return;
 		}
+		GUARDS.removeIf(g -> ClientClock.now() - g.born > GUARD_TIME + 4.0 || mc.level.getEntity(g.entityId) == null);
 		LOOPS.values().removeIf(l -> l.isStopped());
 		double now = ClientClock.now();
 		scrapeSparks(mc, now);
+		bashDust(mc);
 		List<Pending> due = new ArrayList<>();
 		PENDING.removeIf(p -> {
 			if (p.at <= now) {
@@ -612,6 +646,19 @@ public final class IronFx {
 			stepWave(mc.level, w, now);
 		}
 		WAVES.removeIf(w -> !Double.isNaN(w.deadAt) && now - w.deadAt > 16.0);
+	}
+
+	/** 어깨 박치기 돌진 중 — 발뒤꿈치에서 먼지가 조금씩 뒤로 흩날림. */
+	private static void bashDust(Minecraft mc) {
+		for (net.minecraft.client.player.AbstractClientPlayer pl : mc.level.players()) {
+			if (!kr.overbreak.client.anim.SkillAnims.playing(pl.getId(), SkillAnimPayload.IC_BASH) || !pl.onGround()) {
+				continue;
+			}
+			Vec3 f = forward(pl.getYRot());
+			Vec3 at = pl.position().subtract(f.scale(0.3));
+			mc.level.addParticle(ParticleTypes.CLOUD, at.x + (RANDOM.nextDouble() - 0.5) * 0.4, at.y + 0.05, at.z + (RANDOM.nextDouble() - 0.5) * 0.4,
+					-f.x * 0.08, 0.02, -f.z * 0.08);
+		}
 	}
 
 	/** 대지 가르기 긁는 동안 (선딜 끝 ~ 발사) — 시전자 오른쪽 앞 땅에서 불꽃 · 흙이 튐. */
@@ -708,7 +755,7 @@ public final class IronFx {
 		Minecraft mc = Minecraft.getInstance();
 		Camera camera = mc.gameRenderer.mainCamera();
 		if (!camera.isInitialized() || mc.level == null
-				|| ARCS.isEmpty() && WAVES.isEmpty() && ULTS.isEmpty() && CLEAVES.isEmpty()) {
+				|| ARCS.isEmpty() && WAVES.isEmpty() && ULTS.isEmpty() && CLEAVES.isEmpty() && GUARDS.isEmpty()) {
 			return;
 		}
 		Vec3 cam = camera.position();
@@ -718,6 +765,7 @@ public final class IronFx {
 		List<Wave> waves = List.copyOf(WAVES);
 		List<Ult> ults = List.copyOf(ULTS);
 		List<Cleave> cleaves = List.copyOf(CLEAVES);
+		List<GuardTell> guards = List.copyOf(GUARDS);
 		ClientLevel level = mc.level;
 		collector.submitCustomGeometry(pose, RenderTypes.beaconBeam(FILL, true), (p, buffer) -> {
 			for (Arc a : arcs) {
@@ -731,6 +779,9 @@ public final class IronFx {
 			}
 			for (Cleave c : cleaves) {
 				drawCleave(p, buffer, c, cam, t);
+			}
+			for (GuardTell g : guards) {
+				drawGuard(p, buffer, level, g, cam, t, partial);
 			}
 		});
 	}
@@ -888,6 +939,143 @@ public final class IronFx {
 		}
 	}
 
+	/** 검막 알림 색 (금빛 · 흰 코어). */
+	private static final int GUARD_GOLD = 0xFFD84A;
+	/** 번쩍임 길이 (0.25초). */
+	private static final float FLASH = 5.0F;
+
+	/**
+	 * 상대의 검막 (적 화면에만) —
+	 *   쓰는 순간: 가슴 앞에서 금빛 · 흰 십자 광채가 크게 번쩍 (0.25초에 걸쳐 커지며 사라짐)
+	 *   막는 동안: 몸 앞 120° 에 선 금빛 반투명 방벽 (몸 방향을 따라 돎 · 윗단 · 아랫단이 밝게 · 끝날 때 사라짐)
+	 */
+	private static void drawGuard(PoseStack.Pose p, VertexConsumer buffer, ClientLevel level, GuardTell g, Vec3 cam, double t, float partial) {
+		Entity e = level.getEntity(g.entityId);
+		if (e == null) {
+			return;
+		}
+		float age = (float) (t - g.born);
+		boolean on = kr.overbreak.client.anim.SkillAnims.playing(g.entityId, SkillAnimPayload.IC_GUARD);
+		Vec3 feet = e.getPosition(partial);
+		float yaw = e.getViewYRot(partial);
+		Vec3 f = forward(yaw);
+		Vec3 right = new Vec3(-f.z, 0, f.x).scale(-1.0);
+		// 번쩍임
+		if (age < FLASH) {
+			float k = age / FLASH;
+			float fade = 1.0F - k;
+			fade = fade * fade;
+			Vec3 c = feet.add(f.scale(0.7)).add(0, 1.3, 0);
+			double len = 0.8 + 2.6 * Math.sqrt(k);
+			Vec3 up = new Vec3(0, 1, 0);
+			int gold = ARGB.color(Math.round(230 * fade), GUARD_GOLD);
+			int white = ARGB.color(Math.round(255 * fade), 0xFFFFFF);
+			BulletTrails.quad(p, buffer, c.subtract(right.scale(len)), c.add(right.scale(len)), cam, 0.22F * fade + 0.04F, 0.0F, gold, 0.0F);
+			BulletTrails.quad(p, buffer, c.subtract(up.scale(len * 0.8)), c.add(up.scale(len * 0.8)), cam, 0.22F * fade + 0.04F, 0.0F, gold, 0.0F);
+			BulletTrails.quad(p, buffer, c.subtract(right.scale(len * 0.9)), c.add(right.scale(len * 0.9)), cam, 0.08F, 0.0F, white, 0.0F);
+			BulletTrails.quad(p, buffer, c.subtract(up.scale(len * 0.7)), c.add(up.scale(len * 0.7)), cam, 0.08F, 0.0F, white, 0.0F);
+			// 가운데 빛 덩이
+			BulletTrails.quad(p, buffer, c.subtract(right.scale(0.4)), c.add(right.scale(0.4)), cam, 0.42F * (0.5F + fade), 0.0F,
+					ARGB.color(Math.round(200 * fade), 0xFFF4C8), 0.0F);
+		}
+		// 방벽 — 들어갈 때 0.1초 · 끝나면 0.15초에 걸쳐 사라짐
+		float in = Mth.clamp(age / 2.0F, 0.0F, 1.0F);
+		float out;
+		if (on) {
+			out = 1.0F;
+		} else {
+			kr.overbreak.client.anim.SkillAnims.Play play = kr.overbreak.client.anim.SkillAnims.find(g.entityId, SkillAnimPayload.IC_GUARD);
+			float over = play == null ? 99.0F : play.elapsed(partial) - play.end();
+			out = 1.0F - Mth.clamp(over / 3.0F, 0.0F, 1.0F);
+		}
+		float k = Math.min(in, out);
+		if (k <= 0.0F) {
+			return;
+		}
+		float pulse = 0.8F + 0.2F * Mth.sin((float) t * 1.6F);
+		int wall = ARGB.color(Math.round(80 * k * pulse), GUARD_GOLD);
+		int rim = ARGB.color(Math.round(220 * k), GUARD_GOLD);
+		double r = 1.05;
+		double h0 = 0.1;
+		double h1 = 2.1;
+		int n = 8;
+		double half = Math.toRadians(GUARD_FRONT / 2.0);
+		for (int i = 0; i < n; i++) {
+			double a0 = -half + 2.0 * half * i / n;
+			double a1 = -half + 2.0 * half * (i + 1) / n;
+			Vec3 d0 = f.scale(Math.cos(a0)).add(right.scale(Math.sin(a0)));
+			Vec3 d1 = f.scale(Math.cos(a1)).add(right.scale(Math.sin(a1)));
+			Vec3 b0 = feet.add(d0.scale(r)).add(0, h0, 0);
+			Vec3 b1 = feet.add(d1.scale(r)).add(0, h0, 0);
+			Vec3 t0 = feet.add(d0.scale(r)).add(0, h1, 0);
+			Vec3 t1 = feet.add(d1.scale(r)).add(0, h1, 0);
+			band(p, buffer, t0, t1, b1, b0, cam, wall, wall);
+			// 윗단 · 아랫단 빛줄
+			band(p, buffer, t0, t1, t1.add(0, -0.08, 0), t0.add(0, -0.08, 0), cam, rim, rim);
+			band(p, buffer, b0.add(0, 0.08, 0), b1.add(0, 0.08, 0), b1, b0, cam, rim, rim);
+		}
+	}
+
+	/** 어깨 박치기 돌진 시야각 — 0.05초에 ×1.15 로 넓어졌다가 끝나면 0.15초에 걸쳐 원래대로 (설정의 시야각 효과 세기를 따름). */
+	private static final float BASH_FOV = 1.15F;
+
+	public static float fovScale(float partial) {
+		float k = bashAmount(partial);
+		if (k <= 0.0F) {
+			return 1.0F;
+		}
+		double effect = Minecraft.getInstance().options.fovEffectScale().get();
+		return (float) (1.0 + (BASH_FOV - 1.0) * k * effect);
+	}
+
+	/** 지금 내 박치기 세기 0~1 (들어감 0.05초 · 빠짐 0.15초). */
+	private static float bashAmount(float partial) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.player == null) {
+			return 0.0F;
+		}
+		kr.overbreak.client.anim.SkillAnims.Play play = kr.overbreak.client.anim.SkillAnims.find(mc.player.getId(), SkillAnimPayload.IC_BASH);
+		if (play == null) {
+			return 0.0F;
+		}
+		float e = play.elapsed(partial);
+		float in = Mth.clamp(e / 1.0F, 0.0F, 1.0F);
+		float out = 1.0F - Mth.clamp((e - play.end()) / 3.0F, 0.0F, 1.0F);
+		float k = Math.min(in, out);
+		return k * k * (3.0F - 2.0F * k);
+	}
+
+	/** 박치기 돌진 속도선 — 화면 가장자리에서 가운데 쪽으로 흐르는 옅은 흰 줄 (본인 1인칭 · 은은하게). */
+	private static void speedLines(net.minecraft.client.gui.GuiGraphicsExtractor g, int w, int h, double t, float k) {
+		int n = 18;
+		float cx = w / 2.0F;
+		float cy = h / 2.0F;
+		RandomSource r = RandomSource.create(7L);
+		for (int i = 0; i < n; i++) {
+			double ang = Math.PI * 2.0 * i / n + (r.nextDouble() - 0.5) * 0.25;
+			float speed = 0.6F + r.nextFloat() * 0.6F;
+			// 가장자리 → 안쪽으로 흐름 (반지름 비율 1.0 → 0.55)
+			float phase = (float) ((t * 0.18 * speed + r.nextDouble()) % 1.0);
+			float r1 = 1.05F - 0.45F * phase;
+			float r0 = r1 + 0.22F;
+			float ex = (float) Math.cos(ang);
+			float ey = (float) Math.sin(ang);
+			float rx = Math.max(w, h) * 0.62F;
+			int alpha = Math.round(110 * k * (1.0F - phase * 0.7F));
+			if (alpha <= 2) {
+				continue;
+			}
+			int color = (alpha << 24) | 0xFFFFFF;
+			int steps = 48;
+			for (int s = 0; s < steps; s++) {
+				float rr = r0 + (r1 - r0) * s / steps;
+				int x = Math.round(cx + ex * rx * rr);
+				int y = Math.round(cy + ey * rx * rr);
+				g.fill(x, y, x + 2, y + 2, color);
+			}
+		}
+	}
+
 	/** 3타 착지 — 빠르게 퍼지는 흰 충격 고리 두 겹 + 사방으로 갈라진 땅 균열 (2초에 걸쳐 사라짐). */
 	private static void drawSlam(PoseStack.Pose p, VertexConsumer buffer, Cleave c, Vec3 cam, float e) {
 		Vec3 o = c.at.add(0, 0.05, 0);
@@ -974,6 +1162,10 @@ public final class IronFx {
 		double t = ClientClock.at(partial);
 		int w = g.guiWidth();
 		int h = g.guiHeight();
+		float bash = bashAmount(partial);
+		if (bash > 0.0F && mc.options.getCameraType().isFirstPerson()) {
+			speedLines(g, w, h, t, bash);
+		}
 		Stage s = STAGES.get(mc.player.getId());
 		if (s != null) {
 			float flash = 1.0F - Mth.clamp((float) (t - stageFlashAt) / 5.0F, 0.0F, 1.0F);
@@ -1083,6 +1275,11 @@ public final class IronFx {
 			}
 		}
 		return null;
+	}
+
+	/** 시험용: 그리는 중인 검막 알림 수 (적 화면에만). */
+	public static int guardTells() {
+		return GUARDS.size();
 	}
 
 	/** 시험용: 그리는 중인 것 수 (궤적 · 칼날 · 예고 · 베기). */

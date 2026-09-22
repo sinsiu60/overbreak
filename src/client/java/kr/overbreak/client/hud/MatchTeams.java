@@ -49,6 +49,11 @@ public final class MatchTeams {
 		VISIBLE.clear();
 	}
 
+	/** 우리 편인가 (팀전이 아니면 늘 false — 나 말고는 모두 상대). */
+	public static boolean ally(Entity e) {
+		return ALLIES.contains(e.getId());
+	}
+
 	/** 경기 중인가 (테두리를 칠할 개체가 있는가). */
 	public static boolean active() {
 		return !ALLIES.isEmpty() || !FOES.isEmpty();

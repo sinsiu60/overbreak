@@ -205,5 +205,14 @@
         "type": "event"
       }
     ]
+  },
+  "ironcleaver.bash.dash": {
+    "subtitle": "subtitles.overbreak.ironcleaver.bash.dash",
+    "sounds": [
+      {
+        "name": "minecraft:item.trident.riptide_1",
+        "type": "event"
+      }
+    ]
   }
 }

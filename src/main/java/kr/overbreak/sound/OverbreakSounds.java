@@ -41,6 +41,8 @@ public final class OverbreakSounds {
 	/** 모아 베기 발동 — 휘두름 + 폭음 두 겹. */
 	public static final Holder<SoundEvent> IRON_CHARGE_RELEASE = register("ironcleaver.charge.release");
 	public static final Holder<SoundEvent> IRON_CHARGE_RELEASE_BOOM = register("ironcleaver.charge.release.boom");
+	/** 어깨 박치기 돌진 — 바람 가름. */
+	public static final Holder<SoundEvent> IRON_BASH_DASH = register("ironcleaver.bash.dash");
 	/** 어깨 박치기 적중. */
 	public static final Holder<SoundEvent> IRON_BASH_HIT = register("ironcleaver.bash.hit");
 	/** 검막 막기 성공 — 방패 + 쇠 울림 두 겹. */
